@@ -1,0 +1,6 @@
+https://www.djangoproject.com/download/1.7c1/tarball/
+bpython==0.13
+django-braces==1.4.0
+django-model-utils==2.0.3
+logutils==0.3.3
+django_extensions
