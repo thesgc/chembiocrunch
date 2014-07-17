@@ -5,3 +5,4 @@ django-model-utils==2.0.3
 logutils==0.3.3
 django_extensions
 psycopg2
+django-crispy-forms

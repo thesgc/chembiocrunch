@@ -1,12 +1,23 @@
 {% extends "base.html" %}
-{% block page_title %}Start Page{% endblock page_title %}
+{% block page_title %}Welcome to ChembioCrunch{% endblock page_title %}
 {% block content %}
-    <h2>Publishers</h2>
+    <h2>{% if first_eleven %}Your Workflows{% else %}You havent got any workflows yet, create one below{% endif %}</h2>
+   
+
+
    <div class="row">
+    <div class ="col-lg-1 col-md-1  col-sd-2 col-xs-6 well"><a href="{% url "workflow_create" %}">Add a workflow</a></div>
+
+    {% for workflow in first_eleven %}
+        <div class ="col-lg-1 col-md-1  col-sd-2 col-xs-6 well">{{ workflow.title }}</div> <!-- end workflow holder -->
+    {% endfor %}
+    </div><!-- new row every 12 columns -->
+    {% if object_list %}
+    <div class='row'>
     {% for workflow in object_list %}
-            {% cycle "" "" "" "" "" "" "" "" "" "" "</div><div class='row'>" %}<!-- new row every 12 columns -->
-            <div class ="col-lg-1 col-md-1  col-sd-2 col-xs-6 well">{{ workflow.name }}</div> <!-- end workflow holder -->
+            {% cycle "" "" "" "" "" "" "" "" "" "" "" "" "</div><!-- new row every 12 columns --><div class='row'>" %}
+            <div class ="col-lg-1 col-md-1  col-sd-2 col-xs-6 well">{{ workflow.title }}</div> <!-- end workflow holder -->
     {% endfor %}
     </div> <!-- end rows-->
-    
+    {% endif %}
 {% endblock content %}
