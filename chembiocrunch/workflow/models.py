@@ -9,9 +9,11 @@ class WorkflowManager(models.Manager):
 
 # Create your models here.
 class Workflow(TimeStampedModel):
+    title = models.CharField(max_length=100)
     uploaded_file = models.FileField()
     created_by = models.ForeignKey('auth.User')
     objects = WorkflowManager()
+
     def data_requires_update(self):
         '''
         method will test if the files attached to the class or the child pages have been updated since the data was last updated
@@ -27,7 +29,7 @@ class Workflow(TimeStampedModel):
 
 
     def last_data_revision(self):
-        revisions = WorkflowDataRevision.objects.filter(page_id=self.id).order_by("-modified")
+        revisions = WorkflowSchemaRevision.objects.filter(page_id=self.id).order_by("-modified")
         if revisions.count() > 0:
             return revisions[0]
         return False
@@ -43,7 +45,7 @@ class Workflow(TimeStampedModel):
     def create_data_revision(self, new_steps_json, label=""):
         '''Generate a workflow revision using the list of steps in the json
         This might be an empty list if this is revision 1 for the particular dataset'''
-        return WorkflowDataRevision.objects.create(page=self, steps_json=json.dumps(new_steps_json), label=label)
+        return WorkflowSchemaRevision.objects.create(page=self, steps_json=json.dumps(new_steps_json), label=label)
 
 
 
@@ -54,7 +56,11 @@ class Workflow(TimeStampedModel):
 
 
 
-class WorkflowDataRevision(TimeStampedModel):
+class WorkflowSchemaRevision(TimeStampedModel):
     workflow = models.ForeignKey('Workflow', related_name='workflow_data_revisions')
-    label = models.CharField(null=True, default="", blank=True, max_length=200)
+    steps_json = models.TextField(default="[]")
+
+
+class WorkflowDataRevision(TimeStampedModel):
+    schema_revision = models.ForeignKey('WorkflowSchemaRevision', related_name="data_revisions")
     steps_json = models.TextField(default="[]")

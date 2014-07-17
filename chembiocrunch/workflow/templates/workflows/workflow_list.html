@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block page_title %}Start Page{% endblock page_title %}
+{% block content %}
+    <h2>Publishers</h2>
+   <div class="row">
+    {% for workflow in object_list %}
+            {% cycle "" "" "" "" "" "" "" "" "" "" "</div><div class='row'>" %}<!-- new row every 12 columns -->
+            <div class ="col-lg-1 col-md-1  col-sd-2 col-xs-6 well">{{ workflow.name }}</div> <!-- end workflow holder -->
+    {% endfor %}
+    </div> <!-- end rows-->
+    
+{% endblock content %}
