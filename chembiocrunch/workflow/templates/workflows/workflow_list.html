@@ -1,5 +1,11 @@
 {% extends "base.html" %}
-{% block page_title %}Welcome to ChembioCrunch{% endblock page_title %}
+{% block breadcrumbs %}
+<div class="navbar navbar-inverse ">
+      <div class="container">
+        <div class="navbar-header">
+        </div>
+    </div>
+</div>{% endblock breadcrumbs %}
 {% block content %}
     <h2>{% if first_eleven %}Your Workflows{% else %}You havent got any workflows yet, create one below{% endif %}</h2>
    
@@ -20,4 +26,6 @@
     {% endfor %}
     </div> <!-- end rows-->
     {% endif %}
+
+    
 {% endblock content %}

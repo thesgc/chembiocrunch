@@ -1,2 +1,15 @@
-{% extends "base.html" %}
+{% extends "workflow_base.html" %}
 {% load crispy_forms_tags %}
+{% block action_title %}
+To get started upload a data file to your private profile
+{% endblock action_title %}
+{% block content %}
+   
+
+        <form  enctype="multipart/form-data"  action="{% url 'workflow_create' %}" class="crispy form-horizontal" method="post">
+                {% crispy form form.helper %}
+        </form>
+    
+
+    
+{% endblock content %}

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block breadcrumbs %}
+
+
+        <div class="row">
+            <div class="col-xs-2">
+                
+            <div class="arrow_box {% if revisions.upload %}active {% endif %}" >
+                Upload
+            </div>
+            </div>
+        </div>
+
+{% endblock breadcrumbs %}
+<h3> 
+{% block action_title %}
+Action title to be overridden 
+{% endblock action_title %}
+</h3>

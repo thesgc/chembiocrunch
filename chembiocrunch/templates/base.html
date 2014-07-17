@@ -53,8 +53,13 @@
 
     <div class="container">
 
-      <h1>{% block page_title %}Example Base Template{% endblock page_title %}</h1>
-
+      <h1>{% block page_title %}Welcome to ChembioCrunch{% endblock page_title %}</h1>
+      <h2>{% block page_subtitle %}A simple tool to manipulate and visualise assay data{% endblock page_subtitle %}</h2>
+      {% block breadcrumbs %}{% endblock breadcrumbs %}
+      <h2>
+      {% block action_title %}
+{% endblock action_title %}
+</h2>
       {% block content %}
         <p>Use this document as a way to quick start any new project.</p>
       {% endblock content %}

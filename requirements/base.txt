@@ -6,3 +6,4 @@ logutils==0.3.3
 django_extensions
 psycopg2
 django-crispy-forms
+python-magic

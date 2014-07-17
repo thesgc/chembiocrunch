@@ -5,7 +5,7 @@ from django.views.generic.detail import SingleObjectMixin
 from braces.views import LoginRequiredMixin
 
 from django.db.models import get_model
-
+from .forms import CreateWorkflowForm
 
 class WorkflowView( LoginRequiredMixin):
 
@@ -15,7 +15,12 @@ class WorkflowView( LoginRequiredMixin):
         '''Make sure that all of the views cannot see the object unless they own it!'''
         return self.model.objects.get_user_records(self.request.user)
 
-
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super(WorkflowView, self).get_context_data(**kwargs)
+        # Add in a QuerySet of all the books
+        context['revisions'] = {"upload" :"DSFDFSDF"}
+        return context
 
 
 class WorkflowListView(WorkflowView, ListView):
@@ -46,23 +51,21 @@ class WorkflowListView(WorkflowView, ListView):
 
 
 
-class WorkflowCreateView(CreateView, WorkflowView):
+class WorkflowCreateView(WorkflowView, CreateView ):
     '''creates a single workflow'''
     fields = ['title', 'uploaded_file']
+    template_name = "workflows/workflow_create.html"
+    form_class = CreateWorkflowForm
+    success_url = 'success'
 
-     def form_valid(self, form):
-         user = self.request.user
-         form.instance.created_by = user
-         return super(WorkflowCreateView, self).form_valid(form)
+    def form_valid(self, form):
+        user = self.request.user
+        form.instance.created_by = user
+        form_valid = super(WorkflowCreateView, self).form_valid(form)
+        print self.object.id
 
 
-
-    def get(self, request, *args, **kwargs):
-        return render(request,
-            "workflows/workflow_create.html")
-
-    def post(self, request, *args, **kwargs):
-        pass
+        return form_valid
 
 
 
