@@ -100,4 +100,9 @@ fi
 
 export WORKON_HOME=$HOME/.virtualenvs
 export PIP_DOWNLOAD_CACHE=$HOME/.pip_download_cache
-source /usr/local/bin/virtualenvwrapper.sh
+alias migrate="python ~/chembiocrunch/chembiocrunch/manage.py migrate"
+alias makemigrations="python ~/chembiocrunch/chembiocrunch/manage.py makemigrations"
+alias runserver="python ~/chembiocrunch/chembiocrunch/manage.py runserver 0.0.0.0:8000"
+alias dbshell="python ~/chembiocrunch/chembiocrunch/manage.py dbshell"
+alias shell="python ~/chembiocrunch/chembiocrunch/manage.py shell --traceback"
+source /home/vagrant/miniconda/bin/activate chembiocrunch
