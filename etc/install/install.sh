@@ -15,10 +15,10 @@ VIRTUALENV_COMMAND=/home/vagrant/miniconda/bin/activate
 
 source /home/vagrant/miniconda/bin/activate $PROJECT_NAME
 
+cp -p $PROJECT_DIR/etc/install/bashrc /home/vagrant/.bashrc
+
 sudo chown -R vagrant:vagrant   /home/vagrant/.pip_download_cache/
 conda install pip --yes
 conda install pandas --yes
 
 pip install -r $PROJECT_NAME/requirements/local.txt
-
-echo "source $VIRTUALENV_COMMAND $PROJECT_NAME" >> /home/vagrant/.bashrc
