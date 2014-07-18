@@ -5,7 +5,7 @@ from django.views.generic.detail import SingleObjectMixin
 from braces.views import LoginRequiredMixin
 
 from django.db.models import get_model
-from .forms import CreateWorkflowForm
+from workflow.forms import CreateWorkflowForm
 
 class WorkflowView( LoginRequiredMixin):
 
@@ -62,7 +62,9 @@ class WorkflowCreateView(WorkflowView, CreateView ):
         user = self.request.user
         form.instance.created_by = user
         form_valid = super(WorkflowCreateView, self).form_valid(form)
-        print self.object.id
+        
+        if get_model("workflow", "workflowdatamappingrevision").objects.get_mapping_revisions_for_workflow(self.object).count() == 0:
+            self.object.create_first_data_revision()
 
 
         return form_valid

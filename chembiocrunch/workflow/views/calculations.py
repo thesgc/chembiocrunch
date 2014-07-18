@@ -36,7 +36,7 @@ class ControlMappingConfigurationCreate(WorkflowDetailView):
 
 
 
-class ControlMappingConfigurationCreate(WorkflowDetailView):
+class ControlMappingCreate(WorkflowDetailView):
     '''Allows the user to choose what to do with their data'''
     def get(self, request, *args, **kwargs):
         return render(request,"calculations/control_mapping_create.html")

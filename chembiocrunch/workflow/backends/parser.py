@@ -1,5 +1,6 @@
  
 import csv
+from pandas import DataFrame
 
 def parse_data_objects(workflow):
     base_id = 1
@@ -19,3 +20,11 @@ def parse_file(csv_file, objects, base_id):
         objects.append(line)
         base_id += 1
     return objects
+
+
+
+
+def get_data_frame(read_csv):
+    pd = DataFrame()
+    pd = pd.from_csv(read_csv, infer_datetime_format=True,)
+    return pd
