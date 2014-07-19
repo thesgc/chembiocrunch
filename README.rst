@@ -2,6 +2,49 @@
 ChembioCrunch
 ========================
 
+Chembiocrunch is a work in progress project to create a data analysis tool for bioassays.
+The first release is not yet working
+
+Use Cases
+========================
+
+A user might have a CSV file with a set of rows produced by each plate well in a 96 well plate, 
+these need to be averaged just as you might if using Excel pivot tables
+
+They may then need to select out and transform some of the rows to be used in a calculation with the other rows
+This would be done using vlookup in Excel
+
+The idea is to store each of these operations in a workflow that can be applied to other data files.
+
+The system will then support graphing and curve fitting so that a publication-quality visualisation can be produced
+
+Contact the team if you would like to know more. We will potentially create an online demo.
+
+Technologies
+=======================
+
+Front end:
+-------------------------
+Bootstrap, HTML, jquery datatables, jquery multiselect
+
+Back end
+------------------------
+Django, pandas, pytables, all installed under miniconda
+
+Development tools
+-------------------------
+Vagrant - currently there is a box file which runs Centos, ubuntu version coming soon.
+
+Deployment
+-------------------------
+looking to add package management for linux with fpm  as well as a windows installer
+
+Testing approach
+-------------------------
+Currently adding some integration tests
+
+
+
 
 Based upon
 
