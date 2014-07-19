@@ -26,5 +26,5 @@ def parse_file(csv_file, objects, base_id):
 
 def get_data_frame(read_csv):
     pd = DataFrame()
-    pd = pd.from_csv(read_csv, infer_datetime_format=True,)
+    pd = pd.from_csv(read_csv, infer_datetime_format=True,index_col=None)
     return pd

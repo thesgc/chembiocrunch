@@ -2,8 +2,9 @@ from django.db import models
 from pandas.io.pytables import get_store
 from django_extensions.db.models import TimeStampedModel
 from backends import parser
-from pandas import DataFrame
+from pandas import DataFrame, read_hdf
 from django.db.models import get_model
+from django.template.defaultfilters import slugify
 
 def zero_pad_object_id(id):
     return ('%d' % id).zfill(11)
@@ -17,7 +18,8 @@ class WorkflowManager(models.Manager):
 
 
 
-
+def my_slug(str):
+    slugify(str.replace("-","_"))
 
 
 # Create your models here.
@@ -30,15 +32,18 @@ class Workflow(TimeStampedModel):
 
 
     def create_first_data_revision(self):
+
         df = parser.get_data_frame(self.uploaded_file.file)
         new_workflow_revision = get_model("workflow", "WorkflowDataMappingRevision").objects.create(workflow=self)
         data_types = [(name ,df.dtypes[index] ) for index, name in enumerate(df.dtypes.keys())]
-        types_frame = DataFrame([(dtype,) for dtype in df.dtypes], index=df.dtypes.keys(), columns=["dtype",])
+        types_frame = DataFrame([[str(dtype) for dtype in df.dtypes],], columns=df.dtypes.keys())
 
-        with new_workflow_revision.get_store() as store:
-            for key, item in (("dtypes", types_frame),("data", df)):
-                store[new_workflow_revision.get_store_key(key)] = item
-            print store
+        df.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w', format="table")
+
+        types_frame.to_hdf(new_workflow_revision.get_store_filename("dtypes"), new_workflow_revision.get_store_key(), mode='w', format="table")
+
+
+        print new_workflow_revision.get_data()
 
 
         
@@ -128,10 +133,21 @@ class WorkflowDataMappingRevision(TimeStampedModel):
     def get_store(self):
         return get_store('workflows.%s' % (zero_pad_object_id(self.workflow_id),))
 
-    def get_store_key(self, key):
-        return "%s/%s" % (  zero_pad_object_id(self.id), key)
+    
+    def get_store_filename(self, key,):
+        return 'workflows.%s.%s' % (zero_pad_object_id(self.workflow_id),key)
+
+    def get_store_key(self):
+        return "wfdr%s" % (  zero_pad_object_id(self.id),)
 
 
+    def get_data(self, where=None):
+        if not where:
+            filename=self.get_store_filename("data")
+            print filename
+            return read_hdf(filename,self.get_store_key(),)
+        else:
+            return read_hdf(self.get_store_filename("data"),self.get_store_key(),where=where)
 
 
 # class WorkflowDataColumnsRevision(TimeStampedModel):

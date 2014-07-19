@@ -7,12 +7,12 @@ import random
 import string
 from django.contrib.auth.models import User
 from workflow.views import workflows
-
+from django.conf import settings
 def random_string(length=10):
     return u''.join(random.choice(string.ascii_letters) for x in range(length))
 
 
-class TestPage(TestCase):
+class TestWorkflowList(TestCase):
 
     def workflow_file(self):
         return ContentFile(random_string)
@@ -46,3 +46,20 @@ class TestPage(TestCase):
         self.client.login(username='bogus', password='temporary')
         response = self.client.get("/my_workflows/")
         self.assertContains( response, "new row every 12 columns",)
+
+
+
+
+    def test_file_upload(self):
+        self.client.login(username='temporary', password='temporary')
+        with open(settings.SITE_ROOT + '/workflow/test_data/test_data_1.csv') as fp:
+            response = self.client.post('/my_workflows/create/', {'title': 'fred', 'uploaded_file': fp})
+        print response.status_code
+
+
+
+
+
+
+
+
