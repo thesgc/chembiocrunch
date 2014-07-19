@@ -105,4 +105,4 @@ alias makemigrations="python ~/chembiocrunch/chembiocrunch/manage.py makemigrati
 alias runserver="python ~/chembiocrunch/chembiocrunch/manage.py runserver 0.0.0.0:8000"
 alias dbshell="python ~/chembiocrunch/chembiocrunch/manage.py dbshell"
 alias shell="python ~/chembiocrunch/chembiocrunch/manage.py shell --traceback"
-source /home/vagrant/miniconda/bin/activate chembiocrunch
+alias syncdb="python ~/chembiocrunch/chembiocrunch/manage.py syncdb"
