@@ -21,5 +21,5 @@ sudo chown -R vagrant:vagrant   /home/vagrant/.pip_download_cache/
 conda install pip --yes
 conda install pandas --yes
 conda install pytables --yes
-
+conda install psycopg2 --yes
 pip install -r $PROJECT_NAME/requirements/local.txt

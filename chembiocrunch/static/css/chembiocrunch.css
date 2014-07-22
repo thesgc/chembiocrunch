@@ -3,3 +3,6 @@
     text-align:center;
     padding-top:10px;} .arrow_box:after { left: 100%; top: 50%; border: solid transparent; content: " "; height: 0; width: 0; position: absolute; pointer-events: none; border-color: rgba(66, 115, 213, 0); border-left-color: #222; border-width: 20px; margin-top: -20px; }
 
+.spacer {
+    margin-top: 40px; /* define margin as you see fit */
+}

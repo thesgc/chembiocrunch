@@ -1,11 +1,12 @@
 from django import forms    
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, Fieldset
+from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, Fieldset, Reset
 from django.db.models import get_model 
 import magic
 from backends.parser import get_data_frame
-
-
+from crispy_forms.bootstrap import PrependedText
+from django.forms.formsets import formset_factory, BaseFormSet
+from workflow.backends.dataframe_handler import change_column_type
 class CreateWorkflowForm(forms.ModelForm):
     title = forms.CharField(max_length=50)
     uploaded_file  = forms.FileField()
@@ -47,3 +48,75 @@ class CreateWorkflowForm(forms.ModelForm):
         
         self.request = kwargs.pop('request', None)
         return super(CreateWorkflowForm, self).__init__(*args, **kwargs)
+
+
+DATA_TYPE_CHOICES = (
+    ("float64", "Decimal Number"),
+    ("int64", "Whole Number"),
+    ("object", "Category"),
+)
+
+
+
+class DataMappingForm(forms.Form):
+    readonly_fields = ('name',)
+    workflow_id = forms.IntegerField()
+    column_id = forms.IntegerField()
+    name = forms.CharField(max_length=100, show_hidden_initial=True)
+    data_type = forms.ChoiceField(choices=DATA_TYPE_CHOICES, show_hidden_initial=True)
+    hide = forms.BooleanField(required=False, show_hidden_initial=True)
+    description = forms.CharField(max_length=400, required=False, show_hidden_initial=True)
+    unit = forms.CharField(max_length=10, required=False, show_hidden_initial=True)
+
+    def clean_data_type(self):
+        if "data_type" in self.changed_data:
+            data = self.cleaned_data["data_type"]
+            df = get_model("workflow", "workflow").objects.get_latest_workflow_revision(self.cleaned_data["workflow_id"]).get_data()
+            try:
+                df = change_column_type(df,self.cleaned_data["column_id"], data)
+            except ValueError:
+                raise forms.ValidationError('The data in this field is not suitable for conversion to numbers')
+
+
+
+
+
+
+class DataMappingFormSetHelper(FormHelper):
+    def __init__(self, *args, **kwargs):
+        super(DataMappingFormSetHelper, self).__init__(*args, **kwargs)
+        self.form_method = 'post'
+        self.layout = Layout(
+            Fieldset(
+            '',
+            Field('workflow_id', type="hidden"),
+            Field('column_id', type="hidden"),
+            'name',
+            'data_type',
+            'hide',
+            'description',
+            'unit',
+            )
+        )
+        self.render_required_fields = True
+
+
+class ResetButton(Reset):
+    field_classes = 'btn btn-danger'
+
+class BaseDataMappingFormset(BaseFormSet):
+    def clean(self):
+        names = [form.cleaned_data["name"] for form in self]
+        print names
+        if len(names) > len(list(set(names))):
+            raise forms.ValidationError('The name field must be unique across the fields')
+
+    # def clean(self):
+    #     for form in self:
+    #         for field_name in form.changed_data:
+    #             print "field {} has changed. New value {}".format(field_name, form.cleaned_data[field_name])
+
+
+
+
+DataMappingFormSet = formset_factory(DataMappingForm, extra=0, formset=BaseDataMappingFormset)

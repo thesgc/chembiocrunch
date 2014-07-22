@@ -1,0 +1,24 @@
+{% extends "workflow_base.html" %}
+{% load crispy_forms_tags %}
+{% block action_title %}
+Please check that we have imported right number and correct any errors.
+{% endblock action_title %}
+{% block content %}
+{% crispy formset helper %}
+
+
+{% endblock content %}
+
+{% block help_text %}
+
+<p>
+Data fields are read in the format that they appear in the CSV, date support is coming soon.
+</p>
+<p>
+Hiding a column takes it away from view in the analysis process.
+</p>
+<p>
+Descriptions and units are optional but can be displayed on graphs to make data more comprehensible.
+</p>
+
+{% endblock help_text %}

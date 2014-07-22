@@ -5,7 +5,10 @@ from django.views.generic.detail import SingleObjectMixin
 from braces.views import LoginRequiredMixin
 
 from django.db.models import get_model
-from workflow.forms import CreateWorkflowForm
+from workflow.forms import CreateWorkflowForm, DataMappingForm, DataMappingFormSetHelper, DataMappingFormSet, ResetButton
+from django.core.urlresolvers import reverse
+from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, Fieldset, Reset
+
 
 class WorkflowView( LoginRequiredMixin):
 
@@ -18,7 +21,6 @@ class WorkflowView( LoginRequiredMixin):
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
         context = super(WorkflowView, self).get_context_data(**kwargs)
-        # Add in a QuerySet of all the books
         context['revisions'] = {"upload" :"DSFDFSDF"}
         return context
 
@@ -58,6 +60,11 @@ class WorkflowCreateView(WorkflowView, CreateView ):
     form_class = CreateWorkflowForm
     success_url = 'success'
 
+    def get_success_url(self):
+        return reverse('workflow_data_mappings_edit', kwargs={
+                'pk': self.object.pk,
+                })
+
     def form_valid(self, form):
         user = self.request.user
         form.instance.created_by = user
@@ -66,14 +73,13 @@ class WorkflowCreateView(WorkflowView, CreateView ):
         if get_model("workflow", "workflowdatamappingrevision").objects.get_mapping_revisions_for_workflow(self.object).count() == 0:
             self.object.create_first_data_revision()
 
-
         return form_valid
 
 
 
 
 
-class WorkflowDetailView( SingleObjectMixin, WorkflowView,):
+class WorkflowDetailView(WorkflowView, DetailView, ):
     pass
 
 
@@ -88,4 +94,35 @@ class WorkflowOperationChooser(WorkflowDetailView):
         pass
 
 
+
+
+
+
+class WorkflowDataMappingEditView(WorkflowDetailView):
+    '''Allows the user to edit the data mappings created automatically for the data they import'''
+    template_name = "workflows/workflow_data_mapping_edit.html"
+
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super(WorkflowDataMappingEditView, self).get_context_data(**kwargs)
+        if not "formset" in kwargs:
+            formset = DataMappingFormSet(initial=self.object.get_data_mapping_formset_data())
+        else:
+            formset= kwargs.get("formset")
+        context["formset"] = formset
+        helper = DataMappingFormSetHelper()
+        helper.template = 'table_inline.html'
+        helper.add_input(Submit("submit", "Save"))
+        helper.add_input(ResetButton("reset", "Reset Form"))
+        context["helper"] = helper
+        return context
+
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        formset = DataMappingFormSet(request.POST)
+        if formset.is_valid():            
+            new_workflow_revision = self.object.validate_columns(formset)
+            
+        else:
+            return self.render_to_response(self.get_context_data(formset=formset))
 
