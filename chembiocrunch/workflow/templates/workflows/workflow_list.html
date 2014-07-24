@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "workflow_base.html" %}
 {% block breadcrumbs %}
 <div class="navbar ">
       <div class="container">
@@ -6,19 +6,29 @@
         </div>
     </div>
 </div>{% endblock breadcrumbs %}
-{% block content %}
-    <div class="container">
-    
-        <h2>{% if first_eleven %}Your Workflows{% else %}You havent got any workflows yet, create one below{% endif %} </h2>
+
+{% block help_text %}
+
+
+
+
+        <div>
+          <p>Workflows are data containers where you can analyse your experimental results</p>
+        </div>
         
-        <div class="btn-group">
         <a href="{% url "workflow_create" %}"><button type="button" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> Add a workflow</button></a>
-      </div>
-      </div>
-      
-        
       
     
+
+{% endblock help_text %}
+
+{% block action_title %}
+
+<h2>{% if first_eleven %}Your Workflows{% else %}You havent got any workflows yet, create one below{% endif %}</h2>
+
+{% endblock action_title %}
+
+{% block content %}  
 
 <div class="container">
    <div class="row">
@@ -41,11 +51,3 @@
 {% endblock content %}
 
 
-{% block help_text %}
-
-<p>
-Workflows are data containers where you can analyse your experimental results
-</p>
-
-
-{% endblock help_text %}

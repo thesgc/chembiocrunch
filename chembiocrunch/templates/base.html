@@ -72,28 +72,33 @@
     </div><!-- /container -->
   </div><!-- /headerwrap -->
 
-    <div class="container">
+    
 
-      
+      <div class="container">
       {% block breadcrumbs %}{% endblock breadcrumbs %}
-      <h2>
-      {% block action_title %}
-{% endblock action_title %}
-</h2>
+      </div>
+      <div class="container">
+        <h2>
+        {% block action_title %}
+        {% endblock action_title %}
+        </h2>
+      </div>
+      <div class="infobox container">
+        {% block help_text %}
+         
+        {% endblock help_text %}
+      </div>
+      <div class="container">
       {% block content %}
         <p>Use this document as a way to quick start any new project.</p>
 
 
       {% endblock content %}
+      </div>
 
-      <div class="row"> 
-<div class="well spacer">
-{% block help_text %}
+      
 
-{% endblock help_text %}
-
-</div>
-</div>
+   
 
     </div> <!-- /container -->
 
