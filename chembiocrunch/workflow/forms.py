@@ -1,4 +1,4 @@
-from django import forms    
+#from django import forms    
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, Fieldset, Reset
 from django.db.models import get_model 
@@ -7,9 +7,35 @@ from backends.parser import get_data_frame
 from crispy_forms.bootstrap import PrependedText
 from django.forms.formsets import formset_factory, BaseFormSet
 from workflow.backends.dataframe_handler import change_column_type
+
+import floppyforms as forms
+
+
+class Slider(forms.RangeInput):
+    min = 0.2
+    max = 5
+    step = 0.2
+    template_name = 'slider.html'
+
+    class Media:
+        js = (
+            'js/jquery.min.js',
+            'js/jquery-ui.min.js',
+        )
+        css = {
+            'all': (
+                'css/jquery-ui.css',
+            )
+        }
+
+"http://filamentgroup.com/lab/update-jquery-ui-slider-from-a-select-element-now-with-aria-support.html"
+
+
+
+
 class CreateWorkflowForm(forms.ModelForm):
     title = forms.CharField(max_length=50)
-    uploaded_file  = forms.FileField()
+    uploaded_file = forms.FileField()
 
     def clean_uploaded_file(self):
         uploaded_file = self.cleaned_data['uploaded_file']
@@ -51,9 +77,9 @@ class CreateWorkflowForm(forms.ModelForm):
 
 
 DATA_TYPE_CHOICES = (
+    ("object", "Label"),
     ("float64", "Decimal Number"),
     ("int64", "Whole Number"),
-    ("object", "Category"),
 )
 
 
@@ -64,9 +90,10 @@ class DataMappingForm(forms.Form):
     column_id = forms.IntegerField()
     name = forms.CharField(max_length=100, show_hidden_initial=True)
     data_type = forms.ChoiceField(choices=DATA_TYPE_CHOICES, show_hidden_initial=True)
-    hide = forms.BooleanField(required=False, show_hidden_initial=True)
-    description = forms.CharField(max_length=400, required=False, show_hidden_initial=True)
+    #description = forms.CharField(max_length=400, required=False, show_hidden_initial=True)
     unit = forms.CharField(max_length=10, required=False, show_hidden_initial=True)
+    use_as_x_axis = forms.BooleanField(required=False, show_hidden_initial=True)
+    use_as_y_axis = forms.BooleanField(required=False, show_hidden_initial=True)
 
     def clean_data_type(self):
         if "data_type" in self.changed_data:
@@ -93,9 +120,11 @@ class DataMappingFormSetHelper(FormHelper):
             Field('column_id', type="hidden"),
             'name',
             'data_type',
-            'hide',
-            'description',
+            #'hide',
+            #'description',
             'unit',
+            Field('use_as_x_axis', css_class='use_as_x_axis'),
+            Field('use_as_y_axis', css_class='use_as_y_axis'),
             )
         )
         self.render_required_fields = True
@@ -115,6 +144,60 @@ class BaseDataMappingFormset(BaseFormSet):
     #     for form in self:
     #         for field_name in form.changed_data:
     #             print "field {} has changed. New value {}".format(field_name, form.cleaned_data[field_name])
+
+
+
+
+
+class PlotForm(forms.Form):
+    PUBLICATION_TYPE_CHOICES = (("paper","Paper"),
+                                ("talk", "Talk"),
+                                ("notebook", "Notebook"),
+                                ("poster", "Poster"))
+    graph_title = forms.ChoiceField( choices=[], required=False)
+    category_or_x_axis = forms.ChoiceField( choices=[])
+    measurement_or_y_axis = forms.ChoiceField( choices=[])
+    split_y_axis_by = forms.ChoiceField(choices=[])
+    split_x_axis_by = forms.ChoiceField( choices=[])
+    height = forms.FloatField(widget=Slider)
+    aspect_ratio = forms.FloatField(widget=Slider)
+    publication_type = forms.ChoiceField(choices=PUBLICATION_TYPE_CHOICES)
+    error_bars = forms.BooleanField(required=False)
+    
+    def clean_height(self):
+        height = self.cleaned_data['height']
+        if not Slider.min <= height <= Slider.max:
+            raise forms.ValidationError("Enter a value between 5 and 20")
+
+        return height
+    
+
+
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_tag = True
+        self.helper.form_class = 'form-horizontal'
+        self.helper.add_input(Submit('save', 'Submit'))
+        self.helper.layout = Layout(
+            Fieldset( '',
+                'graph_title', 
+                'category_or_x_axis', 
+                'measurement_or_y_axis',
+                'split_y_axis_by',
+                'split_x_axis_by',
+                'height',
+                'aspect_ratio',
+                'error_bars',
+         )
+        )
+        
+        self.request = kwargs.pop('request', None)
+        return super(PlotForm, self).__init__(*args, **kwargs)
+
+
+
+
 
 
 

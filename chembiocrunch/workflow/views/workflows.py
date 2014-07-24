@@ -8,6 +8,7 @@ from django.db.models import get_model
 from workflow.forms import CreateWorkflowForm, DataMappingForm, DataMappingFormSetHelper, DataMappingFormSet, ResetButton
 from django.core.urlresolvers import reverse
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, Fieldset, Reset
+from django.http import HttpResponseRedirect
 
 
 class WorkflowView( LoginRequiredMixin):
@@ -120,9 +121,13 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
     def post(self, request, *args, **kwargs):
         self.object = self.get_object()
         formset = DataMappingFormSet(request.POST)
-        if formset.is_valid():            
-            new_workflow_revision = self.object.validate_columns(formset)
-            
+        if formset.is_valid():
+            steps_json = [{"cleaned_data" : form.cleaned_data, "changed_data" : form.changed_data }  for form in formset]
+            new_workflow_revision = self.object.validate_columns(steps_json)
+            return HttpResponseRedirect(reverse("visualisation_view", kwargs={
+                'pk': self.object.pk,
+                }))
+
         else:
             return self.render_to_response(self.get_context_data(formset=formset))
 

@@ -192,6 +192,7 @@ DJANGO_APPS = (
     # 'django.contrib.admindocs',
     'workflow',
     'crispy_forms',
+    'floppyforms',
 )
 
 # Apps specific for this project go here.

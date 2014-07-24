@@ -1,0 +1,29 @@
+{% extends "workflow_base.html" %}
+{% load crispy_forms_tags %}
+{% block action_title %}
+What would you like to do next?
+{% endblock action_title %}
+{% block content %}
+   
+
+<div class="btn-group">
+  <button class="btn btn-default btn-lg" type="button" >
+    Calculate
+  </button>
+    <button class="btn btn-default btn-lg" type="button" >
+    Visualise
+  </button>
+</div>
+
+
+
+{% endblock content %}
+
+{% block help_text %}
+<p>
+The calculate function allows you to add new rows and columns to the dataset just as you might in Excel - by custom formulas, labelled filters and other calculations.
+</p>
+<p>
+Once you have all of the rows and columns that you need you can visualise the data.
+</p>
+{% endblock help_text %}

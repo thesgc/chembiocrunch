@@ -102,7 +102,7 @@ source /home/vagrant/miniconda/bin/activate $PROJECT_NAME
 sudo chown -R vagrant:vagrant   /home/vagrant/.pip_download_cache/
 conda install pip --yes
 conda install pandas --yes
-
+conda install psycopg2 --yes
 pip install -r $PROJECT_NAME/requirements/local.txt
 
 echo "source $VIRTUALENV_COMMAND $PROJECT_NAME" >> /home/vagrant/.bashrc

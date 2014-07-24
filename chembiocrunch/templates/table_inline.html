@@ -63,3 +63,23 @@
     {% endif %}
 {% if formset_tag %}</form>{% endif %}
 {% endspecialspaceless %}
+
+<script>
+
+$(".use_as_x_axis").each(function()
+{
+    $(this).change(function()
+    {
+        $(".use_as_x_axis").prop('checked',false);
+        $(this).prop('checked',true);
+    });
+});
+$(".use_as_y_axis").each(function()
+{
+    $(this).change(function()
+    {
+        $(".use_as_y_axis").prop('checked',false);
+        $(this).prop('checked',true);
+    });
+});
+</script>

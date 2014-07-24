@@ -22,4 +22,10 @@ conda install pip --yes
 conda install pandas --yes
 conda install pytables --yes
 conda install psycopg2 --yes
+
+conda install matplotlib
+conda install scipy
+pip install git+git://github.com/mwaskom/seaborn.git#egg=seaborn
+conda install patsy
+conda install statsmodels
 pip install -r $PROJECT_NAME/requirements/local.txt

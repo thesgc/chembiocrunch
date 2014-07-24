@@ -2,6 +2,11 @@
 # vi: set ft=ruby :
 
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+Vagrant.configure("1") do |config|
+  config.vm.boot_mode = :gui
+end
+
+
 VAGRANTFILE_API_VERSION = "2"
 Vagrant::Config.run do |config|
   # Base box to build off, and download URL for when it doesn't exist on the user's system already
@@ -16,7 +21,7 @@ Vagrant::Config.run do |config|
   #config.vm.box_url = "http://vmimages.torchbox.com/django-base-v2.1.box"  # Torchbox-internal URL to django-base.box
   
   # Boot with a GUI so you can see the screen. (Default is headless)
-  # config.vm.boot_mode = :gui
+  #config.vm.boot_mode = :gui
   
   # Assign this VM to a host only network IP, allowing you to access it
   # via the IP.

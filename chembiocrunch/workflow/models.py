@@ -47,10 +47,17 @@ class Workflow(TimeStampedModel):
 
         
         
-    def validate_columns(self, revision_type, steps_json):
-        current_data_revision = self.get_latest_data_revision(self)
+    def validate_columns(self, steps_json):
+        current_data_revision = self.get_latest_data_revision()
+        df = current_data_revision.get_data()
+        if not df.empty:
+            new_workflow_revision = get_model("workflow", "WorkflowDataMappingRevision").objects.create(workflow=self, revision_type=VALIDATE_COLUMNS, steps_json=json.dumps(steps_json))
+            df = dataframe_handler.change_all_columns(df, steps_json)
+            df.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w', format="table")
+            print new_workflow_revision.id
 
-        new_workflow_revision = get_model("workflow", "WorkflowDataMappingRevision").objects.create(workflow=self, revision_type=revision_type, steps_json=steps_json)
+
+
 
     def get_data_mapping_formset_data(self):
         rev = self.get_latest_data_revision()
