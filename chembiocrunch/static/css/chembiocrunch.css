@@ -25,4 +25,8 @@ fieldset {
 .form-group {
 	margin: 0 10px;
 }
+.form-horizontal .control-label {
+	font-size:1.4em;
+	margin-bottom: 10px;
+}
 
