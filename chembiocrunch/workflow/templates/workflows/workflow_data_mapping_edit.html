@@ -3,12 +3,6 @@
 {% block action_title %}
 Please check that we have imported right number and correct any errors.
 {% endblock action_title %}
-{% block content %}
-{% crispy formset helper %}
-
-
-{% endblock content %}
-
 {% block help_text %}
 
 <p>
@@ -22,3 +16,38 @@ Descriptions and units are optional but can be displayed on graphs to make data 
 </p>
 
 {% endblock help_text %}
+
+{% block content %}
+{% crispy formset helper %}
+
+{{ graph }}
+<div id="graph_holder"></div>
+<script type="text/javascript">
+var graph = '{{graph}}';
+var y_axis = '{{y_axis}}';
+var x_axis = '{{x_axis}}';
+
+
+
+
+    // $.ajax({
+    //     url: "/",
+    //     type: "post",
+    //     data: {"graph": graph, "y_axis": y_axis, "x_axis" :x_axis},
+    //     success: function(){
+    //         alert("success");
+    //         $("#result").html('Submitted successfully');
+    //     },
+    //     error:function(){
+    //         alert("failure");
+    //         $("#result").html('There is error while submit');
+    //     }
+    // });
+
+</script>
+{% endblock content %}
+
+
+
+
+

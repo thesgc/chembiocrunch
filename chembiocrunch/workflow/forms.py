@@ -134,11 +134,21 @@ class ResetButton(Reset):
     field_classes = 'btn btn-danger'
 
 class BaseDataMappingFormset(BaseFormSet):
+    def get_column_name_from_boolean(self, boolean_field_name):
+        for form in self:
+            if form.cleaned_data.get(boolean_field_name, None):
+                return form.cleaned_data.get("name", None)
+
+
     def clean(self):
         names = [form.cleaned_data["name"] for form in self]
         print names
         if len(names) > len(list(set(names))):
             raise forms.ValidationError('The name field must be unique across the fields')
+
+        if not self.get_column_name_from_boolean("use_as_x_axis") or not self.get_column_name_from_boolean("use_as_y_axis"):
+            raise forms.ValidationError('You need to select an x and y axis in order to plot data')
+
 
     # def clean(self):
     #     for form in self:
