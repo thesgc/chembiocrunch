@@ -3,6 +3,16 @@
 {% block action_title %}
 To get started upload a data file to your private profile
 {% endblock action_title %}
+{% block help_text %}
+<p>
+The file should be in CSV format (ideally raw from your machine).
+</p>
+<p>
+Column names need to be in the first row. Data will only be imported up to the first empty row.</p>
+<p>
+Great file names describe the experiment, include the date and are unique.
+</p>
+{% endblock help_text %}
 {% block content %}
    
 
@@ -15,13 +25,3 @@ To get started upload a data file to your private profile
 
 {% endblock content %}
 
-{% block help_text %}
-<p>
-The file should be in CSV format (ideally raw from your machine).
-</p>
-<p>
-Column names need to be in the first row. Data will only be imported up to the first empty row.</p>
-<p>
-Great file names describe the experiment, include the date and are unique.
-</p>
-{% endblock help_text %}
