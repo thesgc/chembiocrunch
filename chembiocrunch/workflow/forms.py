@@ -13,32 +13,7 @@ import floppyforms as forms
 
 
 
-import numpy as np
-import pandas as pd
-import seaborn as sns
-from scipy import stats
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
-
-
-
-
-
-
-
-
-
-
-
-
-GRAPH_MAPPINGS = {
-    "bar" : {"name": "Bar Graph", "function" : sns.barplot},
-    "scatter" : {"name": "Scatter Graph", "function" : plt.scatter},
-    "hist" : {"name": "Histogram", "function" : plt.hist},
-    "boxplot" : {"name": "Boxplot", "function" : sns.boxplot},
-}
 
 class Slider(forms.RangeInput):
     min = 0.2
@@ -186,18 +161,33 @@ class BaseDataMappingFormset(BaseFormSet):
 
 
 
+class StringFieldFilterForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        column_data = kwargs.pop('column_data')
+        super(StringFieldFilterForm, self).__init__(*args, **kwargs)
+        self.fields["filter_by"] = forms.MultipleChoiceField(        
+            choices = column_data["choices"],
+            widget = forms.CheckboxSelectMultiple,
+        )
 
 
-class PlotForm(forms.Form):
+class NumericFieldFilterForm(forms.Form):
+    pass
+
+
+
+
+
+class VisualisationForm(forms.Form):
     PUBLICATION_TYPE_CHOICES = (("paper","Paper"),
                                 ("talk", "Talk"),
                                 ("notebook", "Notebook"),
                                 ("poster", "Poster"))
-    graph_title = forms.ChoiceField( choices=[], required=False)
-    category_or_x_axis = forms.ChoiceField( choices=[])
-    measurement_or_y_axis = forms.ChoiceField( choices=[])
-    split_y_axis_by = forms.ChoiceField(choices=[])
-    split_x_axis_by = forms.ChoiceField( choices=[])
+    visualisation_title = forms.CharField(max_length=50)
+    #x_axis = forms.ChoiceField( choices=[])
+    #y_axis = forms.ChoiceField( choices=[])
+    #split_y_axis_by = forms.ChoiceField(choices=[])
+    #split_x_axis_by = forms.ChoiceField( choices=[])
     height = forms.FloatField(widget=Slider)
     aspect_ratio = forms.FloatField(widget=Slider)
     publication_type = forms.ChoiceField(choices=PUBLICATION_TYPE_CHOICES)
@@ -214,25 +204,28 @@ class PlotForm(forms.Form):
 
 
     def __init__(self, *args, **kwargs):
+        column_data = kwargs.pop('column_data')
+        super(VisualisationForm, self).__init__(*args, **kwargs)
+        # self.fields["x_axis"] = forms.ChoiceField(choices=column_data["names"])
+        # self.fields["y_axis"] = forms.ChoiceField(choices= column_data["names"])
+        # self.fields["split_x_axis_by"] = forms.ChoiceField( choices= column_data["names"])
+        # self.fields["split_y_axis_by"] = forms.ChoiceField( choices= column_data["names"])
         self.helper = FormHelper()
-        self.helper.form_tag = True
+        self.helper.form_tag = False
         self.helper.form_class = 'form-horizontal'
         self.helper.add_input(Submit('save', 'Submit'))
         self.helper.layout = Layout(
-            Fieldset( '',
-                'graph_title', 
-                'category_or_x_axis', 
-                'measurement_or_y_axis',
-                'split_y_axis_by',
-                'split_x_axis_by',
+            Fieldset( 'Customise Visualisation',
+                'visualisation_title', 
                 'height',
                 'aspect_ratio',
                 'error_bars',
+                'publication_type',
          )
         )
         
         self.request = kwargs.pop('request', None)
-        return super(PlotForm, self).__init__(*args, **kwargs)
+        #return self
 
 
 

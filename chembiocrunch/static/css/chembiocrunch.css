@@ -60,6 +60,7 @@ fieldset {
 	list-style: none;
 }
 .sidebar-nav {
+
 	float:right;
 	min-height:100px;
 	background-color: blue;
