@@ -38,10 +38,10 @@ class WorkflowView( LoginRequiredMixin):
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
         context = super(WorkflowView, self).get_context_data(**kwargs)
-        context['revisions'] = {"upload" :"not-done",
-                                "validate" :"not-done",
-                                "visualise": "not-done",
-                                "cleanse" : "not-done"}
+        context['revisions'] = [["upload" ,"not-done"],
+                                ["validate" ,"not-done"],
+                                ["visualise", "not-done"],
+                                ["cleanse" , "not-done"]]
         return context
 
 
@@ -98,7 +98,7 @@ class WorkflowCreateView(WorkflowView, CreateView ):
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
         context = super(WorkflowCreateView, self).get_context_data(**kwargs)
-        context['revisions']["upload"] = "in-progress"
+        context['revisions'][0][1] = "in-progress"
         return context
 
 
@@ -150,11 +150,11 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
         visualisations = get_model("workflow","visualisation").objects.by_workflow(self.object)
         context["graphs"] = visualisations
         if visualisations.count() > 0:
-            context['revisions']["visualise"] = "in-progress"
-            context['revisions']["validate"] = "done"
+            context['revisions'][1][1] = "in-progress"
+            context['revisions'][2][1] = "done"
         else:
-            context['revisions']["validate"] = "in-progress"
-        context['revisions']["upload"] = "done"
+            context['revisions'][1][1] = "in-progress"
+        context['revisions'][2][1] = "done"
         return context
 
     def post(self, request, *args, **kwargs):
