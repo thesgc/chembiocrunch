@@ -16,6 +16,7 @@
 	border-left-color: #002147; 
 	border-width: 20px; 
 	margin-top: -20px; 
+	z-index:100;
 }
 fieldset {
 	margin: 0 2px !important;
@@ -74,4 +75,8 @@ fieldset {
 .arrow-box.done {
 	/* same colour as bootstrap success */
 	border-left-color: mediumseagreen;
+}
+.arrow-box.validate, .arrow-box.visualise, .arrow-box.cleanse {
+	margin-left:-30px;
+
 }
