@@ -54,16 +54,8 @@ class WorkflowListView(WorkflowView, ListView):
         context = super(WorkflowListView, self).get_context_data(**kwargs)
         # Add in a QuerySet of all the books
 
-        
-        if context['object_list'].count() <= 11:
-            context["first_eleven"] = list(context['object_list'])
+        context["object_list"] = list(context['object_list'])
 
-
-        if context['object_list'].count() > 11:
-            context["first_eleven"] = context['object_list'][0:10]
-            context['object_list'] = context['object_list'][11:]
-        else:
-            context['object_list'] =[]
         return context
 
 
