@@ -23,6 +23,10 @@ from django.db.models import get_model
 from django.http import HttpResponseRedirect, HttpResponse
 
 from workflow.models import GRAPH_MAPPINGS
+from workflow.forms import PlotForm
+from seaborn import plotting_context, set_context
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+
 class WorkflowView( LoginRequiredMixin):
 
     model = get_model("workflow", "Workflow")
@@ -34,7 +38,10 @@ class WorkflowView( LoginRequiredMixin):
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
         context = super(WorkflowView, self).get_context_data(**kwargs)
-        context['revisions'] = {"upload" :"DSFDFSDF"}
+        context['revisions'] = {"upload" :"not-done",
+                                "validate" :"not-done",
+                                "visualise": "not-done",
+                                "cleanse" : "not-done"}
         return context
 
 
@@ -88,6 +95,13 @@ class WorkflowCreateView(WorkflowView, CreateView ):
 
         return form_valid
 
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super(WorkflowCreateView, self).get_context_data(**kwargs)
+        context['revisions']["upload"] = "in-progress"
+        return context
+
+
 prefix="data_mappings"
 
 
@@ -133,7 +147,14 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
         helper.add_input(ResetButton("reset", "Reset Form"))
 
         context["helper"] = helper
-        context["graphs"] = 
+        visualisations = get_model("workflow","visualisation").objects.by_workflow(self.object)
+        context["graphs"] = visualisations
+        if visualisations.count() > 0:
+            context['revisions']["visualise"] = "in-progress"
+            context['revisions']["validate"] = "done"
+        else:
+            context['revisions']["validate"] = "in-progress"
+        context['revisions']["upload"] = "done"
         return context
 
     def post(self, request, *args, **kwargs):
@@ -169,8 +190,8 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
 
 
 
-class VisualisationView(WorkflowDetailView):
-    template_name = "visualise/visualise.html"
+class VisualisationView(DetailView):
+    model = get_model("workflow", "visualisation")
 
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
@@ -182,15 +203,21 @@ class VisualisationView(WorkflowDetailView):
         context["form"] = form
         return context
 
-    def get(self, **kwargs):
-        df = get_model("workflow", "workflow").objects.get_latest_workflow_revision().get_data()
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        df = self.object.data_mapping_revision.get_data()
+
         with plotting_context( "talk" ):
 
             g = sns.FacetGrid(df, size=10, aspect=2)
-            g.map(GRAPH_MAPPINGS.get(self.GET.get("graph")), self.GET.get("x_axis"), self.GET.get("y_axis"),);
-            g.autofmt_xdate()
-            fc = FigureCanvas(g)
+            #g.map(GRAPH_MAPPINGS[self.object.graph_type]["function"], self.object.x_axis, self.object.y_axis);
+            g.map(GRAPH_MAPPINGS["bar"]["function"], self.object.x_axis, self.object.y_axis)
+            plt.plot()
+            fc = FigureCanvas(plt.figure(1))
             response = HttpResponse(content_type='image/png')
-            canvas.print_png(response)
+            fc.print_png(response)
             return response
+
+
+
 

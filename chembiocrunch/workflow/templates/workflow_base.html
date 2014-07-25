@@ -3,12 +3,18 @@
 
 
         <div class="row">
+            {% for key, value in revisions.items %}
             <div class="col-xs-2">
                 
-            <div class="arrow_box {% if revisions.upload %}active {% endif %}" >
-                Upload
+
+
+
+
+            <div class="arrow_box {{value}}" >
+                {{ key|title }}
             </div>
             </div>
+            {% endfor %}
         </div>
 
 {% endblock breadcrumbs %}

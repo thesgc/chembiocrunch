@@ -199,6 +199,9 @@ class WorkflowDataMappingRevision(TimeStampedModel):
 
 
 
+class VisualisationManager(models.Manager):
+    def by_workflow(self, workflow):
+        return self.filter(data_mapping_revision__workflow_id=workflow.id)
 
 
 
@@ -211,6 +214,7 @@ class Visualisation(TimeStampedModel):
     y_axis = models.CharField(max_length=200)
     graph_type = models.CharField(max_length=10, choices=GRAPH_TYPE_CHOICES)
     config_json = models.TextField(default="[]")
+    objects = VisualisationManager()
 
 
 
