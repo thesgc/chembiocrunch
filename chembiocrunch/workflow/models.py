@@ -7,6 +7,28 @@ from django.db.models import get_model
 from django.template.defaultfilters import slugify
 import json
 
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from scipy import stats
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+
+
+
+
+
+GRAPH_MAPPINGS = {
+    "bar" : {"name": "Bar Graph", "function" : sns.barplot},
+    "scatter" : {"name": "Scatter Graph", "function" : plt.scatter},
+    "hist" : {"name": "Histogram", "function" : plt.hist},
+    "boxplot" : {"name": "Boxplot", "function" : sns.boxplot},
+}
+
+
+
+
 def zero_pad_object_id(id):
     return ('%d' % id).zfill(11)
 
@@ -69,7 +91,6 @@ class Workflow(TimeStampedModel):
 
 
 
-
     # def data_requires_update(self):
     #     '''
     #     method will test if the files attached to the class or the child pages have been updated since the data was last updated
@@ -85,7 +106,7 @@ class Workflow(TimeStampedModel):
 
 
     # def last_data_revision(self):
-    #     revisions = WorkflowDataMappingRevision.objects.filter(page_id=self.id).order_by("-modified")
+    #     revisions = WorkflowDataMappingRevision.objects.fbarilter(page_id=self.id).order_by("-modified")
     #     if revisions.count() > 0:
     #         return revisions[0]
     #     return False
@@ -143,6 +164,7 @@ class WorkflowDataMappingRevision(TimeStampedModel):
     steps_json = models.TextField(default="[]")
     revision_type = models.CharField(max_length=5)
 
+
     objects = WorkflowDataMappingRevisionManager()
     
     def get_store(self):
@@ -172,6 +194,26 @@ class WorkflowDataMappingRevision(TimeStampedModel):
             return read_hdf(filename,self.get_store_key(),)
         else:
             return read_hdf(self.get_store_filename("data"),self.get_store_key(),where=where)
+
+
+
+
+
+
+
+
+
+class Visualisation(TimeStampedModel):
+    GRAPH_TYPE_CHOICES = [(key, value["name"]) for key, value in GRAPH_MAPPINGS.iteritems()]
+
+    data_mapping_revision = models.ForeignKey('WorkflowDataMappingRevision', related_name="data_revisions")
+    x_axis = models.CharField(max_length=200)
+    y_axis = models.CharField(max_length=200)
+    graph_type = models.CharField(max_length=10, choices=GRAPH_TYPE_CHOICES)
+    config_json = models.TextField(default="[]")
+
+
+
 
 
 # class WorkflowDataColumnsRevision(TimeStampedModel):

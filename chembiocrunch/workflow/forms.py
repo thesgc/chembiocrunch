@@ -11,6 +11,35 @@ from workflow.backends.dataframe_handler import change_column_type
 import floppyforms as forms
 
 
+
+
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from scipy import stats
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+
+
+
+
+
+
+
+
+
+
+
+
+
+GRAPH_MAPPINGS = {
+    "bar" : {"name": "Bar Graph", "function" : sns.barplot},
+    "scatter" : {"name": "Scatter Graph", "function" : plt.scatter},
+    "hist" : {"name": "Histogram", "function" : plt.hist},
+    "boxplot" : {"name": "Boxplot", "function" : sns.boxplot},
+}
+
 class Slider(forms.RangeInput):
     min = 0.2
     max = 5

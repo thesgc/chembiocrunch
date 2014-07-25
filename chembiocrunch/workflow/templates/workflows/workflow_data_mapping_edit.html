@@ -4,24 +4,27 @@
 Please check that we have imported right number and correct any errors.
 {% endblock action_title %}
 {% block help_text %}
-
-<p>
+<ul>
+<li>
 Data fields are read in the format that they appear in the CSV, date support is coming soon.
-</p>
-<p>
+</li>
+<li>
 Hiding a column takes it away from view in the analysis process.
-</p>
-<p>
+</li>
+<li>
 Descriptions and units are optional but can be displayed on graphs to make data more comprehensible.
-</p>
-
+</li>
+</ul>
 {% endblock help_text %}
 
 {% block content %}
 {% crispy formset helper %}
 
-{{ graph }}
+{% if graph %}
 <div id="graph_holder"></div>
+      <div class="col-xs-3 sidebar-nav">
+cxvbxcbcvbcvbcv
+        </div>
 <script type="text/javascript">
 var graph = '{{graph}}';
 var y_axis = '{{y_axis}}';
@@ -30,21 +33,22 @@ var x_axis = '{{x_axis}}';
 
 
 
-    // $.ajax({
-    //     url: "/",
-    //     type: "post",
-    //     data: {"graph": graph, "y_axis": y_axis, "x_axis" :x_axis},
-    //     success: function(){
-    //         alert("success");
-    //         $("#result").html('Submitted successfully');
-    //     },
-    //     error:function(){
-    //         alert("failure");
-    //         $("#result").html('There is error while submit');
-    //     }
-    // });
+    $.ajax({
+        url: "{% url 'visualisation_view' object.id %}",
+        type: "get",
+        data: {"graph": graph, "y_axis": y_axis, "x_axis" :x_axis},
+        success: function(){
+            alert("success");
+            $("#result").html('Submitted successfully');
+        },
+        error:function(){
+            alert("failure");
+            $("#result").html('There is error while submit');
+        }
+    });
 
 </script>
+{% endif %}
 {% endblock content %}
 
 

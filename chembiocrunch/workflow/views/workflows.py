@@ -8,15 +8,21 @@ from django.db.models import get_model
 from workflow.forms import CreateWorkflowForm, DataMappingForm, DataMappingFormSetHelper, DataMappingFormSet, ResetButton
 from django.core.urlresolvers import reverse
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, Fieldset, Reset
-from django.http import HttpResponseRedirect
-import numpy as np
-import pandas as pd
+from django.http import HttpResponseRedirect, HttpResponse
 import seaborn as sns
-from scipy import stats
-import matplotlib as mpl
 import matplotlib.pyplot as plt
-from workflow.forms import PlotForm
 
+from django.shortcuts import render, redirect
+from django.views.generic import View,  DetailView, ListView, CreateView
+from django.views.generic.detail import SingleObjectMixin
+
+from braces.views import LoginRequiredMixin
+
+from django.db.models import get_model
+
+from django.http import HttpResponseRedirect, HttpResponse
+
+from workflow.models import GRAPH_MAPPINGS
 class WorkflowView( LoginRequiredMixin):
 
     model = get_model("workflow", "Workflow")
@@ -82,7 +88,7 @@ class WorkflowCreateView(WorkflowView, CreateView ):
 
         return form_valid
 
-
+prefix="data_mappings"
 
 
 
@@ -116,7 +122,7 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
         context["use_as_x_axis"] = ""
         context["use_as_y_axis"] = ""
         if not "formset" in kwargs:
-            context["formset"] = DataMappingFormSet(initial=self.object.get_data_mapping_formset_data())
+            context["formset"] = DataMappingFormSet(initial=self.object.get_data_mapping_formset_data(), prefix="data_mappings")
         context.update(kwargs)
         helper = DataMappingFormSetHelper()
         helper.template = 'table_inline.html'
@@ -127,11 +133,13 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
         helper.add_input(ResetButton("reset", "Reset Form"))
 
         context["helper"] = helper
+        context["graphs"] = 
         return context
 
     def post(self, request, *args, **kwargs):
+        '''This view will always add a new graph, graph updates are handled by ajax'''
         self.object = self.get_object()
-        formset = DataMappingFormSet(request.POST)
+        formset = DataMappingFormSet(request.POST, prefix="data_mappings")
         if formset.is_valid():
             data_changed = False
             for form in formset:
@@ -139,20 +147,50 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
                     data_changed = True
             if data_changed == True:
                 steps_json = [{"cleaned_data" : form.cleaned_data, "changed_data" : form.changed_data }  for form in formset]
-                new_workflow_revision = self.object.validate_columns(steps_json)
-            graph = None
+                workflow_revision = self.object.validate_columns(steps_json)
+            else:
+                workflow_revision = self.object.get_latest_data_revision()
+
             for mapping in GRAPH_MAPPINGS:
                 if mapping in formset.data:
-                    graph = mapping
-            return self.render_to_response(self.get_context_data(formset=formset, 
-                                                                    graph=graph, 
+                    new_graph = get_model("workflow","Visualisation").objects.create(
+                                                                    graph_type=mapping, 
                                                                     x_axis=formset.get_column_name_from_boolean("use_as_x_axis"),
-                                                                    y_axis=formset.get_column_name_from_boolean("use_as_y_axis")))
+                                                                    y_axis=formset.get_column_name_from_boolean("use_as_y_axis"), 
+                                                                    data_mapping_revision=workflow_revision,
+                                                                    )
+
+
+
+            return self.render_to_response(self.get_context_data(formset=formset,))
         return self.render_to_response(self.get_context_data(formset=formset))
 
-GRAPH_MAPPINGS = {
-    "bar" : {"name": "Bar Graph", "function" : sns.barplot},
-    "scatter" : {"name": "Scatter Graph", "function" : plt.scatter},
-    "hist" : {"name": "Histogram", "function" : plt.hist},
-    "boxplot" : {"name": "Boxplot", "function" : sns.boxplot},
-}
+
+
+
+
+class VisualisationView(WorkflowDetailView):
+    template_name = "visualise/visualise.html"
+
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super(VisualisationView, self).get_context_data(**kwargs)
+        if not "form" in kwargs:
+            form = PlotForm()
+        else:
+            form= kwargs.get("form")
+        context["form"] = form
+        return context
+
+    def get(self, **kwargs):
+        df = get_model("workflow", "workflow").objects.get_latest_workflow_revision().get_data()
+        with plotting_context( "talk" ):
+
+            g = sns.FacetGrid(df, size=10, aspect=2)
+            g.map(GRAPH_MAPPINGS.get(self.GET.get("graph")), self.GET.get("x_axis"), self.GET.get("y_axis"),);
+            g.autofmt_xdate()
+            fc = FigureCanvas(g)
+            response = HttpResponse(content_type='image/png')
+            canvas.print_png(response)
+            return response
+
