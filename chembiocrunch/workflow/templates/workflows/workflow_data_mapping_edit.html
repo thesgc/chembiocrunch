@@ -20,34 +20,12 @@ Descriptions and units are optional but can be displayed on graphs to make data 
 {% block content %}
 {% crispy formset helper %}
 
-{% if graphs %}
-<div id="graph_holder"></div>
-      <div class="col-xs-3 sidebar-nav">
-cxvbxcbcvbcvbcv
-        </div>
-<script type="text/javascript">
-var graph = '{{graph}}';
-var y_axis = '{{y_axis}}';
-var x_axis = '{{x_axis}}';
+{% if visualisations %}
+{% for vis in visualisations %}
 
+{% include "visualise/visualise.html" with visualisation=vis %}
+{% endfor %}
 
-
-
-    $.ajax({
-        url: "{% url 'visualisation_view' object.id %}",
-        type: "get",
-        data: {"graph": graph, "y_axis": y_axis, "x_axis" :x_axis},
-        success: function(){
-            alert("success");
-            $("#result").html('Submitted successfully');
-        },
-        error:function(){
-            alert("failure");
-            $("#result").html('There is error while submit');
-        }
-    });
-
-</script>
 {% endif %}
 {% endblock content %}
 

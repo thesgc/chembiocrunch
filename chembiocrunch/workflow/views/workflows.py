@@ -23,7 +23,7 @@ from django.db.models import get_model
 from django.http import HttpResponseRedirect, HttpResponse
 
 from workflow.models import GRAPH_MAPPINGS
-from workflow.forms import PlotForm
+from workflow.forms import VisualisationForm
 from seaborn import plotting_context, set_context
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
@@ -121,13 +121,16 @@ class WorkflowOperationChooser(WorkflowDetailView):
         pass
 
 
+def vis_label_filter_prexix(vis_id):
+    return "vis_label_filter_%d" % vis_id
 
-
-
+def vis_option_prexix(vis_id):
+    return "vis_options_%d" % vis_id
 
 class WorkflowDataMappingEditView(WorkflowDetailView):
     '''Allows the user to edit the data mappings created automatically for the data they import'''
     template_name = "workflows/workflow_data_mapping_edit.html"
+
 
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
@@ -148,7 +151,16 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
 
         context["helper"] = helper
         visualisations = get_model("workflow","visualisation").objects.by_workflow(self.object)
-        context["graphs"] = visualisations
+        vis_dicts = []
+        for vis in visualisations:
+            initial_data = vis.get_initial_form_data()
+            column_data = vis.get_column_form_data()
+            print column_data
+            vis_dict = vis.__dict__
+            vis_dict["vis_option_form"] = VisualisationForm(initial=initial_data, prefix=vis_option_prexix(vis.id), column_data=column_data)
+            vis_dicts.append(vis_dict)
+        context["visualisations"] = vis_dicts
+
         if visualisations.count() > 0:
             context['revisions'][1][1] = "in-progress"
             context['revisions'][2][1] = "done"
@@ -174,8 +186,8 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
 
             for mapping in GRAPH_MAPPINGS:
                 if mapping in formset.data:
-                    new_graph = get_model("workflow","Visualisation").objects.create(
-                                                                    graph_type=mapping, 
+                    new_visualisation = get_model("workflow","Visualisation").objects.create(
+                                                                    visualisation_type=mapping, 
                                                                     x_axis=formset.get_column_name_from_boolean("use_as_x_axis"),
                                                                     y_axis=formset.get_column_name_from_boolean("use_as_y_axis"), 
                                                                     data_mapping_revision=workflow_revision,
@@ -193,15 +205,15 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
 class VisualisationView(DetailView):
     model = get_model("workflow", "visualisation")
 
-    def get_context_data(self, **kwargs):
-        # Call the base implementation first to get a context
-        context = super(VisualisationView, self).get_context_data(**kwargs)
-        if not "form" in kwargs:
-            form = PlotForm()
-        else:
-            form= kwargs.get("form")
-        context["form"] = form
-        return context
+    # def get_context_data(self, **kwargs):
+    #     # Call the base implementation first to get a context
+    #     context = super(VisualisationView, self).get_context_data(**kwargs)
+    #     if not "form" in kwargs:
+    #         form = PlotForm()
+    #     else:
+    #         form= kwargs.get("form")
+    #     context["form"] = form
+    #     return context
 
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()

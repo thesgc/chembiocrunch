@@ -201,22 +201,37 @@ class WorkflowDataMappingRevision(TimeStampedModel):
 
 class VisualisationManager(models.Manager):
     def by_workflow(self, workflow):
-        return self.filter(data_mapping_revision__workflow_id=workflow.id)
+        return self.filter(data_mapping_revision__workflow_id=workflow.id).order_by("-modified")
 
 
 
 
 class Visualisation(TimeStampedModel):
     GRAPH_TYPE_CHOICES = [(key, value["name"]) for key, value in GRAPH_MAPPINGS.iteritems()]
-
     data_mapping_revision = models.ForeignKey('WorkflowDataMappingRevision', related_name="data_revisions")
     x_axis = models.CharField(max_length=200)
     y_axis = models.CharField(max_length=200)
-    graph_type = models.CharField(max_length=10, choices=GRAPH_TYPE_CHOICES)
+    visualisation_type = models.CharField(max_length=10, choices=GRAPH_TYPE_CHOICES)
     config_json = models.TextField(default="[]")
     objects = VisualisationManager()
 
 
+    def get_column_form_data(self):
+        df = self.data_mapping_revision.get_data()
+        fields = df.columns.to_series().groupby(df.dtypes).groups
+        fields_dict = {k.name: v for k, v in fields.items()}
+        string_field_uniques = []
+        for field in fields_dict["object"]:
+            s = df[field].value_counts()
+            string_field_uniques.append({"name": field, "choices" : [(k,k) for k,v in s.iterkv()]})
+        numeric_field_max_and_min = []
+        for field in fields_dict["int64"] + fields_dict["float64"]:
+            numeric_field_max_and_min.append({"name" : field, "max" : s.max(), "min" : s.min()})
+
+        return {"string_field_uniques" : string_field_uniques,"numeric_field_max_and_min" :numeric_field_max_and_min , "names" : [(name,name) for name in df.dtypes.keys()]}
+
+    def get_initial_form_data(self):
+        return { "x_axis" : self.x_axis, "y_axis":self.y_axis }
 
 
 

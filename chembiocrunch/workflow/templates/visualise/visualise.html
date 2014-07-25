@@ -1,0 +1,25 @@
+{% load crispy_forms_tags %}
+
+<div class="row">
+<div class="col-xs-9" id="visualisation_holder_{{ visualisation.id }}"></div>
+<div class="col-xs-3 sidebar-nav">
+{% crispy visualisation.vis_option_form visualisation.vis_option_form.helper %}
+</div>
+<script type="text/javascript">
+var div_to_replace = "visualisation_holder_{{ visualisation.id }}";
+    $.ajax({
+        url: "{% url 'visualisation_view' object.id %}",
+        type: "get",
+        data: {"visualisation": visualisation, "y_axis": y_axis, "x_axis" :x_axis},
+        success: function(){
+            alert("success");
+            $("#result").html('Submitted successfully');
+        },
+        error:function(){
+            alert("failure");
+            $("#result").html('There is error while submit');
+        }
+    });
+
+</script>
+</div>
