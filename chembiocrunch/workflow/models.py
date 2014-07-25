@@ -59,7 +59,7 @@ class Workflow(TimeStampedModel):
     def create_first_data_revision(self):
 
         df = dataframe_handler.get_data_frame(self.uploaded_file.file)
-        new_workflow_revision = get_model("workflow", "WorkflowDataMappingRevision").objects.create(workflow=self, revision_type=UPLOAD, steps_json=json.dumps({"count" : df.count()[0]}))
+        new_workflow_revision = get_model("workflow", "WorkflowDataMappingRevision").objects.create(workflow=self, revision_type=UPLOAD, steps_json=json.dumps({"count" : int(df.count()[0])}))
         
         # types_frame = DataFrame([[str(dtype) for dtype in df.dtypes],], columns=df.dtypes.keys())
 
