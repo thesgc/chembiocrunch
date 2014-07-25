@@ -38,12 +38,26 @@ fieldset {
 .infobox {
 	min-height: 20px;
 	padding: 19px;
-    background-color: #efe;
+    background-color: rgb(188,210,195);
 	border: 1px solid #e3e3e3;
 	border-radius: 4px;
 	-webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
 	box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
 	margin-bottom:20px;
+}
+.errorbox {
+	min-height: 20px;
+	padding: 19px;
+    /*background-color: rgb(135,36,52);*/ /* now using a bootstrap class */
+    color:white;
+	border: 1px solid #e3e3e3;
+	border-radius: 4px;
+	-webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
+	box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
+	margin-bottom:20px;
+}
+.errorbox ul {
+	list-style: none;
 }
 .sidebar-nav {
 	float:right;
@@ -54,27 +68,26 @@ fieldset {
 /* Breadcrumb progress indicator CSS */
 .arrow-box.not-done{
 	/* same colour as bootstrap alert/error buttons */
-	background-color: tomato;
+	background-color: #d9534f;
 }
 .arrow-box.not-done:after {
-	border-left-color: tomato;
+	border-left-color: #d9534f;
 }
 .arrow-box.in-progress{
 	/* amber colour */
-	background-color: gold;
-	color:#444;
+	background-color: #ec971f;
 }
 .arrow-box.in-progress:after{
 	/* amber colour */
-	border-left-color: gold;
+	border-left-color: #ec971f;
 }
 .arrow-box.done {
 	/* same colour as bootstrap success */
-	background-color: mediumseagreen;
+	background-color: #449d44;
 }
-.arrow-box.done {
+.arrow-box.done:after {
 	/* same colour as bootstrap success */
-	border-left-color: mediumseagreen;
+	border-left-color: #449d44;
 }
 .arrow-box.validate, .arrow-box.visualise, .arrow-box.cleanse {
 	margin-left:-30px;
