@@ -66,7 +66,9 @@
           <h2>{% block page_subtitle %}A simple tool to manipulate and visualise assay data{% endblock page_subtitle %}</h2>     
           
         </div><!-- /col-lg-6 -->
-
+        <div class="container">
+      {% block breadcrumbs %}{% endblock breadcrumbs %}
+      </div>
         
       </div><!-- /row -->
     </div><!-- /container -->
@@ -74,9 +76,7 @@
 
     
 
-      <div class="container">
-      {% block breadcrumbs %}{% endblock breadcrumbs %}
-      </div>
+
       <div class="container">
         <h2>
         {% block action_title %}
