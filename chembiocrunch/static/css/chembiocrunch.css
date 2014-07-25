@@ -1,9 +1,9 @@
 /*! project specific CSS goes here. */
-.arrow_box { position: relative; background: #002147; min-height:40px; color:white;
+.arrow-box { position: relative; background-color: #002147; min-height:40px; color:white;
     text-align:center;
     padding-top:10px;
 } 
-.arrow_box:after { 
+.arrow-box:after { 
 	left: 100%; 
 	top: 50%; 
 	border: solid transparent; 
@@ -16,6 +16,7 @@
 	border-left-color: #002147; 
 	border-width: 20px; 
 	margin-top: -20px; 
+	z-index:100;
 }
 fieldset {
 	margin: 0 2px !important;
@@ -37,13 +38,59 @@ fieldset {
 .infobox {
 	min-height: 20px;
 	padding: 19px;
-    background-color: #efe;
+    background-color: rgb(188,210,195);
 	border: 1px solid #e3e3e3;
 	border-radius: 4px;
 	-webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
 	box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
+	margin-bottom:20px;
+}
+.errorbox {
+	min-height: 20px;
+	padding: 19px;
+    /*background-color: rgb(135,36,52);*/ /* now using a bootstrap class */
+    color:white;
+	border: 1px solid #e3e3e3;
+	border-radius: 4px;
+	-webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
+	box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
+	margin-bottom:20px;
+}
+.errorbox ul {
+	list-style: none;
 }
 .sidebar-nav {
-float:right;
-min-height:100px;
+
+	float:right;
+	min-height:100px;
+	background-color: blue;
+}
+
+/* Breadcrumb progress indicator CSS */
+.arrow-box.not-done{
+	/* same colour as bootstrap alert/error buttons */
+	background-color: #d9534f;
+}
+.arrow-box.not-done:after {
+	border-left-color: #d9534f;
+}
+.arrow-box.in-progress{
+	/* amber colour */
+	background-color: #ec971f;
+}
+.arrow-box.in-progress:after{
+	/* amber colour */
+	border-left-color: #ec971f;
+}
+.arrow-box.done {
+	/* same colour as bootstrap success */
+	background-color: #449d44;
+}
+.arrow-box.done:after {
+	/* same colour as bootstrap success */
+	border-left-color: #449d44;
+}
+.arrow-box.validate, .arrow-box.visualise, .arrow-box.cleanse {
+	margin-left:-30px;
+
 }

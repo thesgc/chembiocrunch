@@ -30,23 +30,26 @@
 
 {% block content %}  
 
-<div class="container">
    <div class="row">
     
 
     {% for workflow in first_eleven %}
+        <a href="{{ workflow.id }}/workflow_data_mappings_edit">
         <div class ="btn col-lg-2 col-md-2 col-sd-4 col-xs-6 well">{{ workflow.title }}</div> <!-- end workflow holder -->
+        </a>
     {% endfor %}
     </div><!-- new row every 12 columns -->
     {% if object_list %}
     <div class='row'>
     {% for workflow in object_list %}
         {% cycle "" "" "" "" "" "" "" "" "" "" "" "" "</div><!-- new row every 12 columns --><div class='row'>" %}
+        <a href="{{ workflow.id }}/workflow_data_mappings_edit">
         <div class ="btn col-lg-2 col-md-2 col-sd-4 col-xs-6 well">{{ workflow.title }}</div> <!-- end workflow holder -->
+        </a>
     {% endfor %}
     </div> <!-- end rows-->
     {% endif %}
-</div>
+
     
 {% endblock content %}
 
