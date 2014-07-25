@@ -1,9 +1,9 @@
 /*! project specific CSS goes here. */
-.arrow_box { position: relative; background: #002147; min-height:40px; color:white;
+.arrow-box { position: relative; background-color: #002147; min-height:40px; color:white;
     text-align:center;
     padding-top:10px;
 } 
-.arrow_box:after { 
+.arrow-box:after { 
 	left: 100%; 
 	top: 50%; 
 	border: solid transparent; 
@@ -45,7 +45,33 @@ fieldset {
 	margin-bottom:20px;
 }
 .sidebar-nav {
-float:right;
-min-height:100px;
-background-color: blue;
+	float:right;
+	min-height:100px;
+	background-color: blue;
+}
+
+/* Breadcrumb progress indicator CSS */
+.arrow-box.not-done{
+	/* same colour as bootstrap alert/error buttons */
+	background-color: tomato;
+}
+.arrow-box.not-done:after {
+	border-left-color: tomato;
+}
+.arrow-box.in-progress{
+	/* amber colour */
+	background-color: gold;
+	color:#444;
+}
+.arrow-box.in-progress:after{
+	/* amber colour */
+	border-left-color: gold;
+}
+.arrow-box.done {
+	/* same colour as bootstrap success */
+	background-color: mediumseagreen;
+}
+.arrow-box.done {
+	/* same colour as bootstrap success */
+	border-left-color: mediumseagreen;
 }
