@@ -213,7 +213,8 @@ class VisualisationForm(forms.Form):
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.form_class = 'form-horizontal'
-        self.helper.add_input(Submit('save', 'Submit'))
+        self.helper.add_input(Button('save', 'Submit'))
+        self.helper.add_input(Button('export', 'Export to PPT'))
         self.helper.layout = Layout(
             Fieldset( 'Customise Visualisation',
                 'visualisation_title', 

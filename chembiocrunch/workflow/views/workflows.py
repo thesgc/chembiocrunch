@@ -5,27 +5,19 @@ from django.views.generic.detail import SingleObjectMixin
 from braces.views import LoginRequiredMixin
 
 from django.db.models import get_model
-from workflow.forms import CreateWorkflowForm, DataMappingForm, DataMappingFormSetHelper, DataMappingFormSet, ResetButton
+from workflow.forms import CreateWorkflowForm, DataMappingForm, DataMappingFormSetHelper, DataMappingFormSet, ResetButton, VisualisationForm
 from django.core.urlresolvers import reverse
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, Fieldset, Reset
 from django.http import HttpResponseRedirect, HttpResponse
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from django.shortcuts import render, redirect
-from django.views.generic import View,  DetailView, ListView, CreateView
-from django.views.generic.detail import SingleObjectMixin
-
-from braces.views import LoginRequiredMixin
-
-from django.db.models import get_model
-
-from django.http import HttpResponseRedirect, HttpResponse
-
 from workflow.models import GRAPH_MAPPINGS
-from workflow.forms import VisualisationForm
 from seaborn import plotting_context, set_context
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+
+from pptx import Presentation
+from pptx.util import Inches, Px
 
 class WorkflowView( LoginRequiredMixin):
 
@@ -220,6 +212,35 @@ class VisualisationView(DetailView):
             fc = FigureCanvas(plt.figure(1))
             response = HttpResponse(content_type='image/png')
             fc.print_png(response)
+            return response
+
+class VisualisationExportView(WorkflowView, DetailView,):
+    model = get_model("workflow", "visualisation")
+    
+    def get(self, request, *args, **kwargs):
+        #self.self.object = self.get_object()
+        #df = self.object.data_mapping_revision.get_data()
+        with plotting_context( "talk" ):
+
+            #g = sns.FacetGrid(df, size=10, aspect=2)
+            #g.map(GRAPH_MAPPINGS[self.object.graph_type]["function"], self.object.x_axis, self.object.y_axis);
+            #g.map(GRAPH_MAPPINGS["bar"]["function"], self.object.x_axis, self.object.y_axis)
+            #plt.plot()
+            #fc = FigureCanvas(plt.figure(1))
+
+            #from here, send this image to python-pptx
+            #img_path = 'monty-truth.png'
+
+            prs = Presentation()
+            blank_slide_layout = prs.slide_layouts[6]
+            slide = prs.slides.add_slide(blank_slide_layout)
+
+            #left = top = Inches(1)
+            #pic = slide.shapes.add_picture(fc.print_png, left, top)
+            #try serving a blank ppt
+            response = HttpResponse(prs, content_type='application/vnd.openxmlformats-officedocument.presentationml.presentation')
+            response['Content-Disposition'] = 'attachment; filename=TestPpt.pptx'
+            #fc.print_png(response)
             return response
 
 
