@@ -122,7 +122,7 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
         context["graph"] = ""
         context["use_as_x_axis"] = ""
         context["use_as_y_axis"] = ""
-        if not "formset" in kwargs:matplotlib.use('Agg')
+        if not "formset" in kwargs:
             context["formset"] = DataMappingFormSet(initial=self.object.get_data_mapping_formset_data(), prefix="data_mappings")
         context.update(kwargs)
         helper = DataMappingFormSetHelper()
