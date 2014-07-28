@@ -11,7 +11,8 @@ from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, F
 from django.http import HttpResponseRedirect, HttpResponse
 import seaborn as sns
 import matplotlib.pyplot as plt
-
+from matplotlib import use
+use("Agg")
 from workflow.models import GRAPH_MAPPINGS
 from seaborn import plotting_context, set_context
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -122,7 +123,7 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
         context["graph"] = ""
         context["use_as_x_axis"] = ""
         context["use_as_y_axis"] = ""
-        if not "formset" in kwargs:
+        if not "formset" in kwargs:matplotlib.use('Agg')
             context["formset"] = DataMappingFormSet(initial=self.object.get_data_mapping_formset_data(), prefix="data_mappings")
         context.update(kwargs)
         helper = DataMappingFormSetHelper()
@@ -176,7 +177,7 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
                                                                     y_axis=formset.get_column_name_from_boolean("use_as_y_axis"), 
                                                                     data_mapping_revision=workflow_revision,
                                                                     )
-
+matplotlib.use('Agg')
 
 
             return self.render_to_response(self.get_context_data(formset=formset,))
@@ -213,6 +214,7 @@ class VisualisationView(DetailView):
             response = HttpResponse(content_type='image/png')
             fc.print_png(response)
             return response
+
 
 class VisualisationExportView(WorkflowView, DetailView,):
     model = get_model("workflow", "visualisation")
