@@ -10,3 +10,9 @@ python-magic
 django-floppyforms
 django_shell_ipynb
 python-pptx
+
+Cython
+tables
+seaborn
+hiredis
+django-redis

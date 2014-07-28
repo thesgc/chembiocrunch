@@ -3,10 +3,9 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, Fieldset, Reset
 from django.db.models import get_model 
 import magic
-from backends.parser import get_data_frame
 from crispy_forms.bootstrap import PrependedText
 from django.forms.formsets import formset_factory, BaseFormSet
-from workflow.backends.dataframe_handler import change_column_type
+from workflow.backends.dataframe_handler import change_column_type, get_data_frame
 
 import floppyforms as forms
 
