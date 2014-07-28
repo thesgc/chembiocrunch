@@ -10,12 +10,12 @@ from django.core.urlresolvers import reverse
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, Fieldset, Reset
 from django.http import HttpResponseRedirect, HttpResponse
 import seaborn as sns
-import matplotlib.pyplot as plt
-from matplotlib import use
+
+import matplotlib
+matplotlib.use('Agg')
 
 from workflow.models import GRAPH_MAPPINGS
 from seaborn import plotting_context, set_context
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 from pptx import Presentation
 from pptx.util import Inches, Px
@@ -188,7 +188,7 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
 
 class VisualisationView(DetailView):
     model = get_model("workflow", "visualisation")
-    use("Agg")
+    
     # def get_context_data(self, **kwargs):
     #     # Call the base implementation first to get a context
     #     context = super(VisualisationView, self).get_context_data(**kwargs)
@@ -208,8 +208,8 @@ class VisualisationView(DetailView):
             g = sns.FacetGrid(df, size=10, aspect=2)
             #g.map(GRAPH_MAPPINGS[self.object.graph_type]["function"], self.object.x_axis, self.object.y_axis);
             g.map(GRAPH_MAPPINGS["bar"]["function"], self.object.x_axis, self.object.y_axis)
-            plt.plot()
-            fc = FigureCanvas(plt.figure(1))
+            matplotlib.pyplot.plot()
+            fc = matplotlib.backends.backend_agg.FigureCanvasAgg(plt.figure(1))
             response = HttpResponse(content_type='image/png')
             fc.print_png(response)
             return response
