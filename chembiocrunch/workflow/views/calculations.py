@@ -1,4 +1,3 @@
-from .workflows import WorkflowDetailView
 
 # class AverageRepeatsConfigurationCreate(WorkflowDetailView):
 #     '''Allows the user to choose what to do with their data'''
