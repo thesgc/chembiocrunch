@@ -12,7 +12,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib import use
-use("Agg")
+
 from workflow.models import GRAPH_MAPPINGS
 from seaborn import plotting_context, set_context
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -87,7 +87,6 @@ class WorkflowCreateView(WorkflowView, CreateView ):
         return context
 
 
-prefix="data_mappings"
 
 
 
@@ -177,7 +176,7 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
                                                                     y_axis=formset.get_column_name_from_boolean("use_as_y_axis"), 
                                                                     data_mapping_revision=workflow_revision,
                                                                     )
-matplotlib.use('Agg')
+
 
 
             return self.render_to_response(self.get_context_data(formset=formset,))
@@ -189,7 +188,7 @@ matplotlib.use('Agg')
 
 class VisualisationView(DetailView):
     model = get_model("workflow", "visualisation")
-
+    use("Agg")
     # def get_context_data(self, **kwargs):
     #     # Call the base implementation first to get a context
     #     context = super(VisualisationView, self).get_context_data(**kwargs)
