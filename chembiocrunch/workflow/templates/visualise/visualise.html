@@ -28,7 +28,7 @@ var div_to_replace = "visualisation_holder_{{ visualisation.id }}";
         e.preventDefault();
         $.get({
             url: "{% url 'visualisation_export' visualisation.id %}",
-            data: {"y_axis": $(".use_as_x_axis").attr(":checked").val(), "x_axis" :$(".use_as_y_axis").attr(":checked").val()}, //is the graph in the workflow object?l
+            data: {"y_axis": $(".use_as_y_axis:checked").val(), "x_axis" : $(".use_as_x_axis:checked").val()}, //is the graph in the workflow object?l
             success: function(){
                 alert("success");
                 $("#result").html('Submitted successfully');
