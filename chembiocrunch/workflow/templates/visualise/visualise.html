@@ -37,11 +37,12 @@ var div_to_replace = "visualisation_holder_{{ visualisation.id }}";
                 alert("failure");
                 $("#result").html('There is error while submit');
             }
-        })
+        });
+        return false;
 
     });
     
-    $.ajax({
+    /*$.ajax({
         url: "{% url 'visualisation_view' visualisation.id %}",
         type: "get",
         data: {},
@@ -53,7 +54,7 @@ var div_to_replace = "visualisation_holder_{{ visualisation.id }}";
             alert("failure");
             $("#result").html('There is error while submit');
         }
-    });
+    });*/
     
 
 </script>

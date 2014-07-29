@@ -221,6 +221,7 @@ class VisualisationExportView(WorkflowView, DetailView,):
     def get(self, request, *args, **kwargs):
         #self.self.object = self.get_object()
         #df = self.object.data_mapping_revision.get_data()
+        print "doing this"
         with plotting_context( "talk" ):
 
             #g = sns.FacetGrid(df, size=10, aspect=2)
