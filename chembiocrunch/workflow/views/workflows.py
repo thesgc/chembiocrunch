@@ -229,7 +229,6 @@ class VisualisationExportView(WorkflowView, DetailView,):
 
             #g = sns.FacetGrid(df, size=10, aspect=2)
             #g.map(GRAPH_MAPPINGS[self.object.graph_type]["function"], self.object.x_axis, self.object.y_axis);
->>>>>>> c4ea825b9941d72e0472ab2d8c8dc2172e244f56
             #g.map(GRAPH_MAPPINGS["bar"]["function"], self.object.x_axis, self.object.y_axis)
             fig = plt.figure(1)
             plt.plot()
