@@ -22,7 +22,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 GRAPH_MAPPINGS = {
     "bar" : {"name": "Bar Graph", "function" : sns.barplot},
     "scatter" : {"name": "Scatter Graph", "function" : plt.scatter},
-    "hist" : {"name": "Histogram", "function" : plt.hist},
+   # "hist" : {"name": "Histogram", "function" : plt.hist},
     "boxplot" : {"name": "Boxplot", "function" : sns.boxplot},
 }
 
@@ -221,11 +221,11 @@ class Visualisation(TimeStampedModel):
         fields = df.columns.to_series().groupby(df.dtypes).groups
         fields_dict = {k.name: v for k, v in fields.items()}
         string_field_uniques = []
-        for field in fields_dict["object"]:
+        for field in fields_dict.get("object",[]):
             s = df[field].value_counts()
             string_field_uniques.append({"name": field, "choices" : [(k,k) for k,v in s.iterkv()]})
         numeric_field_max_and_min = []
-        for field in fields_dict["int64"] + fields_dict["float64"]:
+        for field in fields_dict.get("int64",[]) + fields_dict.get("float64",[]):
             numeric_field_max_and_min.append({"name" : field, "max" : s.max(), "min" : s.min()})
 
         return {"string_field_uniques" : string_field_uniques,"numeric_field_max_and_min" :numeric_field_max_and_min , "names" : [(name,name) for name in df.dtypes.keys()]}

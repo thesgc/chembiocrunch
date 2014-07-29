@@ -1,59 +1,62 @@
 {% load crispy_forms_tags %}
 
 <div class="row">
-<div class="col-xs-9" id="visualisation_holder_{{ visualisation.id }}"></div>
+<div class="col-xs-9" >
+
+<img class="col-xs-9" src="{% url 'visualisation_view' visualisation.id %}"></img>
+</div>
 <div class="col-xs-3 sidebar-nav">
 {% crispy visualisation.vis_option_form visualisation.vis_option_form.helper %}
 </div>
 <script type="text/javascript">
 var div_to_replace = "visualisation_holder_{{ visualisation.id }}";
     
-    $('#button-id-save').click(function(e){
-        e.preventDefault();
-        $.get({
-            url: "{% url 'visualisation_view' visualisation.id %}",
-            data: {"visualisation": visualisation, "y_axis": y_axis, "x_axis" :x_axis},
-            success: function(){
-                alert("success");
-                $("#result").html('Submitted successfully');
-            },
-            error:function(){
-                alert("failure");
-                $("#result").html('There is error while submit');
-            }
-        })
-    });
+    // $('#button-id-save').click(function(e){
+    //     e.preventDefault();
+    //     $.get({
+    //         url: "{% url 'visualisation_view' visualisation.id %}",
+    //         data: {"visualisation": visualisation, "y_axis": y_axis, "x_axis" :x_axis},
+    //         success: function(){
+    //             alert("success");
+    //             $("#result").html('Submitted successfully');
+    //         },
+    //         error:function(){
+    //             alert("failure");
+    //             $("#result").html('There is error while submit');
+    //         }
+    //     })
+    // });
 
-    $('#button-id-export').click(function(e){
-        e.preventDefault();
-        $.get({
-            url: "{% url 'visualisation_export' visualisation.id %}",
-            data: {"y_axis": $(".use_as_x_axis").attr(":checked").val(), "x_axis" :$(".use_as_y_axis").attr(":checked").val()}, //is the graph in the workflow object?l
-            success: function(){
-                alert("success");
-                $("#result").html('Submitted successfully');
-            },
-            error:function(){
-                alert("failure");
-                $("#result").html('There is error while submit');
-            }
-        })
+    // $('#button-id-export').click(function(e){
+    //     e.preventDefault();
+    //     $.get({
+    //         url: "",
+    //         data: {"y_axis": $(".use_as_x_axis").attr(":checked").val(), "x_axis" :$(".use_as_y_axis").attr(":checked").val()}, //is the graph in the workflow object?l
+    //         success: function(){
+    //             alert("success");
+    //             $("#result").html('Submitted successfully');
+    //         },
+    //         error:function(){
+    //             alert("failure");
+    //             $("#result").html('There is error while submit');
+    //         }
+    //     })
 
-    });
+    // });
     
-    $.ajax({
-        url: "{% url 'visualisation_view' visualisation.id %}",
-        type: "get",
-        data: {},
-        success: function(){
-            alert("success");
-            $("#result").html('Submitted successfully');
-        },
-        error:function(){
-            alert("failure");
-            $("#result").html('There is error while submit');
-        }
-    });
+    // $.ajax({
+    //     url: "{% url 'visualisation_view' visualisation.id %}",
+    //     type: "get",
+    //     data: {},
+    //     success: function(data){
+    //         var elem =  document.getElementById(div_to_replace);
+    //         elem.src = "data:image/png;base64," + data;
+    //     },
+    //     error:function(){
+    //         alert("failure");
+    //         $("#result").html('There is error while submit');
+    //     }
+    // });
     
 
 </script>

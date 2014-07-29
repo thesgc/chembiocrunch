@@ -107,7 +107,7 @@ class DataMappingForm(forms.Form):
             except ValueError:
                 raise forms.ValidationError('The data in this field is not suitable for conversion to numbers')
 
-
+    
 
 
 
@@ -143,14 +143,24 @@ class BaseDataMappingFormset(BaseFormSet):
                 return form.cleaned_data.get("name", None)
 
 
+    def get_data_type(self, boolean_field_name):
+        for form in self:
+            if form.cleaned_data.get(boolean_field_name, None) == True:
+                return form.cleaned_data.get("data_type", None)
+            else:
+                continue
+
     def clean(self):
         names = [form.cleaned_data["name"] for form in self]
-        print names
         if len(names) > len(list(set(names))):
             raise forms.ValidationError('The name field must be unique across the fields')
 
         if not self.get_column_name_from_boolean("use_as_x_axis") or not self.get_column_name_from_boolean("use_as_y_axis"):
             raise forms.ValidationError('You need to select an x and y axis in order to plot data')
+
+        # if self.get_data_type("use_as_y_axis") == "object":
+        #     raise forms.ValidationError('Y axis must be a number')
+
 
 
     # def clean(self):

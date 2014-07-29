@@ -193,7 +193,7 @@ DJANGO_APPS = (
     'workflow',
     'crispy_forms',
     'floppyforms',
-    'pptx'
+    #'pptx'
 )
 
 # Apps specific for this project go here.

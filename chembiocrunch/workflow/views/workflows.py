@@ -9,16 +9,17 @@ from workflow.forms import CreateWorkflowForm, DataMappingForm, DataMappingFormS
 from django.core.urlresolvers import reverse
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, Fieldset, Reset
 from django.http import HttpResponseRedirect, HttpResponse
-import seaborn as sns
 
 import matplotlib
-matplotlib.use('Agg')
 
+import matplotlib.pyplot as plt
+
+import seaborn as sns
 from workflow.models import GRAPH_MAPPINGS
 from seaborn import plotting_context, set_context
-
-from pptx import Presentation
-from pptx.util import Inches, Px
+import mpld3
+# from pptx import Presentation
+# from pptx.util import Inches, Px
 
 class WorkflowView( LoginRequiredMixin):
 
@@ -92,7 +93,7 @@ class WorkflowCreateView(WorkflowView, CreateView ):
 
 class WorkflowDetailView(WorkflowView, DetailView, ):
     pass
-
+mpld3
 
 
 class WorkflowOperationChooser(WorkflowDetailView):
@@ -114,8 +115,6 @@ def vis_option_prexix(vis_id):
 class WorkflowDataMappingEditView(WorkflowDetailView):
     '''Allows the user to edit the data mappings created automatically for the data they import'''
     template_name = "workflows/workflow_data_mapping_edit.html"
-
-
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
         context = super(WorkflowDataMappingEditView, self).get_context_data(**kwargs)
@@ -127,30 +126,30 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
         context.update(kwargs)
         helper = DataMappingFormSetHelper()
         helper.template = 'table_inline.html'
-        for mapping in GRAPH_MAPPINGS:
-            helper.add_input(Submit(mapping, GRAPH_MAPPINGS[mapping]["name"]))
+        
+        helper.add_input(Submit("submit","Save data mappings and visualise"))
 
-        helper.add_input(Submit("other", "Other"))
+        #helper.add_input(Submit("other", "Other"))
         helper.add_input(ResetButton("reset", "Reset Form"))
 
         context["helper"] = helper
         visualisations = get_model("workflow","visualisation").objects.by_workflow(self.object)
-        vis_dicts = []
-        for vis in visualisations:
-            initial_data = vis.get_initial_form_data()
-            column_data = vis.get_column_form_data()
-            print column_data
-            vis_dict = vis.__dict__
-            vis_dict["vis_option_form"] = VisualisationForm(initial=initial_data, prefix=vis_option_prexix(vis.id), column_data=column_data)
-            vis_dicts.append(vis_dict)
-        context["visualisations"] = vis_dicts
+        # vis_dicts = []
+        # for vis in visualisations:
+        #     initial_data = vis.get_initial_form_data()
+        #     column_data = vis.get_column_form_data()
+        #     vis_dict = vis.__dict__
+        #     vis_dict["vis_option_form"] = VisualisationForm(initial=initial_data, prefix=vis_option_prexix(vis.id), column_data=column_data)
+        #     vis_dicts.append(vis_dict)
+        # context["visualisations"] = vis_dicts
 
-        if visualisations.count() > 0:
+        if visualisations.count() == 0:
             context['revisions'][1][1] = "in-progress"
-            context['revisions'][2][1] = "done"
+            context['revisions'][2][1] = "not-done"
         else:
-            context['revisions'][1][1] = "in-progress"
-        context['revisions'][2][1] = "done"
+            context['revisions'][1][1] = "done"
+            context['revisions'][2][1] = "in-progress"
+        context['revisions'][0][1] = "done"
         return context
 
     def post(self, request, *args, **kwargs):
@@ -168,13 +167,12 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
             else:
                 workflow_revision = self.object.get_latest_data_revision()
 
-            for mapping in GRAPH_MAPPINGS:
-                if mapping in formset.data:
-                    new_visualisation = get_model("workflow","Visualisation").objects.create(
-                                                                    visualisation_type=mapping, 
-                                                                    x_axis=formset.get_column_name_from_boolean("use_as_x_axis"),
-                                                                    y_axis=formset.get_column_name_from_boolean("use_as_y_axis"), 
-                                                                    data_mapping_revision=workflow_revision,
+          
+            new_visualisation = get_model("workflow","Visualisation").objects.create(
+                                                    visualisation_type=mapping, 
+                                                    x_axis=formset.get_column_name_from_boolean("use_as_x_axis"),
+                                                    y_axis=formset.get_column_name_from_boolean("use_as_y_axis"), 
+                                                    data_mapping_revision=workflow_revision,
                                                                     )
 
 
@@ -187,62 +185,70 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
 
 
 class VisualisationView(DetailView):
+
+    template_name = "visualise/vis_new.html"
     model = get_model("workflow", "visualisation")
     
-    # def get_context_data(self, **kwargs):
-    #     # Call the base implementation first to get a context
-    #     context = super(VisualisationView, self).get_context_data(**kwargs)
-    #     if not "form" in kwargs:
-    #         form = PlotForm()
-    #     else:
-    #         form= kwargs.get("form")
-    #     context["form"] = form
-    #     return context
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super(VisualisationView, self).get_context_data(**kwargs)
+        if "html" in kwargs:
+            context["html"] = kwargs["html"]
+        return context
 
     def get(self, request, *args, **kwargs):
+        
         self.object = self.get_object()
+        x = self.object.x_axis
+        y = self.object.y_axis
+        vis = self.object.visualisation_type
+
         df = self.object.data_mapping_revision.get_data()
 
-        with plotting_context( "talk" ):
+        with plotting_context( "poster" ):
 
             g = sns.FacetGrid(df, size=10, aspect=2)
-            #g.map(GRAPH_MAPPINGS[self.object.graph_type]["function"], self.object.x_axis, self.object.y_axis);
-            g.map(GRAPH_MAPPINGS["bar"]["function"], self.object.x_axis, self.object.y_axis)
-            matplotlib.pyplot.plot()
-            fc = matplotlib.backends.backend_agg.FigureCanvasAgg(plt.figure(1))
-            response = HttpResponse(content_type='image/png')
-            fc.print_png(response)
-            return response
-
-
-class VisualisationExportView(WorkflowView, DetailView,):
-    model = get_model("workflow", "visualisation")
-    
-    def get(self, request, *args, **kwargs):
-        #self.self.object = self.get_object()
-        #df = self.object.data_mapping_revision.get_data()
-        with plotting_context( "talk" ):
-
-            #g = sns.FacetGrid(df, size=10, aspect=2)
-            #g.map(GRAPH_MAPPINGS[self.object.graph_type]["function"], self.object.x_axis, self.object.y_axis);
+            
+            g.map(GRAPH_MAPPINGS[vis]["function"], x, y);
             #g.map(GRAPH_MAPPINGS["bar"]["function"], self.object.x_axis, self.object.y_axis)
-            #plt.plot()
-            #fc = FigureCanvas(plt.figure(1))
+            fig = plt.figure(1)
+            plt.plot()
+            html =  mpld3.fig_to_html(fig)
+            plt.close()
+            # fc = matplotlib.backends.backend_agg.FigureCanvasAgg(fig)
+            # response = HttpResponse(content_type='image/png')
+            # fc.print_png(response)
+            return self.render_to_response(self.get_context_data(html=html))
 
-            #from here, send this image to python-pptx
-            #img_path = 'monty-truth.png'
 
-            prs = Presentation()
-            blank_slide_layout = prs.slide_layouts[6]
-            slide = prs.slides.add_slide(blank_slide_layout)
+# class VisualisationExportView(WorkflowView, DetailView,):
+#     model = get_model("workflow", "visualisation")
+    
+#     def get(self, request, *args, **kwargs):
+#         #self.self.object = self.get_object()
+#         #df = self.object.data_mapping_revision.get_data()
+#         with plotting_context( "talk" ):
 
-            #left = top = Inches(1)
-            #pic = slide.shapes.add_picture(fc.print_png, left, top)
-            #try serving a blank ppt
-            response = HttpResponse(prs, content_type='application/vnd.openxmlformats-officedocument.presentationml.presentation')
-            response['Content-Disposition'] = 'attachment; filename=TestPpt.pptx'
-            #fc.print_png(response)
-            return response
+#             #g = sns.FacetGrid(df, size=10, aspect=2)
+#             #g.map(GRAPH_MAPPINGS[self.object.graph_type]["function"], self.object.x_axis, self.object.y_axis);
+#             #g.map(GRAPH_MAPPINGS["bar"]["function"], self.object.x_axis, self.object.y_axis)
+#             #plt.plot()
+#             #fc = FigureCanvas(plt.figure(1))
+
+#             #from here, send this image to python-pptx
+#             #img_path = 'monty-truth.png'
+
+#             prs = Presentation()
+#             blank_slide_layout = prs.slide_layouts[6]
+#             slide = prs.slides.add_slide(blank_slide_layout)
+
+#             #left = top = Inches(1)
+#             #pic = slide.shapes.add_picture(fc.print_png, left, top)
+#             #try serving a blank ppt
+#             response = HttpResponse(prs, content_type='application/vnd.openxmlformats-officedocument.presentationml.presentation')
+#             response['Content-Disposition'] = 'attachment; filename=TestPpt.pptx'
+#             #fc.print_png(response)
+#             return response
 
 
 
