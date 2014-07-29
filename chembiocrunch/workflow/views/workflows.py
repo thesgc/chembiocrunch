@@ -210,6 +210,26 @@ class VisualisationView(DetailView):
             g = sns.FacetGrid(df, size=10, aspect=2)
             
             g.map(GRAPH_MAPPINGS[vis]["function"], x, y);
+            #g.map(GRAPH_MAPPINGS[self.object.graph_type]["function"], self.object.x_axis, self.object.y_axis);
+            matplotlib.pyplot.plot()
+            fc = matplotlib.backends.backend_agg.FigureCanvasAgg(plt.figure(1))
+            response = HttpResponse(content_type='image/png')
+            fc.print_png(response)
+            return response
+
+
+class VisualisationExportView(WorkflowView, DetailView,):
+    model = get_model("workflow", "visualisation")
+    
+    def get(self, request, *args, **kwargs):
+        #self.self.object = self.get_object()
+        #df = self.object.data_mapping_revision.get_data()
+        print "doing this"
+        with plotting_context( "talk" ):
+
+            #g = sns.FacetGrid(df, size=10, aspect=2)
+            #g.map(GRAPH_MAPPINGS[self.object.graph_type]["function"], self.object.x_axis, self.object.y_axis);
+>>>>>>> c4ea825b9941d72e0472ab2d8c8dc2172e244f56
             #g.map(GRAPH_MAPPINGS["bar"]["function"], self.object.x_axis, self.object.y_axis)
             fig = plt.figure(1)
             plt.plot()

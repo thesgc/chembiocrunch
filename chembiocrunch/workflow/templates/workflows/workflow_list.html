@@ -34,7 +34,7 @@
     <div class='row'>
     {% for workflow in object_list %}
         <a href="{{ workflow.id }}/workflow_data_mappings_edit">
-        <div class ="btn col-lg-2 col-md-2 col-sd-4 col-xs-6 well">{{ workflow.title }}</div> <!-- end workflow holder -->
+        <div class ="btn col-lg-2 col-md-2 col-sd-4 col-xs-6 well"><span class="workflow-title">{{ workflow.title|title }}</span><br/><br/><span class="workflow-date">{{ workflow.created}}</span></div> <!-- end workflow holder -->
         </a>
     {% endfor %}
     {% endif %}

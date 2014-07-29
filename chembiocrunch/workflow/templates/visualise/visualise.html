@@ -41,6 +41,21 @@ var div_to_replace = "visualisation_holder_{{ visualisation.id }}";
     //             $("#result").html('There is error while submit');
     //         }
     //     })
+    // $('#button-id-export').click(function(e){
+    //     e.preventDefault();
+    //     $.get({
+    //         url: "{% url 'visualisation_export' visualisation.id %}",
+    //         data: {"y_axis": $(".use_as_y_axis:checked").val(), "x_axis" : $(".use_as_x_axis:checked").val()}, //is the graph in the workflow object?l
+    //         success: function(){
+    //             alert("success");
+    //             $("#result").html('Submitted successfully');
+    //         },
+    //         error:function(){
+    //             alert("failure");
+    //             $("#result").html('There is error while submit');
+    //         }
+    //     });
+    //     return false;
 
     // });
     
@@ -57,6 +72,20 @@ var div_to_replace = "visualisation_holder_{{ visualisation.id }}";
     //         $("#result").html('There is error while submit');
     //     }
     // });
+
+    /*$.ajax({
+        url: "{% url 'visualisation_view' visualisation.id %}",
+        type: "get",
+        data: {},
+        success: function(){
+            alert("success");
+            $("#result").html('Submitted successfully');
+        },
+        error:function(){
+            alert("failure");
+            $("#result").html('There is error while submit');
+        }
+    });*/
     
 
 </script>

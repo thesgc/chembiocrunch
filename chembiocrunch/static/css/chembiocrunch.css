@@ -64,6 +64,11 @@ fieldset {
 	float:right;
 	min-height:100px;
 }
+/* Workflow list item css */
+span.workflow-date {
+	font-size: 0.8em;
+	color: #999;
+}
 
 /* Breadcrumb progress indicator CSS */
 .arrow-box.not-done{
