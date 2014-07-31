@@ -16,4 +16,4 @@ tables
 seaborn
 hiredis
 django-redis
-django_select2
+django-select2
