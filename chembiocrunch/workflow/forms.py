@@ -7,8 +7,13 @@ from crispy_forms.bootstrap import PrependedText
 from django.forms.formsets import formset_factory, BaseFormSet
 from workflow.backends.dataframe_handler import change_column_type, get_data_frame
 
+#from easy_select2.widgets import Select2TextInput
+from django_select2.fields import Select2ChoiceField
+
 import floppyforms as forms
 from workflow.models import VALIDATE_COLUMNS, my_slug, GRAPH_MAPPINGS
+
+import django.forms as vanillaforms
 
 
 import json
@@ -93,8 +98,18 @@ class DataMappingForm(forms.Form):
     column_id = forms.IntegerField()
     name = forms.CharField(max_length=100, show_hidden_initial=True)
     data_type = forms.ChoiceField(choices=DATA_TYPE_CHOICES, show_hidden_initial=True)
+    # unit = vanillaforms.ChoiceField(widget = Select2TextInput(
+    #         select2attrs={
+    #             'data': [ {'id': 'data1', 'text': 'data1'}, {'id': 'data2', 'text': 'data2'} ],
+    #         },
+    #     ))
     #description = forms.CharField(max_length=400, required=False, show_hidden_initial=True)
-    unit = forms.CharField(max_length=10, required=False, show_hidden_initial=True)
+    #unit = vanillaforms.ChoiceField()
+    unit = Select2ChoiceField(
+            choices=DATA_TYPE_CHOICES,
+        )
+
+    
     use_as_x_axis = forms.BooleanField(required=False, show_hidden_initial=True)
     use_as_y_axis = forms.BooleanField(required=False, show_hidden_initial=True)
 
@@ -108,8 +123,14 @@ class DataMappingForm(forms.Form):
                 raise forms.ValidationError('The data in this field is not suitable for conversion to numbers')
 
     
-
-
+    # def __init__(self, *args, **kwargs):
+    #     super(DataMappingForm, self).__init__(*args, **kwargs)
+    #     self.fields["unit"] = forms.ChoiceField(required=False)
+    #     self.fields["unit"].widget = Select2TextInput(
+    #         select2attrs={
+    #             'data': [ {'id': 'data1', 'text': 'data1'}, {'id': 'data2', 'text': 'data2'} ],
+    #         },
+    #     )
 
 
 class DataMappingFormSetHelper(FormHelper):

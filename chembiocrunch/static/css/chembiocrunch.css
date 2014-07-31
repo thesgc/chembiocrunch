@@ -74,6 +74,10 @@ span.workflow-date {
 	font-size: 0.8em;
 	color: #999;
 }
+a.close{
+	margin-right: -10px;
+	margin-top: -15px;
+}
 
 /* Breadcrumb progress indicator CSS */
 .arrow-box.not-done{

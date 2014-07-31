@@ -33,9 +33,9 @@
     {% if object_list %}
     <div class='row'>
     {% for workflow in object_list %}
-        <a href="{{ workflow.id }}/workflow_data_mappings_edit">
-        <div class ="btn col-lg-1 col-md-2 col-sd-4 col-xs-6 "><div class="well col-sd-10 col-sd-offset-1"><span class="workflow-title">{{ workflow.title|title }}</span><br/><br/><span class="workflow-date">{{ workflow.created}}</span></div></div> <!-- end workflow holder -->
-        </a>
+
+        
+        <div class ="btn col-lg-2 col-md-2 col-sd-4 col-xs-6 well"><a class="close">×</a><a href="{{ workflow.id }}/workflow_data_mappings_edit"><span class="workflow-title">{{ workflow.title|title }}</span></a><br/><br/><span class="workflow-date">{{ workflow.created}}</span></div> <!-- end workflow holder -->
     {% endfor %}
     {% endif %}
 
