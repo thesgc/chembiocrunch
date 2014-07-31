@@ -193,7 +193,10 @@ DJANGO_APPS = (
     'workflow',
     'crispy_forms',
     'floppyforms',
+    #'easy_select2',
+    #'select2light',
     #'pptx'
+    'django_select2',
 )
 
 # Apps specific for this project go here.
@@ -251,3 +254,4 @@ WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
 
 ########## END SOUTH CONFIGURATION
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
+
