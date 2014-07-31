@@ -24,7 +24,7 @@
 
 {% block action_title %}
 
-<h2>{% if first_eleven %}Your Workflows{% else %}You havent got any workflows yet, create one below{% endif %}</h2>
+<h2>{% if object_list %}Your Workflows:{% else %}You havent got any workflows yet, create one below:{% endif %}</h2>
 
 {% endblock action_title %}
 
@@ -34,7 +34,7 @@
     <div class='row'>
     {% for workflow in object_list %}
         <a href="{{ workflow.id }}/workflow_data_mappings_edit">
-        <div class ="btn col-lg-2 col-md-2 col-sd-4 col-xs-6 well"><span class="workflow-title">{{ workflow.title|title }}</span><br/><br/><span class="workflow-date">{{ workflow.created}}</span></div> <!-- end workflow holder -->
+        <div class ="btn col-lg-1 col-md-2 col-sd-4 col-xs-6 "><div class="well col-sd-10 col-sd-offset-1"><span class="workflow-title">{{ workflow.title|title }}</span><br/><br/><span class="workflow-date">{{ workflow.created}}</span></div></div> <!-- end workflow holder -->
         </a>
     {% endfor %}
     {% endif %}

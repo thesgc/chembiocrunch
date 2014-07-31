@@ -8,10 +8,10 @@ from django.forms.formsets import formset_factory, BaseFormSet
 from workflow.backends.dataframe_handler import change_column_type, get_data_frame
 
 import floppyforms as forms
+from workflow.models import VALIDATE_COLUMNS, my_slug, GRAPH_MAPPINGS
 
 
-
-
+import json
 
 
 class Slider(forms.RangeInput):
@@ -124,7 +124,7 @@ class DataMappingFormSetHelper(FormHelper):
             'name',
             'data_type',
             #'hide',
-            #'description',
+            'description',
             'unit',
             Field('use_as_x_axis', css_class='use_as_x_axis'),
             Field('use_as_y_axis', css_class='use_as_y_axis'),
@@ -132,6 +132,8 @@ class DataMappingFormSetHelper(FormHelper):
         )
         self.render_required_fields = True
 
+class BigButton(Submit):
+    field_classes = 'btn btn-default btn-large'
 
 class ResetButton(Reset):
     field_classes = 'btn btn-danger'
@@ -158,30 +160,95 @@ class BaseDataMappingFormset(BaseFormSet):
         if not self.get_column_name_from_boolean("use_as_x_axis") or not self.get_column_name_from_boolean("use_as_y_axis"):
             raise forms.ValidationError('You need to select an x and y axis in order to plot data')
 
-        # if self.get_data_type("use_as_y_axis") == "object":
-        #     raise forms.ValidationError('Y axis must be a number')
+
+    def process(self, workflow):
+        data_changed = False
+        for form in self:
+            if "dtype" in form.changed_data or "name" in form.changed_data:
+                data_changed = True
+        steps_json = [{"cleaned_data" : form.cleaned_data, "changed_data" : form.changed_data }  for form in self]
+        current_data_revision = workflow.get_latest_data_revision()
+        x_axis = self.get_column_name_from_boolean("use_as_x_axis")
+        y_axis = self.get_column_name_from_boolean("use_as_y_axis")
+        if data_changed == True:
+            df = current_data_revision.get_data()
+            if not df.empty:
+                new_workflow_revision = get_model("workflow", "WorkflowDataMappingRevision").objects.create(
+                    workflow=workflow, 
+                    revision_type=VALIDATE_COLUMNS, 
+                    steps_json=json.dumps(steps_json),
+                    x_axis=x_axis,
+                    y_axis=y_axis,
+                    )
+                df = dataframe_handler.change_all_columns(df, steps_json)
+                df.to_hdf(new_workflow_revision.get_store_filename("data"), 
+                    new_workflow_revision.get_store_key(), 
+                    mode='w', 
+                    format="table")
+                return new_workflow_revision
+
+        else:
+            #Not a data revision, we are just changing the default x and y axes
+            current_data_revision.x_axis = x_axis
+            current_data_revision.y_axis = y_axis
+            current_data_revision.save()
+            return current_data_revision
+        return None
 
 
 
-    # def clean(self):
-    #     for form in self:
-    #         for field_name in form.changed_data:
-    #             print "field {} has changed. New value {}".format(field_name, form.cleaned_data[field_name])
+# class FilterForm(forms.Form):
+#     def __init__(self, *args, **kwargs):
+#         column_data = kwargs.pop('column_data')
+#         super(FilterForm, self).__init__(*args, **kwargs)
+#         fields = []
+#         fieldsets = []
+#         for field_data in column_data["string_field_uniques"]:
+#             field = my_slug(field_data["name"])
+#             self.fields[field] = forms.MultipleChoiceField( 
+#                 choices = field_data["choices"],
+#                 widget = forms.CheckboxSelectMultiple,
+#                 initial = [choice[0] for choice in field_data["choices"]], #If initial data here
+#                 required=False,
+#             )
+#             fields.append(field)
+#             fieldsets.append(Fieldset('Filter %s' % field_data["name"], field ))
+
+        
+#         self.helper = FormHelper()
+#         self.helper.add_input(Submit('submit', 'Filter'))
+#         self.helper.layout = Layout(
+#             *fieldsets
+#         )
+#         self.request = kwargs.pop('request', None)
+#         self.helper.form_show_labels = False
 
 
-
-class StringFieldFilterForm(forms.Form):
-    def __init__(self, *args, **kwargs):
-        column_data = kwargs.pop('column_data')
-        super(StringFieldFilterForm, self).__init__(*args, **kwargs)
-        self.fields["filter_by"] = forms.MultipleChoiceField(        
-            choices = column_data["choices"],
-            widget = forms.CheckboxSelectMultiple,
-        )
-
-
-class NumericFieldFilterForm(forms.Form):
-    pass
+# class NumericFieldFilterForm(forms.Form):
+#     def __init__(self, *args, **kwargs):
+#         column_data = kwargs.pop('column_data')
+#         super(NumericFieldFilterForm, self).__init__(*args, **kwargs)
+#         fields = []
+#         for field_data in column_data["string_field_uniques"]:
+#             field = my_slug(field_data["name"])
+#             self.fields[field] = forms.MultipleChoiceField( 
+#                 choices = field_data["choices"],
+#                 widget = forms.CheckboxSelectMultiple,
+#                 initial = [choice[0] for choice in field_data["choices"]],
+#                 required=False,
+#             )
+#             fields.append(field)
+#         print self
+#         arguments = ['Label Filters',] + fields
+#         self.helper = FormHelper()
+#         self.helper.add_input(Button('submit', 'Filter'))
+#         self.helper.layout = Layout(
+#             Fieldset( 
+#                *arguments
+#             )     
+#         )
+#         self.request = kwargs.pop('request', None)
+   
 
 
 
@@ -192,48 +259,111 @@ class VisualisationForm(forms.Form):
                                 ("talk", "Talk"),
                                 ("notebook", "Notebook"),
                                 ("poster", "Poster"))
-    visualisation_title = forms.CharField(max_length=50)
+    visualisation_title = forms.CharField(max_length=50,widget=forms.TextInput(attrs={'placeholder': 'Visualisation Title'}), required=False)
     #x_axis = forms.ChoiceField( choices=[])
     #y_axis = forms.ChoiceField( choices=[])
-    #split_y_axis_by = forms.ChoiceField(choices=[])
-    #split_x_axis_by = forms.ChoiceField( choices=[])
-    height = forms.FloatField(widget=Slider)
-    aspect_ratio = forms.FloatField(widget=Slider)
-    publication_type = forms.ChoiceField(choices=PUBLICATION_TYPE_CHOICES)
-    error_bars = forms.BooleanField(required=False)
-    
-    def clean_height(self):
-        height = self.cleaned_data['height']
-        if not Slider.min <= height <= Slider.max:
-            raise forms.ValidationError("Enter a value between 5 and 20")
 
-        return height
-    
+    # height = forms.FloatField(widget=Slider)
+    # aspect_ratio = forms.FloatField(widget=Slider)
+    # publication_type = forms.ChoiceField(choices=PUBLICATION_TYPE_CHOICES)
+    error_bars =  forms.TypedChoiceField(
+        choices = ((1, "Yes"), (0, "No")),
+        coerce = lambda x: bool(int(x)),
+        widget = forms.RadioSelect,
+        initial = '0',
+        required = True,
+    )
+    visualisation_type = forms.ChoiceField(
+        label = "",
+        choices = [(key, "Graph type: " +value["name"]) for key, value in GRAPH_MAPPINGS.iteritems()],
+        widget = forms.RadioSelect,
+        initial = 'bar',
+        required = True,
+    )
+
+    def save(self, data_mapping_revision):
+        Visualisation = get_model("workflow", "visualisation")
+        cleaned_data = self.cleaned_data
+        defaults = {    
+                        fieldname: cleaned_data.pop(fieldname) 
+                        for fieldname in ["visualisation_title",
+                                            "visualisation_type",
+                                           "error_bars",
+                                           "x_axis",
+                                           "y_axis",
+                                           "split_x_axis_by",
+                                           "split_y_axis_by",
+                                            ]
+                    }
+        defaults["data_mapping_revision"] = data_mapping_revision
+        config_json = {
+                        field : cleaned_data.pop(field) 
+                        for field in self.column_data["string_field_uniques"]
+                        }
+        defaults["config_json"] = json.dumps(config_json)
+        visualisation = Visualisation.objects.create(default=defaults)
+        return visualisation
+
+
 
 
 
     def __init__(self, *args, **kwargs):
         column_data = kwargs.pop('column_data')
+
         super(VisualisationForm, self).__init__(*args, **kwargs)
-        # self.fields["x_axis"] = forms.ChoiceField(choices=column_data["names"])
-        # self.fields["y_axis"] = forms.ChoiceField(choices= column_data["names"])
-        # self.fields["split_x_axis_by"] = forms.ChoiceField( choices= column_data["names"])
-        # self.fields["split_y_axis_by"] = forms.ChoiceField( choices= column_data["names"])
-        self.helper = FormHelper()
-        self.helper.form_tag = False
-        self.helper.form_class = 'form-horizontal'
-        self.helper.add_input(Button('save', 'Submit'))
-        self.helper.add_input(Button('export', 'Export to PPT'))
-        self.helper.layout = Layout(
-            Fieldset( 'Customise Visualisation',
-                'visualisation_title', 
-                'height',
-                'aspect_ratio',
-                'error_bars',
-                'publication_type',
-         )
-        )
+        self.column_data = column_data
+        self.fields["x_axis"] = forms.ChoiceField(choices=column_data["names"], initial=column_data["x_axis"])
+        self.fields["y_axis"] = forms.ChoiceField(choices= column_data["names"], initial=column_data["y_axis"])
+        self.fields["split_x_axis_by"] = forms.TypedChoiceField(required=False, choices= [("None","Do not split x axis"),] + [(label[0], "Split x axis by %s" % label[1]) for label in column_data["names"]])
+        self.fields["split_y_axis_by"] = forms.TypedChoiceField(required=False, choices= [("None","Do not split y axis"),] + [(label[0], "Split y axis by %s" % label[1]) for label in column_data["names"]])
         
+        self.helper = FormHelper()
+        self.helper.form_show_labels = False
+        self.helper.form_tag = False
+        #self.helper.form_class = 'form-horizontal'
+        self.helper.add_input(Submit('submit', 'Save'))
+        # self.helper.add_input(Button('export', 'Export to PPT'))
+        self.helper.layout = Layout(
+            Fieldset( 'Chart Options',
+                'visualisation_title', 
+                'visualisation_type', 
+            ),
+            Fieldset( 'X axis ',
+                'x_axis',
+                'split_x_axis_by',),
+            Fieldset('Y axis ',
+                'y_axis',
+                'split_y_axis_by',  
+            ),
+            Fieldset(
+                'Error bars',
+                'error_bars',
+            )
+        )
+
+        fields = []
+        fieldsets = []
+        for field_data in column_data["string_field_uniques"]:
+            field = my_slug(field_data["name"])
+            self.fields[field] = forms.MultipleChoiceField( 
+                choices = field_data["choices"],
+                widget = forms.CheckboxSelectMultiple,
+                initial = [choice[0] for choice in field_data["choices"]], #If initial data here
+                required=False,
+            )
+            fields.append(field)
+            fieldsets.append(Fieldset('Filter %s' % field_data["name"], field ))
+
+        
+        self.filterhelper = FormHelper()
+        self.filterhelper.add_input(Submit('submit', 'Filter'))
+        self.filterhelper.layout = Layout(
+            *fieldsets
+        )
+        self.filterhelper.form_show_labels = False
+
+
         self.request = kwargs.pop('request', None)
         #return self
 
