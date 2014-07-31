@@ -1,0 +1,47 @@
+ wget ftp://wesley.informatik.uni-freiburg.de/pub/linux/wxxt/source/
+   90  wget http://sourceforge.net/projects/wxpython/files/wxPython/2.9.3.0/wxPython-src-2.9.3.0.tar.bz2/download
+   91  tar -jxf download 
+   92  tar -jxfv download 
+   93  ls
+   94  rm -rf wxPython-src-2.9.3.0/
+   95  wget http://sourceforge.net/projects/wxpython/files/wxPython/2.9.3.0/wxPython-src-2.9.3.0.tar.bz2/download
+   96  tar -jxfv download.1 
+   97  tar -jxf download.1 
+   98  ls
+   99  cd wxPython-src-2.9.3.0/
+  100  ls
+  101  ./configure python=/home/vagrant/miniconda/bin/python
+  102  yum install gtk+
+  103  ./configure python=/home/vagrant/miniconda/bin/python
+  104  yum install gtk+
+  105  yum install gtk-config
+  106  yum install gtk-config
+  107  ./configure python=/home/vagrant/miniconda/bin/python
+  108  ls
+  109  cd build/
+  110  ls
+  111  cd ..
+  112  ls
+  113  cd wxPython
+  114  ls
+  115  python build-wxpython.py --build-dir=./bld
+  116  python build-wxpython.py 
+  117  vim ../config.log 
+  118  yum install gnome-desktop-devel
+  119  python build-wxpython.py 
+  120  yum install mesa-libGL
+  121  yum install mesa-libGL
+  122  yum install mesa-libGL-devel
+  123  python build-wxpython.py 
+  124  yum install freeglut-devel
+  125  python build-wxpython.py 
+  126  yum install gstreamer*
+  127  python build-wxpython.py 
+  128  ls
+  129  ls -l
+  130  date
+  131  rm -rf wxpy-bld/
+  132  cd ..
+  133  ./configure -python=/home/vagrant/miniconda/envs/chembiocrunch/bin/python2.7 
+  134  ./configure python=/home/vagrant/miniconda/envs/chembiocrunch/bin/python2.7 
+  135  make install

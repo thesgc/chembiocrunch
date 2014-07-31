@@ -11,12 +11,14 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from scipy import stats
-import matplotlib as mpl
+
+import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 
-
+from seaborn import plotting_context, set_context
+import mpld3
 
 
 GRAPH_MAPPINGS = {
@@ -43,7 +45,8 @@ class WorkflowManager(models.Manager):
         return get_model("workflow", "WorkflowDataMappingRevision").objects.filter(workflow_id=workflow_id).order_by("-created")[0]
 
 def my_slug(str):
-    slugify(str.replace("-","_"))
+    return slugify(str).replace("-","_")
+
 
 
 # Create your models here.
@@ -67,17 +70,7 @@ class Workflow(TimeStampedModel):
         # types_frame.to_hdf(new_workflow_revision.get_store_filename("dtypes"), new_workflow_revision.get_store_key(), mode='w', format="table")
 
 
-        
-        
-    def validate_columns(self, steps_json):
-        current_data_revision = self.get_latest_data_revision()
-        df = current_data_revision.get_data()
-        if not df.empty:
-            new_workflow_revision = get_model("workflow", "WorkflowDataMappingRevision").objects.create(workflow=self, revision_type=VALIDATE_COLUMNS, steps_json=json.dumps(steps_json))
-            df = dataframe_handler.change_all_columns(df, steps_json)
-            df.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w', format="table")
-            print new_workflow_revision.id
-
+                
 
 
 
@@ -163,8 +156,8 @@ class WorkflowDataMappingRevision(TimeStampedModel):
     workflow = models.ForeignKey('Workflow', related_name='workflow_data_revisions')
     steps_json = models.TextField(default="[]")
     revision_type = models.CharField(max_length=5)
-
-
+    x_axis = models.CharField(max_length=100)
+    y_axis = models.CharField(max_length=100)
     objects = WorkflowDataMappingRevisionManager()
     
     def get_store(self):
@@ -195,29 +188,8 @@ class WorkflowDataMappingRevision(TimeStampedModel):
         else:
             return read_hdf(self.get_store_filename("data"),self.get_store_key(),where=where)
 
-
-
-
-
-class VisualisationManager(models.Manager):
-    def by_workflow(self, workflow):
-        return self.filter(data_mapping_revision__workflow_id=workflow.id).order_by("-modified")
-
-
-
-
-class Visualisation(TimeStampedModel):
-    GRAPH_TYPE_CHOICES = [(key, value["name"]) for key, value in GRAPH_MAPPINGS.iteritems()]
-    data_mapping_revision = models.ForeignKey('WorkflowDataMappingRevision', related_name="data_revisions")
-    x_axis = models.CharField(max_length=200)
-    y_axis = models.CharField(max_length=200)
-    visualisation_type = models.CharField(max_length=10, choices=GRAPH_TYPE_CHOICES)
-    config_json = models.TextField(default="[]")
-    objects = VisualisationManager()
-
-
     def get_column_form_data(self):
-        df = self.data_mapping_revision.get_data()
+        df = self.get_data()
         fields = df.columns.to_series().groupby(df.dtypes).groups
         fields_dict = {k.name: v for k, v in fields.items()}
         string_field_uniques = []
@@ -228,7 +200,42 @@ class Visualisation(TimeStampedModel):
         for field in fields_dict.get("int64",[]) + fields_dict.get("float64",[]):
             numeric_field_max_and_min.append({"name" : field, "max" : s.max(), "min" : s.min()})
 
-        return {"string_field_uniques" : string_field_uniques,"numeric_field_max_and_min" :numeric_field_max_and_min , "names" : [(name,name) for name in df.dtypes.keys()]}
+        return {"x_axis": self.x_axis, "y_axis": self.y_axis, "string_field_uniques" : string_field_uniques,"numeric_field_max_and_min" :numeric_field_max_and_min , "names" : [(name,name) for name in df.dtypes.keys()]}
+
+
+
+
+class VisualisationManager(models.Manager):
+    def by_workflow(self, workflow):
+        return self.filter(data_mapping_revision__workflow_id=workflow.id).order_by("-modified")
+
+    def by_workflow_revision(self, workflow_revision):
+        return self.filter(data_mapping_revision_id=workflow_revision.id).order_by("-modified")
+
+
+
+
+class Visualisation(TimeStampedModel):
+    GRAPH_TYPE_CHOICES = [(key, value["name"]) for key, value in GRAPH_MAPPINGS.iteritems()]
+    data_mapping_revision = models.ForeignKey('WorkflowDataMappingRevision', related_name="data_revisions")
+    x_axis = models.CharField(max_length=200)
+    y_axis = models.CharField(max_length=200)
+    visualisation_title = models.CharField(max_length=200, null=True, blank=True)
+    visualisation_type = models.CharField(max_length=10, choices=GRAPH_TYPE_CHOICES)
+    config_json = models.TextField(default="[]")
+    objects = VisualisationManager()
+
+    def get_fig_for_dataframe(self):
+        df = self.data_mapping_revision.get_data()
+        with plotting_context( "talk" ):
+            g = sns.FacetGrid(df, size=8, aspect=1)
+            g.map(GRAPH_MAPPINGS[self.visualisation_type]["function"], self.x_axis, self.y_axis);
+            fig = plt.figure(1)
+            plt.plot()
+            plt.close()
+            return fig
+
+
 
     def get_initial_form_data(self):
         return { "x_axis" : self.x_axis, "y_axis":self.y_axis }

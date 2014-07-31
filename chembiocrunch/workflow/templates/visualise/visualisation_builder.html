@@ -1,0 +1,65 @@
+{% extends "workflow_base.html" %}
+{% load crispy_forms_tags %}
+{% block action_title %}
+Visualisation Builder
+{% endblock action_title %}
+{% block help_text %}
+<p>
+        The visualisation builder lets you create, save and export multiple visualisations
+</p>
+         <a id="carousel-selector-0" class="selected"><button type="button" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> Add a visualisation</button></a>
+{% endblock help_text %}
+{% block content %}
+  
+
+{% if visualisation_list %}
+    <div class='row'>
+    {% for visualisation in visualisation_list %}
+        <a id="carousel-selector-{{ visualisation.id }}">
+        <div class ="btn col-lg-1 col-md-2 col-sd-4 col-xs-6 "><div class="well col-sd-10 col-sd-offset-1"><span class="workflow-title">{{ visualisation.title|title }}</span><br/><br/><span class="workflow-date">{{ visualisation.created }}</span></div></div> <!-- end workflow holder -->
+        </a>
+    {% endfor %}
+
+{% endif %}
+
+    <div class="row">
+        <div class="col-md-12" id="slider">
+            
+                <div id="carousel-bounding-box">
+                    <div id="myCarousel" class="carousel slide">
+                        <!-- main slider carousel items -->
+                        <div class="carousel-inner">
+                             <div class="active item" data-slide-number="0">
+                               <form    action="" class="  " method="post">
+                                <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 crispy form-horizontal">
+                                    {% crispy visualisation_form visualisation_form.helper %}
+                                </div>
+                                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
+                                    {{ visualisation|safe }}
+                                </div>
+                                <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 crispy form-horizontal">
+                                    {% crispy visualisation_form visualisation_form.filterhelper %}
+                                    Numeric fields coming soon
+                                </div>
+                                </form>
+                            </div>
+                        </div>
+                        <!-- main slider carousel nav controls <a class="carousel-control left" href="#myCarousel" data-slide="prev">‹</a>
+
+                        <a class="carousel-control right" href="#myCarousel" data-slide="next">›</a>--> 
+                    </div>
+                </div>
+
+        </div>
+    </div>
+
+
+
+
+{% endblock content %}
+
+
+{% block extra_js %}
+
+{% endblock extra_js %}
+

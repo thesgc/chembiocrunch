@@ -4,24 +4,28 @@
 To get started upload a data file to your private profile
 {% endblock action_title %}
 {% block help_text %}
-<p>
-The file should be in CSV format (ideally raw from your machine).
-</p>
-<p>
-Column names need to be in the first row. Data will only be imported up to the first empty row.</p>
-<p>
-Great file names describe the experiment, include the date and are unique.
-</p>
+<ul>
+    <li>
+    The file should be in CSV format (ideally raw from your machine).
+    <ul>
+        <li>
+            A file is saved as CSV in Excel by using the Save As button and selecting comma separated values from the drop down. 
+        </li>
+        <li>
+            Only one sheet (the active sheet at that time) will be saved.
+        </li>
+    </ul>
+    </li>
+    <li>
+    Column names need to be in the first row. Data will only be imported up to the first empty row.
+    </li>
+    <li>
+    Great file names describe the experiment, include the date and are unique.
+    </li>
 {% endblock help_text %}
 {% block content %}
-   
-
         <form  enctype="multipart/form-data"  action="{% url 'workflow_create' %}" class="crispy form-horizontal col-lg-6 col-md-6 col-sm-12 col-xs-12" method="post">
-                {% crispy form form.helper %}
+        {% crispy form form.helper %}
         </form>
-
-
-
-
 {% endblock content %}
 
