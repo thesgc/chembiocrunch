@@ -181,6 +181,8 @@ class VisualisationBuilderView(WorkflowDetailView):
         return self.render_to_response(context)
 
     def get_context_data(self,  **kwargs):
+        if "visualisation_form" in kwargs:
+            context["visualisation_form"] = kwargs.pop("visualisation_form")
         context = super(VisualisationBuilderView, self).get_context_data(**kwargs)      
         
         if self.workflow_revision_id == 'latest':
@@ -188,8 +190,9 @@ class VisualisationBuilderView(WorkflowDetailView):
         else:
             context["workflow_revision"] = get_object_or_404(get_model("workflow", "WorkflowDataMappingRevision"), pk=self.workflow_revision_id)
         context["visualisation_list"] = get_model("workflow", "visualisation").objects.by_workflow_revision(context["workflow_revision"])
-        column_data = context["workflow_revision"].get_column_form_data()
-        context["visualisation_form"] = VisualisationForm(column_data=column_data)
+        if not context.get("visualisation_form", None):
+            column_data = context["workflow_revision"].get_column_form_data()
+            context["visualisation_form"] = VisualisationForm(column_data=column_data)
 
         context['revisions'][1][1] = "done"
         context['revisions'][2][1] = "in-progress"
@@ -200,7 +203,7 @@ class VisualisationBuilderView(WorkflowDetailView):
                                                                 data_mapping_revision=context["workflow_revision"])
         fig = holder_object.get_fig_for_dataframe()
         html =  mpld3.fig_to_html(fig)
-        context['visualisation'] = html
+        context['visualisation'] = {"html" : html}
         return context
 
     def post(self, request, *args, **kwargs):
@@ -214,13 +217,62 @@ class VisualisationBuilderView(WorkflowDetailView):
         column_data = workflow_revision.get_column_form_data()
         vis_create_form = VisualisationForm(request.POST,column_data=column_data )
         if vis_create_form.is_valid():
-            new_object = vis_create_form.save()
-            return HttpResponseRedirect(reverse("visualisation_updater",kwargs={
+            new_object = vis_create_form.save(workflow_revision)
+            return HttpResponseRedirect(reverse("visualisation_update_view",kwargs={
                 'pk': self.object.id,
                 'workflow_revision_id' : workflow_revision.id,
                 'visualisation_id' : new_object.id,
                 }))
+        return self.render_to_response(self.get_context_data(visualisation_form=vis_create_form))
 
+
+class VisualisationUpdateView(WorkflowDetailView):
+
+    workflow_revision_id = None
+    visualisation_id = None
+    template_name = "visualise/visualisation_builder.html"
+    
+    def get_context_data(self,  **kwargs):
+        if "visualisation_form" in kwargs:
+            context["visualisation_form"] = kwargs.pop("visualisation_form")
+
+        context = super(VisualisationUpdateView, self).get_context_data(**kwargs)
+        context["visualisation_id"] = self.visualisation_id
+        context["workflow_revision"] = get_object_or_404(get_model("workflow", "WorkflowDataMappingRevision"), pk=self.workflow_revision_id)
+        context["visualisation_list"] = get_model("workflow", "visualisation").objects.by_workflow_revision(context["workflow_revision"])
+        context["visualisation"] = context["visualisation_list"].get(pk=self.visualisation_id)
+        if not context.get("visualisation_form", None):
+            column_data = context["visualisation"].get_column_form_data()
+            context["visualisation_form"] = VisualisationForm(column_data=column_data, prefix="")
+        return context
+
+
+    def get(self, request, *args, **kwargs):
+        '''Borrowed from django base detail view'''
+        self.workflow_revision_id = kwargs.pop("workflow_revision_id")
+        self.visualisation_id = kwargs.pop("visualisation_id")
+
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+
+
+    def post(self, request, *args, **kwargs):
+        '''This view will always add a new graph, graph updates are handled by ajax'''
+        self.workflow_revision_id = kwargs.pop("workflow_revision_id")
+        self.visualisation_id = kwargs.pop("visualisation_id")
+
+        self.object = self.get_object()
+        workflow_revision = get_object_or_404(get_model("workflow", "WorkflowDataMappingRevision"), pk=self.workflow_revision_id)
+        visualisation_list = get_model("workflow", "visualisation").objects.by_workflow_revision(workflow_revision)
+        visualisation = visualisation_list.get(pk=self.visualisation_id)
+        column_data = visualisation.get_column_form_data()
+        vis_update_form = VisualisationForm(request.POST,column_data=column_data )
+        if vis_update_form.is_valid():
+
+            new_object = vis_update_form.save(workflow_revision, visualisation=visualisation)
+            context = self.get_context_data(object=self.object)
+            return self.render_to_response(context)
 
 
 

@@ -18,6 +18,8 @@ import django.forms as vanillaforms
 
 import json
 
+import mpld3
+import copy 
 
 class Slider(forms.RangeInput):
     min = 0.2
@@ -313,13 +315,14 @@ class VisualisationForm(forms.Form):
     )
     visualisation_type = forms.ChoiceField(
         label = "",
-        choices = [(key, "Graph type: " +value["name"]) for key, value in GRAPH_MAPPINGS.iteritems()],
+        #choices = [(key, "Graph type: " +value["name"]) for key, value in GRAPH_MAPPINGS.iteritems()],
+        choices = [("bar" , "Graph type: bar")],
         widget = forms.RadioSelect,
         initial = 'bar',
         required = True,
     )
 
-    def save(self, data_mapping_revision):
+    def save(self, data_mapping_revision, visualisation=None):
         Visualisation = get_model("workflow", "visualisation")
         cleaned_data = self.cleaned_data
         defaults = {    
@@ -334,12 +337,21 @@ class VisualisationForm(forms.Form):
                                             ]
                     }
         defaults["data_mapping_revision"] = data_mapping_revision
-        config_json = {
-                        field : cleaned_data.pop(field) 
-                        for field in self.column_data["string_field_uniques"]
-                        }
+        config_json = self.cleaned_data
         defaults["config_json"] = json.dumps(config_json)
-        visualisation = Visualisation.objects.create(default=defaults)
+        print defaults
+        if not visualisation:
+            visualisation = Visualisation(**defaults)
+            visualisation.html = mpld3.fig_to_html(visualisation.get_fig_for_dataframe())
+            visualisation.save()
+        else:
+            
+            qs = Visualisation.objects.filter(id=visualisation.id)
+            qs.update(**defaults)
+            visualisation = qs.get()
+            visualisation.html = mpld3.fig_to_html(visualisation.get_fig_for_dataframe())
+            visualisation.save()
+
         return visualisation
 
 
@@ -348,19 +360,24 @@ class VisualisationForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         column_data = kwargs.pop('column_data')
-
+        
         super(VisualisationForm, self).__init__(*args, **kwargs)
-        self.column_data = column_data
+        self.fields = copy.deepcopy(self.base_fields)
+
         self.fields["x_axis"] = forms.ChoiceField(choices=column_data["names"], initial=column_data["x_axis"])
         self.fields["y_axis"] = forms.ChoiceField(choices= column_data["names"], initial=column_data["y_axis"])
-        self.fields["split_x_axis_by"] = forms.TypedChoiceField(required=False, choices= [("None","Do not split x axis"),] + [(label[0], "Split x axis by %s" % label[1]) for label in column_data["names"]])
-        self.fields["split_y_axis_by"] = forms.TypedChoiceField(required=False, choices= [("None","Do not split y axis"),] + [(label[0], "Split y axis by %s" % label[1]) for label in column_data["names"]])
+        self.fields["split_x_axis_by"] = forms.TypedChoiceField(initial=column_data.get("split_x_axis_by", None), 
+                                                                required=False,
+                                                                choices= [(None,"Do not split x axis"),] + [(label[0], "Split x axis by %s" % label[1]) for label in column_data["names"]])
+        self.fields["split_y_axis_by"] = forms.TypedChoiceField(required=False, 
+                                                                initial=column_data.get("split_y_axis_by", None), 
+                                                                choices= [(None,"Do not split y axis"),] + [(label[0], "Split y axis by %s" % label[1]) for label in column_data["names"]])
         
         self.helper = FormHelper()
         self.helper.form_show_labels = False
         self.helper.form_tag = False
         #self.helper.form_class = 'form-horizontal'
-        self.helper.add_input(Submit('submit', 'Save'))
+        self.helper.add_input(Submit('submit', 'Update and Save'))
         # self.helper.add_input(Button('export', 'Export to PPT'))
         self.helper.layout = Layout(
             Fieldset( 'Chart Options',
@@ -387,7 +404,7 @@ class VisualisationForm(forms.Form):
             self.fields[field] = forms.MultipleChoiceField( 
                 choices = field_data["choices"],
                 widget = forms.CheckboxSelectMultiple,
-                initial = [choice[0] for choice in field_data["choices"]], #If initial data here
+                initial = [choice for choice in field_data["initial"]], #If initial data here
                 required=False,
             )
             fields.append(field)
@@ -395,15 +412,15 @@ class VisualisationForm(forms.Form):
 
         
         self.filterhelper = FormHelper()
-        self.filterhelper.add_input(Submit('submit', 'Filter'))
+        self.filterhelper.add_input(Submit('submit', 'Filter and Save'))
         self.filterhelper.layout = Layout(
             *fieldsets
         )
         self.filterhelper.form_show_labels = False
+        if len(args) == 1:
+            self.data = args[0]
 
 
-        self.request = kwargs.pop('request', None)
-        #return self
 
 
 

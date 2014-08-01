@@ -195,10 +195,10 @@ class WorkflowDataMappingRevision(TimeStampedModel):
         string_field_uniques = []
         for field in fields_dict.get("object",[]):
             s = df[field].value_counts()
-            string_field_uniques.append({"name": field, "choices" : [(k,k) for k,v in s.iterkv()]})
+            string_field_uniques.append({"name": field,"initial":[k for k,v in s.iterkv()], "choices" : [(k,k) for k,v in s.iterkv()]})
         numeric_field_max_and_min = []
         for field in fields_dict.get("int64",[]) + fields_dict.get("float64",[]):
-            numeric_field_max_and_min.append({"name" : field, "max" : s.max(), "min" : s.min()})
+            numeric_field_max_and_min.append({"name" : field, "max" : s.max(), "min" : s.min(), "initial_min" :s.min(),"initial_max" : s.max() })
 
         return {"x_axis": self.x_axis, "y_axis": self.y_axis, "string_field_uniques" : string_field_uniques,"numeric_field_max_and_min" :numeric_field_max_and_min , "names" : [(name,name) for name in df.dtypes.keys()]}
 
@@ -220,9 +220,13 @@ class Visualisation(TimeStampedModel):
     data_mapping_revision = models.ForeignKey('WorkflowDataMappingRevision', related_name="data_revisions")
     x_axis = models.CharField(max_length=200)
     y_axis = models.CharField(max_length=200)
+    split_x_axis_by = models.CharField(max_length=200, null=True, blank=True)
+    split_y_axis_by = models.CharField(max_length=200, null=True, blank=True)
+    error_bars = models.NullBooleanField()
     visualisation_title = models.CharField(max_length=200, null=True, blank=True)
     visualisation_type = models.CharField(max_length=10, choices=GRAPH_TYPE_CHOICES)
     config_json = models.TextField(default="[]")
+    html = models.TextField(default="")
     objects = VisualisationManager()
 
     def get_fig_for_dataframe(self):
@@ -237,8 +241,19 @@ class Visualisation(TimeStampedModel):
 
 
 
-    def get_initial_form_data(self):
-        return { "x_axis" : self.x_axis, "y_axis":self.y_axis }
+    def get_column_form_data(self):
+        df = self.data_mapping_revision.get_data()
+        fields = df.columns.to_series().groupby(df.dtypes).groups
+        fields_dict = {k.name: v for k, v in fields.items()}
+        string_field_uniques = []
+        config_json = json.loads(self.config_json)
+        for field in fields_dict.get("object",[]):
+            s = df[field].value_counts()
+            string_field_uniques.append({"name": field,"initial": config_json.get(my_slug(field)), "choices" : [(k,k) for k,v in s.iterkv()]})
+        numeric_field_max_and_min = []
+        for field in fields_dict.get("int64",[]) + fields_dict.get("float64",[]):
+            numeric_field_max_and_min.append({"name" : field, "max" : s.max(), "min" : s.min(), "initial_min" :s.min(),"initial_max" : s.max() })#Tob be completed
+        return {"error_bars": self.error_bars, "x_axis": self.x_axis, "y_axis": self.y_axis,"split_x_axis_by" : self.split_x_axis_by, "split_y_axis_by" : self.split_x_axis_by, "string_field_uniques" : string_field_uniques,"numeric_field_max_and_min" :numeric_field_max_and_min , "names" : [(name,name) for name in df.dtypes.keys()]}
 
 
 
