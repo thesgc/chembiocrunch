@@ -90,6 +90,23 @@ DATA_TYPE_CHOICES = (
     ("int64", "Whole Number"),
 )
 
+UNIT_CHOICES = (
+    ("mM", "mM"),
+    ("&micro;l", "&micro;l"),
+    ("ml", "ml"),
+    ("mol", "mol"),
+    ("Angstrom (&Aring;)", "Angstrom (&Aring;)"),
+    ("K", "K"),
+    ("nm", "nm"),
+    ("degrees-c", "&deg;C"),
+    ("l", "l"),
+    ("g", "g"),
+    ("mg", "mg"),
+    ("kg", "kg"),
+    ("nm", "nm"),
+    ("m/s", "m/s")
+)
+
 
 
 class DataMappingForm(forms.Form):
@@ -106,7 +123,7 @@ class DataMappingForm(forms.Form):
     #description = forms.CharField(max_length=400, required=False, show_hidden_initial=True)
     #unit = vanillaforms.ChoiceField()
     unit = Select2ChoiceField(
-            choices=DATA_TYPE_CHOICES,
+            choices=UNIT_CHOICES,
         )
 
     
