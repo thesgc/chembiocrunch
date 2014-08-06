@@ -74,6 +74,39 @@ Editing Visualisation
 
 
 {% block extra_js %}
+<script>
+$.fn.xml = function() {
+    return (new XMLSerializer()).serializeToString(this[0]);
+};
 
+$.fn.DOMRefresh = function() {
+    return $($(this.xml()).replaceAll(this));
+};
+
+$( document ).ready(function() {
+    $(window).load(function() {
+var backendheight= "0";
+var backendwidth = "0";
+var items = $(".mpld3-figure");
+if (items instanceof Array){
+    backendheight = items[0].attr("height");
+    backendwidth = items[0].attr("width");
+
+}else {
+    backendheight = items.attr("height");
+    backendwidth = items.attr("width");
+}
+items.attr("preserveAspectRatio", "true");
+items.attr("viewBox", "0 0 "+ backendheight +" " + backendwidth);
+items.attr("x", "100%");
+items.attr("y", "100%");
+items.attr("height", "100%");
+items.attr("width", "100%");
+items.DOMRefresh();
+//items.parent().html=$(".mpld3-figure").parent().html;
+
+});
+});
+</script>
 {% endblock extra_js %}
 
