@@ -76,7 +76,13 @@ Editing Visualisation
 {% block extra_js %}
 <script>
 $.fn.xml = function() {
-    return (new XMLSerializer()).serializeToString(this[0]);
+    if (typeof window.XMLSerializer != "undefined") {
+        return (new window.XMLSerializer()).serializeToString(this[0]);
+    } else if (typeof xmlNode.xml != "undefined") {
+        return this[0].xml;
+    }
+    return "";
+    //(new XMLSerializer()).serializeToString(this[0]);
 };
 
 $.fn.DOMRefresh = function() {
