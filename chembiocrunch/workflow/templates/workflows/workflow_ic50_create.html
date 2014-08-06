@@ -1,0 +1,32 @@
+{% extends "workflow_base.html" %}
+{% load crispy_forms_tags %}
+{% block action_title %}
+To get started upload your data and config files
+{% endblock action_title %}
+{% block help_text %}
+<ul>
+    <li>
+    You need to upload two files into the correct upload boxes:
+    <ul>
+        <li>
+            The output from the machine (use the data file upload box)
+        </li>
+        <li>
+            The config file to map data to your plates (use the config file upload box).
+        </li>
+    </ul>
+    </li>
+    <li>
+    They should be in the standard template format supplied by Oleg.
+    </li>
+    <li>
+    Great file names describe the experiment, include the date and are unique.
+    </li>
+</ul>
+{% endblock help_text %}
+{% block content %}
+        <form  enctype="multipart/form-data"  action="{% url 'workflow_ic50_create' %}" class="crispy form-horizontal col-lg-6 col-md-6 col-sm-12 col-xs-12" method="post">
+        {% crispy form form.helper %}
+        </form>
+
+{% endblock content %}

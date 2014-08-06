@@ -1,11 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import View,  DetailView, ListView, CreateView
 from django.views.generic.detail import SingleObjectMixin
+from django.conf import settings
 
 from braces.views import LoginRequiredMixin
 
 from django.db.models import get_model
-from workflow.forms import CreateWorkflowForm, DataMappingForm, DataMappingFormSetHelper, DataMappingFormSet, ResetButton, VisualisationForm
+from workflow.forms import CreateWorkflowForm, CreateIcFiftyWorkflowForm, DataMappingForm, DataMappingFormSetHelper, DataMappingFormSet, ResetButton, VisualisationForm, HeatmapForm
 from django.core.urlresolvers import reverse
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, Fieldset, Reset
 from django.http import HttpResponseRedirect, HttpResponse
@@ -18,6 +19,7 @@ import seaborn as sns
 from workflow.models import GRAPH_MAPPINGS
 from seaborn import plotting_context, set_context
 import mpld3
+import pandas as pd
 # from pptx import Presentation
 # from pptx.util import Inches, Px
 
@@ -89,6 +91,35 @@ class WorkflowCreateView(WorkflowView, CreateView ):
 
 
 
+class WorkflowCreateIcFiftyView(WorkflowView, CreateView ):
+    '''creates a single workflow'''
+    fields = ['title', 'uploaded_data_file','uploaded_config_file']
+    template_name = "workflows/workflow_ic50_create.html"
+    form_class = CreateIcFiftyWorkflowForm
+    success_url = 'success'
+
+    def get_success_url(self):
+        return reverse('workflow_ic50_heatmap', kwargs={
+                'pk': self.object.pk,
+                })
+
+    def form_valid(self, form):
+        user = self.request.user
+        form.instance.created_by = user
+        form_valid = super(WorkflowCreateIcFiftyView, self).form_valid(form)
+        
+        if get_model("workflow", "workflowic50datamappingrevision").objects.get_mapping_revisions_for_workflow(self.object).count() == 0:
+            self.object.create_first_data_revision()
+
+        return form_valid
+
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super(WorkflowCreateIcFiftyView, self).get_context_data(**kwargs)
+        context['revisions'][0][1] = "in-progress"
+        return context
+
+
 
 
 class WorkflowDetailView(WorkflowView, DetailView, ):
@@ -149,6 +180,55 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
             context['revisions'][1][1] = "done"
             context['revisions'][2][1] = "in-progress"
         context['revisions'][0][1] = "done"
+        return context
+
+    def post(self, request, *args, **kwargs):
+        '''This view will always add a new graph, graph updates are handled by ajax'''
+        self.object = self.get_object()
+        formset = DataMappingFormSet(request.POST, prefix="data_mappings")
+        if formset.is_valid():
+            workflow_revision = formset.process(self.object)
+
+            return HttpResponseRedirect(reverse("visualisation_builder",kwargs={
+                'pk': self.object.id,
+                'workflow_revision_id' : workflow_revision.id,
+                }))
+        return self.render_to_response(self.get_context_data(formset=formset))
+
+
+class WorkflowHeatmapView(WorkflowDetailView):
+    
+    template_name = "workflows/workflow_ic50_heatmap.html"
+    
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super(WorkflowHeatmapView, self).get_context_data(**kwargs)
+
+        #if not "formset" in kwargs:
+        #    context["formset"] = DataMappingFormSet(initial=self.object.get_data_mapping_formset_data(), prefix="data_mappings")
+        form_class = HeatmapForm
+        #using a static file until I can get file upload working
+        link = settings.SITE_ROOT + "/static/misc/olegdata.xls"
+        #socket = rq.get(link)
+        olegdata = pd.ExcelFile(link) #you may need to import xlrd as a dependency
+        dfs = olegdata.parse(olegdata.sheet_names[0], header=None)
+        dfs[2] = [item.split(':')[1] for item in dfs[0]]
+        dfs[3] = [item[1] for item in dfs[2]]           #letter part of well coordinate
+        dfs[4] = [item[2:len(item)] for item in dfs[2]] #numeric part of well coordinate
+
+        #name the columns to enable easier pivoting
+        dfs.columns = ['fullname', 'figure', 'full_ref', 'well_letter', 'well_number']
+
+        #ensure the well position comes out in numerical order instead of string order
+        dfs['well_number'] = dfs['well_number'].astype(int) 
+        #don't pivot results as it's easier to loop through - if you need it, here's how to pivot results into the plate layout
+        #dpvt = dfs.pivot(index='well_letter', columns='well_number', values='figure')
+        #context["oleg_data"] = dpvt
+        #context["oleg_data"] = dfs
+        context["heatmap_form"] = HeatmapForm(oleg_data=dfs)
+
+        context.update(kwargs)
+        
         return context
 
     def post(self, request, *args, **kwargs):
