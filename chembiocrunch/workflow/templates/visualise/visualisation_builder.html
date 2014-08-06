@@ -96,7 +96,7 @@ if (items instanceof Array){
     backendheight = items.attr("height");
     backendwidth = items.attr("width");
 }
-items.attr("preserveAspectRatio", "true");
+items.attr("preserveAspectRatio", "xMinYMin slice");
 items.attr("viewBox", "0 0 "+ backendheight +" " + backendwidth);
 items.attr("x", "100%");
 items.attr("y", "100%");
