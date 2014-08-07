@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 #from django import forms    
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, Fieldset, Reset
@@ -59,7 +60,7 @@ class CreateWorkflowForm(forms.ModelForm):
         # if pd.count()[0] < 1:
         #     forms.ValidationError('Error with file, zero rows recognised or first column empty')
     
-
+# -*- coding: <encoding name> -*-
         return uploaded_file
 
     class Meta:
@@ -93,14 +94,19 @@ DATA_TYPE_CHOICES = (
 )
 
 UNIT_CHOICES = (
+        ("", "Please Select"),
     ("mM", "mM"),
-    ("&micro;l", "&micro;l"),
+
+    ("μl", "μl"),
+    ("nM", "nM"),
+    ("pM", "pM"),
+
     ("ml", "ml"),
     ("mol", "mol"),
-    ("Angstrom (&Aring;)", "Angstrom (&Aring;)"),
+    ("Angstrom", "Angstrom (Å)"),
     ("K", "K"),
     ("nm", "nm"),
-    ("degrees-c", "&deg;C"),
+    ("degrees-c", "°C"),
     ("l", "l"),
     ("g", "g"),
     ("mg", "mg"),
@@ -126,6 +132,7 @@ class DataMappingForm(forms.Form):
     #unit = vanillaforms.ChoiceField()
     unit = Select2ChoiceField(
             choices=UNIT_CHOICES,
+            required=False,
         )
 
     
@@ -299,28 +306,24 @@ class VisualisationForm(forms.Form):
                                 ("talk", "Talk"),
                                 ("notebook", "Notebook"),
                                 ("poster", "Poster"))
-    visualisation_title = forms.CharField(max_length=50,widget=forms.TextInput(attrs={'placeholder': 'Visualisation Title'}), required=False)
+    
     #x_axis = forms.ChoiceField( choices=[])
     #y_axis = forms.ChoiceField( choices=[])
 
     # height = forms.FloatField(widget=Slider)
     # aspect_ratio = forms.FloatField(widget=Slider)
     # publication_type = forms.ChoiceField(choices=PUBLICATION_TYPE_CHOICES)
-    error_bars =  forms.TypedChoiceField(
-        choices = ((1, "Yes"), (0, "No")),
-        coerce = lambda x: bool(int(x)),
-        widget = forms.RadioSelect,
-        initial = '0',
-        required = True,
-    )
-    visualisation_type = forms.ChoiceField(
-        label = "",
-        #choices = [(key, "Graph type: " +value["name"]) for key, value in GRAPH_MAPPINGS.iteritems()],
-        choices = [("bar" , "Graph type: bar")],
-        widget = forms.RadioSelect,
-        initial = 'bar',
-        required = True,
-    )
+    # error_bars =  forms.TypedChoiceField(
+    #     choices = ((1, "Yes"), (0, "No")),
+    #     coerce = lambda x: bool(int(x)),
+    #     widget = forms.RadioSelect,
+    #     initial = '0',
+    #     required = True,
+    # )
+
+
+
+
 
     def save(self, data_mapping_revision, visualisation=None):
         Visualisation = get_model("workflow", "visualisation")
@@ -329,27 +332,29 @@ class VisualisationForm(forms.Form):
                         fieldname: cleaned_data.pop(fieldname) 
                         for fieldname in ["visualisation_title",
                                             "visualisation_type",
-                                           "error_bars",
+                                        #   "error_bars",
                                            "x_axis",
                                            "y_axis",
                                            "split_x_axis_by",
                                            "split_y_axis_by",
+                                           "split_by",
                                             ]
                     }
         defaults["data_mapping_revision"] = data_mapping_revision
         config_json = self.cleaned_data
         defaults["config_json"] = json.dumps(config_json)
-        print defaults
         if not visualisation:
             visualisation = Visualisation(**defaults)
-            visualisation.html = mpld3.fig_to_html(visualisation.get_fig_for_dataframe())
+            #visualisation.html = mpld3.fig_to_html(visualisation.get_fig_for_dataframe())
+            visualisation.html = visualisation.get_svg()
             visualisation.save()
         else:
-            
             qs = Visualisation.objects.filter(id=visualisation.id)
             qs.update(**defaults)
             visualisation = qs.get()
-            visualisation.html = mpld3.fig_to_html(visualisation.get_fig_for_dataframe())
+            print visualisation.__dict__
+            #visualisation.html = mpld3.fig_to_html(visualisation.get_fig_for_dataframe())
+            visualisation.html = visualisation.get_svg()
             visualisation.save()
 
         return visualisation
@@ -363,16 +368,38 @@ class VisualisationForm(forms.Form):
         
         super(VisualisationForm, self).__init__(*args, **kwargs)
         self.fields = copy.deepcopy(self.base_fields)
-
+        self.fields["visualisation_title"] = forms.CharField(max_length=50,
+            widget=forms.TextInput(attrs={'placeholder': 'Visualisation Title'}), 
+            required=False, 
+            initial = column_data["visualisation_title"],
+        )
+        self.fields["visualisation_type"] = forms.ChoiceField(
+            label = "",
+            choices = [(key, "Graph type: " +value["name"]) for key, value in GRAPH_MAPPINGS.iteritems()],
+            #choices = [("bar" , "Graph type: bar")],
+            widget = forms.RadioSelect,
+            initial = column_data["visualisation_type"],
+            required = True,
+        )
         self.fields["x_axis"] = forms.ChoiceField(choices=column_data["names"], initial=column_data["x_axis"])
         self.fields["y_axis"] = forms.ChoiceField(choices= column_data["names"], initial=column_data["y_axis"])
-        self.fields["split_x_axis_by"] = forms.TypedChoiceField(initial=column_data.get("split_x_axis_by", None), 
-                                                                required=False,
-                                                                choices= [(None,"Do not split x axis"),] + [(label[0], "Split x axis by %s" % label[1]) for label in column_data["names"]])
+        split_x_axis_by = column_data["split_x_axis_by"]
+        self.fields["split_x_axis_by"] = forms.TypedChoiceField(
+                                    choices= [(None,"Do not split x axis"),] + [(label[0], "Split x axis by %s" % label[1]) for label in column_data["names"]],
+                                    initial=split_x_axis_by, 
+                                    required=False,
+                                            )
+        split_y_axis_by = column_data["split_y_axis_by"]
         self.fields["split_y_axis_by"] = forms.TypedChoiceField(required=False, 
-                                                                initial=column_data.get("split_y_axis_by", None), 
-                                                                choices= [(None,"Do not split y axis"),] + [(label[0], "Split y axis by %s" % label[1]) for label in column_data["names"]])
-        
+            choices= [(None,"Do not split y axis"),] + [(label[0], "Split y axis by %s" % label[1]) for label in column_data["names"]],
+                                                                initial=split_y_axis_by, 
+                                                                )
+
+        split_by = column_data["split_by"]
+        self.fields["split_by"] = forms.TypedChoiceField(required=False, 
+            choices= [(None,"Do not split into grid"),] + [(label[0], "Split by %s only" % label[1]) for label in column_data["names"]],
+                                                                initial=split_by, 
+                                                                )
         self.helper = FormHelper()
         self.helper.form_show_labels = False
         self.helper.form_tag = False
@@ -386,14 +413,18 @@ class VisualisationForm(forms.Form):
             ),
             Fieldset( 'X axis ',
                 'x_axis',
-                'split_x_axis_by',),
+                ),
             Fieldset('Y axis ',
                 'y_axis',
-                'split_y_axis_by',  
             ),
             Fieldset(
-                'Error bars',
-                'error_bars',
+                'Create grid',
+                 'split_by',
+            ),
+            Fieldset(
+                'Create grid with 2 variables',
+                 'split_x_axis_by',
+                 'split_y_axis_by',
             )
         )
 

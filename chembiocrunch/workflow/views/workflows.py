@@ -201,15 +201,17 @@ class VisualisationBuilderView(WorkflowDetailView):
                                                                 y_axis=context["workflow_revision"].y_axis,
                                                                 visualisation_type="bar",
                                                                 data_mapping_revision=context["workflow_revision"])
-        fig = holder_object.get_fig_for_dataframe()
-        html =  mpld3.fig_to_html(fig)
+        html = holder_object.get_svg()
         context['visualisation'] = {"html" : html}
         return context
 
     def post(self, request, *args, **kwargs):
         '''This view will always add a new graph, graph updates are handled by ajax'''
+        
         self.workflow_revision_id = kwargs.pop("workflow_revision_id")
         self.object = self.get_object()
+        if request.POST.get("delete", False) == "delete":        
+            return self.render_to_response(self.get_context_data())
         if self.workflow_revision_id == 'latest':
             workflow_revision = self.object.get_latest_workflow_revision()
         else:
@@ -233,17 +235,26 @@ class VisualisationUpdateView(WorkflowDetailView):
     template_name = "visualise/visualisation_builder.html"
     
     def get_context_data(self,  **kwargs):
+        visualisation_form = None
         if "visualisation_form" in kwargs:
-            context["visualisation_form"] = kwargs.pop("visualisation_form")
+            visualisation_form = kwargs.pop("visualisation_form")
 
         context = super(VisualisationUpdateView, self).get_context_data(**kwargs)
         context["visualisation_id"] = self.visualisation_id
         context["workflow_revision"] = get_object_or_404(get_model("workflow", "WorkflowDataMappingRevision"), pk=self.workflow_revision_id)
         context["visualisation_list"] = get_model("workflow", "visualisation").objects.by_workflow_revision(context["workflow_revision"])
         context["visualisation"] = context["visualisation_list"].get(pk=self.visualisation_id)
-        if not context.get("visualisation_form", None):
+
+        context['revisions'][1][1] = "done"
+        context['revisions'][2][1] = "done"
+        context['revisions'][0][1] = "done"
+        context['revisions'][3][1] = "in-progress"
+
+        if not visualisation_form:
             column_data = context["visualisation"].get_column_form_data()
             context["visualisation_form"] = VisualisationForm(column_data=column_data, prefix="")
+        else:
+            context["visualisation_form"] = visualisation_form
         return context
 
 
@@ -258,7 +269,7 @@ class VisualisationUpdateView(WorkflowDetailView):
 
 
     def post(self, request, *args, **kwargs):
-        '''This view will always add a new graph, graph updates are handled by ajax'''
+
         self.workflow_revision_id = kwargs.pop("workflow_revision_id")
         self.visualisation_id = kwargs.pop("visualisation_id")
 
@@ -266,64 +277,88 @@ class VisualisationUpdateView(WorkflowDetailView):
         workflow_revision = get_object_or_404(get_model("workflow", "WorkflowDataMappingRevision"), pk=self.workflow_revision_id)
         visualisation_list = get_model("workflow", "visualisation").objects.by_workflow_revision(workflow_revision)
         visualisation = visualisation_list.get(pk=self.visualisation_id)
+        if request.POST.get("delete", False) == "delete":
+            visualisation.delete()
+            return HttpResponseRedirect(reverse("visualisation_builder",kwargs={
+                'pk': self.object.id,
+                'workflow_revision_id' : workflow_revision.id,
+                })) 
         column_data = visualisation.get_column_form_data()
         vis_update_form = VisualisationForm(request.POST,column_data=column_data )
         if vis_update_form.is_valid():
-
             new_object = vis_update_form.save(workflow_revision, visualisation=visualisation)
-            context = self.get_context_data(object=self.object)
+            context = self.get_context_data(object=self.object, visualisation_form=vis_update_form)
+            print request.POST
+            if request.POST.get("new", False) == "new":
+                return HttpResponseRedirect(reverse("visualisation_builder",kwargs={
+                'pk': self.object.id,
+                'workflow_revision_id' : workflow_revision.id,
+                })) 
             return self.render_to_response(context)
 
 
 
 
-class VisualisationView(DetailView):
+# class VisualisationView(DetailView):
 
-    template_name = "visualise/vis_new.html"
+#     template_name = "visualise/vis_new.html"
+#     model = get_model("workflow", "visualisation")
+    
+#     def get_context_data(self, **kwargs):
+#         # Call the base implementation first to get a context
+#         context = super(VisualisationView, self).get_context_data(**kwargs)
+#         if "html" in kwargs:
+#             context["html"] = kwargs["html"]
+#         return context
+
+#     def get(self, request, *args, **kwargs):
+        
+#         self.object = self.get_object()
+#         x = self.object.x_axis
+#         y = self.object.y_axis
+#         vis = self.object.visualisation_type
+
+#         df = self.object.data_mapping_revision.get_data()
+
+#         with plotting_context( "poster" ):
+
+#             g = sns.FacetGrid(df, size=10, aspect=2)
+            
+#             g.map(GRAPH_MAPPINGS[vis]["function"], x, y);
+#             #g.map(GRAPH_MAPPINGS[self.object.graph_type]["function"], self.object.x_axis, self.object.y_axis);
+#             matplotlib.pyplot.plot()
+#             fc = matplotlib.backends.backend_agg.FigureCanvasAgg(plt.figure(1))
+#             response = HttpResponse(content_type='image/png')
+#             fc.print_png(response)
+#             return response
+
+
+class VisualisationView(DetailView,):
     model = get_model("workflow", "visualisation")
     
-    def get_context_data(self, **kwargs):
-        # Call the base implementation first to get a context
-        context = super(VisualisationView, self).get_context_data(**kwargs)
-        if "html" in kwargs:
-            context["html"] = kwargs["html"]
-        return context
-
     def get(self, request, *args, **kwargs):
-        
         self.object = self.get_object()
-        x = self.object.x_axis
-        y = self.object.y_axis
-        vis = self.object.visualisation_type
-
         df = self.object.data_mapping_revision.get_data()
-
-        with plotting_context( "poster" ):
-
-            g = sns.FacetGrid(df, size=10, aspect=2)
+        with plotting_context( "talk" ):
+            labels = sorted([k for k,v in df[self.object.x_axis].value_counts().iterkv()])
+            g = sns.factorplot(self.object.x_axis,
+                y=self.object.y_axis, data=df, 
+                row=self.object.split_y_axis_by if self.object.split_y_axis_by !='None' else None, 
+                x_order=labels, 
+                col=self.object.split_x_axis_by if self.object.split_x_axis_by !='None' else None,)         
+            # g = sns.FacetGrid(df,**kwargs )
+            # g.map(GRAPH_MAPPINGS[self.visualisation_type]["function"], self.x_axis, self.y_axis, x_order=[k for k,v in df[self.x_axis].value_counts().iterkv()],);
             
-            g.map(GRAPH_MAPPINGS[vis]["function"], x, y);
-            #g.map(GRAPH_MAPPINGS[self.object.graph_type]["function"], self.object.x_axis, self.object.y_axis);
-            matplotlib.pyplot.plot()
-            fc = matplotlib.backends.backend_agg.FigureCanvasAgg(plt.figure(1))
+            g.set_xticklabels(labels, rotation=90)        
+            g.fig.suptitle("self.object.visualisation_title", fontsize=20)
+            g.fig.tight_layout(rect=(0,0,1,0.93))
+            #if self.object.visualisation_title:
+            
+            g.fig.patch.set_alpha(0.0)
+            fc = matplotlib.backends.backend_agg.FigureCanvasAgg(g.fig)
             response = HttpResponse(content_type='image/png')
-            fc.print_png(response)
+            fc.print_png(response,  transparent=True)
             return response
-
-
-class VisualisationExportView(WorkflowView, DetailView,):
-    model = get_model("workflow", "visualisation")
-    
-    def get(self, request, *args, **kwargs):
-        self.self.object = self.get_object()
-        df = self.object.data_mapping_revision.get_data()
-        
-
-            
-            # fc = matplotlib.backends.backend_agg.FigureCanvasAgg(fig)
-            # response = HttpResponse(content_type='image/png')
-            # fc.print_png(response)
-        return self.render_to_response(self.get_context_data(html=html))
 
 
 # class VisualisationExportView(WorkflowView, DetailView,):

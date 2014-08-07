@@ -5,7 +5,7 @@
 {% if not visualisation_id %}
 Adding a new Visualisation
 {% else %}
-Editing Visualisation
+Editing Visualisation - {% if visualisation.visualisation_title %}{{ visualisation.visualisation_title|title }}{% else %} no title yet{% endif %}
 {% endif %}
 
 
@@ -17,10 +17,17 @@ Editing Visualisation
 <p>
         The visualisation builder lets you create, save and export multiple visualisations
 </p>
+<form    action="" class="  " method="post">
 {% if visualisation_id %}
-         <a href=""><button type="button" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span>Save changes and add a new visualisation</button></a>
+
+         <button type="submit" value="new" name="new" id="submit-id2-submit"  class="btn btn-success"><span class="glyphicon glyphicon-plus"></span>Save changes and create new</button>
+    {% else %}
+
 
 {% endif %}
+ <button type="submit"  id="submit-id3-submit"  class="btn btn-primary"><span class="glyphicon glyphicon-refresh"></span>Save changes and continue editing</button>
+
+ <button type="submit"  id="submit-id3-submit" value="delete" name="delete" class="btn btn-danger"><span class="glyphicon glyphicon-remove"></span>Discard visualisation and restart</button>
 
 {% endblock help_text %}
 {% block content %}
@@ -29,11 +36,11 @@ Editing Visualisation
 {% if visualisation_list %}
     <div class='row'>
     {% for visualisation_item in visualisation_list %}
-        <a id="carousel-selector-{{ visualisation.id }}">
-        <div class ="btn col-lg-2 col-md-2 col-sd-4 col-xs-6 "><div class="well col-sd-10 col-sd-offset-1 {% ifequal visualisation_item.id visualisation.id %} activeitem {% endifequal %}"><span class="workflow-title">{{ visualisation_item.title|title }}</span><br/><br/><span class="workflow-date">{{ visualisation_item.created }}</span></div></div> <!-- end workflow holder -->
+        <a id="carousel-selector-{{ visualisation_item.id }}" href="{% url 'visualisation_update_view' pk=object.id workflow_revision_id=workflow_revision.id visualisation_id=visualisation_item.id %}">
+        <div class ="btn col-lg-2 col-md-2 col-sd-4 col-xs-6 "><div class="well col-sd-10 col-sd-offset-1 {% ifequal visualisation_item.id visualisation.id %} activeitem {% endifequal %}"><span class="workflow-title">{% if visualisation_item.visualisation_title %}{{ visualisation_item.visualisation_title|title }}{% else %} no title yet{% endif %}</span><br/><br/><span class="workflow-date">{{ visualisation_item.created }}</span></div></div> 
         </a>
     {% endfor %}
-
+</div><!-- end vis holder -->
 {% endif %}
 
     <div class="row">
@@ -44,7 +51,7 @@ Editing Visualisation
                         <!-- main slider carousel items -->
                         <div class="carousel-inner">
                              <div class="active item" data-slide-number="0">
-                               <form    action="" class="  " method="post">
+                               
                                 <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 crispy form-horizontal">
                                     {% crispy visualisation_form visualisation_form.helper %}
                                 </div>
@@ -103,10 +110,10 @@ if (items instanceof Array){
     backendwidth = items.attr("width");
 }
 items.attr("preserveAspectRatio", "xMinYMin slice");
-items.attr("viewBox", "0 0 "+ backendheight +" 1800");
+items.attr("viewBox", "0 0 "+ backendwidth + " " backendheight);
 items.attr("x", "100%");
 items.attr("y", "100%");
-items.attr("height", "2000px");
+items.attr("height", "100%");
 items.attr("width", "100%");
 items.attr("version", "1.1");
 items.DOMRefresh();

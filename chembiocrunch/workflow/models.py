@@ -15,17 +15,27 @@ from scipy import stats
 import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-
+from StringIO import StringIO
 
 from seaborn import plotting_context, set_context
 import mpld3
 
 
+
+def get_labels(vis, df):
+    return sorted([k for k,v in df[vis.x_axis].value_counts().iterkv()])
+
+def get_none(vis, df):
+    return None
+
 GRAPH_MAPPINGS = {
-    "bar" : {"name": "Bar Graph", "function" : sns.barplot},
-    "scatter" : {"name": "Scatter Graph", "function" : plt.scatter},
+    "bar" : {"xy": False, "name": "Bar Graph", "function" : sns.barplot, "get_label_function" : get_labels},
+    "point" : {"xy": False, "name": "Point Plot", "function" : sns.pointplot, "get_label_function" : get_labels},
+
+    "scatter" : {"xy": True, "name": "Scatter Graph", "function" : plt.scatter, "get_label_function" : get_none},
+    "linear_regression" : {"xy": True, "name": "Linear Regression", "function" : sns.regplot, "get_label_function" : get_none},
    # "hist" : {"name": "Histogram", "function" : plt.hist},
-    "boxplot" : {"name": "Boxplot", "function" : sns.boxplot},
+   # "boxplot" : {"name": "Boxplot", "function" : sns.boxplot},
 }
 
 
@@ -144,7 +154,7 @@ REVISION_TYPES = (
 class WorkflowDataMappingRevision(TimeStampedModel):
 
     '''Every time there is a major change to the mapping type in elasticsearch we reindex
-    This object is designed to store the UI side definition of that change, which is translatable 
+    This object is desigimport StringIOned to store the UI side definition of that change, which is translatable 
     to a reindex and remapping operation in elasticsearch'''
     '''In case of doing a statistics operation
     First we choose some columns 
@@ -200,17 +210,25 @@ class WorkflowDataMappingRevision(TimeStampedModel):
         for field in fields_dict.get("int64",[]) + fields_dict.get("float64",[]):
             numeric_field_max_and_min.append({"name" : field, "max" : s.max(), "min" : s.min(), "initial_min" :s.min(),"initial_max" : s.max() })
 
-        return {"x_axis": self.x_axis, "y_axis": self.y_axis, "string_field_uniques" : string_field_uniques,"numeric_field_max_and_min" :numeric_field_max_and_min , "names" : [(name,name) for name in df.dtypes.keys()]}
+        return {
+        "split_by": None,
+        "split_x_axis_by": None,
+        "split_y_axis_by": None,
+        "visualisation_type" : "bar",
+        "visualisation_title" : "",
+        "x_axis": self.x_axis, "y_axis": self.y_axis, "string_field_uniques" : string_field_uniques,"numeric_field_max_and_min" :numeric_field_max_and_min , "names" : [(name,name) for name in df.dtypes.keys()]}
+
+
 
 
 
 
 class VisualisationManager(models.Manager):
     def by_workflow(self, workflow):
-        return self.filter(data_mapping_revision__workflow_id=workflow.id).order_by("-modified")
+        return self.filter(data_mapping_revision__workflow_id=workflow.id).order_by("-created")
 
     def by_workflow_revision(self, workflow_revision):
-        return self.filter(data_mapping_revision_id=workflow_revision.id).order_by("-modified")
+        return self.filter(data_mapping_revision_id=workflow_revision.id).order_by("-created")
 
 
 
@@ -220,24 +238,78 @@ class Visualisation(TimeStampedModel):
     data_mapping_revision = models.ForeignKey('WorkflowDataMappingRevision', related_name="data_revisions")
     x_axis = models.CharField(max_length=200)
     y_axis = models.CharField(max_length=200)
-    split_x_axis_by = models.CharField(max_length=200, null=True, blank=True)
-    split_y_axis_by = models.CharField(max_length=200, null=True, blank=True)
+    split_by = models.CharField(max_length=200, null=True, blank=True, default=None)
+    split_x_axis_by = models.CharField(max_length=200, null=True, blank=True, default=None)
+    split_y_axis_by = models.CharField(max_length=200, null=True, blank=True, default=None)
     error_bars = models.NullBooleanField()
     visualisation_title = models.CharField(max_length=200, null=True, blank=True)
     visualisation_type = models.CharField(max_length=10, choices=GRAPH_TYPE_CHOICES)
-    config_json = models.TextField(default="[]")
+    config_json = models.TextField(default="{}")
     html = models.TextField(default="")
     objects = VisualisationManager()
 
+
+    def get_svg(self):
+        imgdata = StringIO()
+        fig = self.get_fig_for_dataframe()
+        fig.savefig(imgdata, format='svg')
+        imgdata.seek(0)
+        return imgdata.buf
+
+
     def get_fig_for_dataframe(self):
+        form_data = self.get_column_form_data()
+        string_expressions = {form_datum["name"] : form_datum["initial"] for form_datum in form_data["string_field_uniques"]}
         df = self.data_mapping_revision.get_data()
-        with plotting_context( "talk" ):
-            g = sns.FacetGrid(df, size=8, aspect=1)
-            g.map(GRAPH_MAPPINGS[self.visualisation_type]["function"], self.x_axis, self.y_axis);
-            fig = plt.figure(1)
-            plt.plot()
-            plt.close()
-            return fig
+        # row_mask = df.isin(string_expressions)[[form_datum["name"]  for form_datum in form_data["string_field_uniques"]]]
+        # df = df[row_mask.all(1)]
+        split_y_axis_by = self.split_y_axis_by if self.split_y_axis_by !='None' else None
+        split_x_axis_by = self.split_x_axis_by if self.split_x_axis_by !='None' else None
+
+        kwargs = {"size": 4, 
+                    "aspect": 1,
+                    "row":self.split_y_axis_by if self.split_y_axis_by !='None' else None,
+                    "col":self.split_x_axis_by if self.split_x_axis_by !='None' else None,
+                     "sharex":True, 
+                     "sharey":True, 
+                    }
+        split_by = self.split_by if self.split_by !='None' else None
+        if split_by:
+            kwargs["row"] = None
+            kwargs["col"] = split_by
+            kwargs["col_wrap"] = 4
+        if GRAPH_MAPPINGS[self.visualisation_type]["xy"] == True:
+            if df.count()[0] > 0 :
+                xlim = (0, float(max(df[self.x_axis]))*1.1)
+                ylim = (0, float(max(df[self.y_axis]))*1.1)
+                kwargs["xlim"] = xlim
+                kwargs["ylim"] = ylim
+         
+
+        with plotting_context( "paper" ):
+            labels = GRAPH_MAPPINGS[self.visualisation_type]["get_label_function"](self, df) 
+            # g = sns.factorplot(self.x_axis,
+            #      y=self.y_axis, data=df, 
+            #      row=self.split_y_axis_by if self.split_y_axis_by !='None' else None, 
+            #      x_order=labels, 
+            #      col=self.split_x_axis_by if self.split_x_axis_by !='None' else None,)
+            g_kwargs = {}
+            if labels:
+                g_kwargs = {"x_order":labels}  
+            g = sns.FacetGrid(df,**kwargs )
+            g.map(GRAPH_MAPPINGS[self.visualisation_type]["function"], self.x_axis, self.y_axis, **g_kwargs);
+            if labels and not split_by :
+                 g.set_xticklabels(labels, rotation=90)
+            if self.visualisation_title:
+                g.fig.tight_layout()
+                height_in_inches = g.fig.get_figheight()
+                title_height_fraction = 0.2 / (height_in_inches ** (0.5)) #20px is ~0.3 inches
+                g.fig.suptitle(self.visualisation_title, fontsize=20)
+                g.fig.tight_layout(rect=(0,0,1,1 - title_height_fraction))
+            else:
+                g.fig.tight_layout()            
+            g.fig.patch.set_alpha(0.0)
+            return g.fig
 
 
 
@@ -249,11 +321,27 @@ class Visualisation(TimeStampedModel):
         config_json = json.loads(self.config_json)
         for field in fields_dict.get("object",[]):
             s = df[field].value_counts()
-            string_field_uniques.append({"name": field,"initial": config_json.get(my_slug(field)), "choices" : [(k,k) for k,v in s.iterkv()]})
+            initial = []
+            if config_json.get(my_slug(field)):
+                initial = config_json.get(my_slug(field))
+            else:
+                initial = [k for k,v in s.iterkv()]
+            string_field_uniques.append({"name": field,"initial": initial, "choices" : [(k,k) for k,v in s.iterkv()]})
         numeric_field_max_and_min = []
         for field in fields_dict.get("int64",[]) + fields_dict.get("float64",[]):
             numeric_field_max_and_min.append({"name" : field, "max" : s.max(), "min" : s.min(), "initial_min" :s.min(),"initial_max" : s.max() })#Tob be completed
-        return {"error_bars": self.error_bars, "x_axis": self.x_axis, "y_axis": self.y_axis,"split_x_axis_by" : self.split_x_axis_by, "split_y_axis_by" : self.split_x_axis_by, "string_field_uniques" : string_field_uniques,"numeric_field_max_and_min" :numeric_field_max_and_min , "names" : [(name,name) for name in df.dtypes.keys()]}
+        return {
+        "visualisation_type" : self.visualisation_type,
+        "visualisation_title" : self.visualisation_title,
+        "error_bars": self.error_bars, 
+        "x_axis": self.x_axis, 
+        "y_axis": self.y_axis,
+        "split_by" : self.split_by, 
+        "split_x_axis_by" : self.split_x_axis_by, 
+        "split_y_axis_by" : self.split_y_axis_by, 
+        "string_field_uniques" : string_field_uniques,
+        "numeric_field_max_and_min" :numeric_field_max_and_min , 
+        "names" : [(name,name) for name in df.dtypes.keys()]}
 
 
 
