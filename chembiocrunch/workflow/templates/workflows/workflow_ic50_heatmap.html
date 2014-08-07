@@ -1,0 +1,61 @@
+{% extends "workflow_base.html" %}
+{% load crispy_forms_tags %}
+{% block action_title %}
+To get started upload your data and config files
+{% endblock action_title %}
+{% block help_text %}
+<ul>
+    <li>
+    Your data is displayed as a conditionally formatted heatmap
+    </li>
+    <li>
+    Validate your data by eye. You can deselect wells as outliers by clicking the value in each table cell. 
+    </li>
+    <li>
+    Deselected cells will turn grey. You can re-select cells by clicking the value again.
+    </li>
+    <li>
+      When you are finished, click Update and Save
+    </li>
+</ul>
+{% endblock help_text %}
+{% block content %}
+        
+
+<!-- Build heatmap content here
+  Div containing a table
+  Each table cell corresponds to a plate well 
+  Each well contains the data value and a styled/hidden checkbox
+  Clicking the cell toggles the checkbox
+  deactivated cells go grey, then recolour when activated 
+-->
+
+<div class="heatmap-container">
+
+<form  enctype="multipart/form-data" name="heatmap_form" class="crispy form-horizontal" method="post">
+{% crispy heatmap_form %}
+</form>
+
+</div>
+<script>
+
+$(document).ready(function() {
+
+  $('.checkboxinput').each(function(){
+
+    //apply the class
+
+    $(this).change(function(e){
+      //get parent table cell
+      //add or remove unchecked class
+      cell = $(this).closest('td');
+      cell.toggleClass("unchecked");
+    });
+
+  });
+
+});
+
+</script>
+
+{% endblock content %}

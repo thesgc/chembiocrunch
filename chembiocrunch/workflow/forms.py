@@ -20,7 +20,10 @@ import django.forms as vanillaforms
 import json
 
 import mpld3
-import copy 
+import copy
+
+import pandas as pd
+import math
 
 class Slider(forms.RangeInput):
     min = 0.2
@@ -86,6 +89,44 @@ class CreateWorkflowForm(forms.ModelForm):
         self.request = kwargs.pop('request', None)
         return super(CreateWorkflowForm, self).__init__(*args, **kwargs)
 
+class CreateIcFiftyWorkflowForm(forms.ModelForm):
+    title = forms.CharField(max_length=50)
+    uploaded_data_file = forms.FileField()
+    uploaded_config_file = forms.FileField()
+
+    def clean_uploaded_file(self):
+        error_flag = ""
+        uploaded_data_file = self.cleaned_data['uploaded_data_file']
+        uploaded_config_file = self.cleaned_data['uploaded_config_file']
+        #mime = magic.from_buffer(uploaded_data_file.read(), mime=True)
+        #if 'text/' not in mime:
+        #    error_flag += 'Data file must be a CSV document'
+        #mime = magic.from_buffer(uploaded_config_file.read(), mime=True)
+        #if 'text/' not in mime:
+        #    error_flag += '\nConfig file must be a CSV document'
+
+        #if error_flag: 
+        #    raise forms.ValidationError(error_flag)
+
+    class Meta:
+        model = get_model("workflow", "icfiftyworkflow")
+        exclude = ('created_by',)
+
+    def __init__(self, *args, **kwargs):
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+        self.helper.form_class = 'form-horizontal'
+        self.helper.add_input(Submit('save', 'Next'))
+        self.helper.layout = Layout(
+            Fieldset( '',
+                'title', 'uploaded_data_file', 
+                'uploaded_config_file','save',
+         )
+        )
+        
+        self.request = kwargs.pop('request', None)
+        return super(CreateIcFiftyWorkflowForm, self).__init__(*args, **kwargs)
+
 
 DATA_TYPE_CHOICES = (
     ("object", "Label"),
@@ -114,6 +155,7 @@ UNIT_CHOICES = (
     ("nm", "nm"),
     ("m/s", "m/s")
 )
+
 
 
 
@@ -296,9 +338,49 @@ class BaseDataMappingFormset(BaseFormSet):
 #         )
 #         self.request = kwargs.pop('request', None)
    
+class HeatmapFormHelper(FormHelper):
+        form_show_labels = True
+        form_tag = False
 
+class HeatmapForm(forms.Form):
 
+    def __init__(self, *args, **kwargs):
+        olegdata = kwargs.pop('oleg_data')
+        super(HeatmapForm, self).__init__(*args, **kwargs)
 
+        self.helper = HeatmapFormHelper()
+        well_letters = olegdata['well_letter'].unique()
+        hi_value = olegdata['figure'].max()
+        self.helper.layout=Layout(
+            HTML('<table class="heatmap">')
+        )
+        for letter in well_letters:
+            #create table row
+            loophelper = HeatmapFormHelper()
+            loophelper.layout = Layout()
+            loophelper.layout.fields.extend([
+                HTML('<tr>')
+            ])
+            #loop through subset of olegdata which has that letter
+            subset = olegdata[olegdata['well_letter'] == letter]
+            for index, row in subset.iterrows():
+                well_str = row['well_letter'] + str(row['well_number'])
+                #work out the class number to apply for conditional formatting - 
+                #an integer between 1-10 worked out from the fraction this value is of the maximum
+                cond_class = int(math.ceil((float(row['figure']) / float(hi_value)) * 10))
+                self.fields[well_str] = forms.BooleanField(initial=True, label=row['figure'])
+                loophelper.layout.fields.extend([
+                    HTML('<td data_row="' + row['well_letter'] + '" data_column="' + str(row['well_number']) + '" class="hmp' + str(cond_class) + '">'),
+                    well_str,
+                    HTML('</td>')
+                ])
+            self.helper.layout.append(loophelper.layout)
+        stop_helper = HeatmapFormHelper()
+        stop_helper.layout=Layout(
+            HTML('</table>')
+        )
+        self.helper.layout.append(stop_helper)
+        self.helper.layout.append(Submit('submit', 'Update and Save'))
 
 
 class VisualisationForm(forms.Form):

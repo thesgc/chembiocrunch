@@ -142,3 +142,45 @@ list-style-position:inside;
 	border: 1px solid #002147;
 
 }
+/* Heatmap plate CSS */
+table.heatmap {
+	width:100%;
+	border:solid 2px #444;
+}
+.heatmap td {
+	/*border-bottom: 1px solid #eee;
+	border-right: 1px solid #eee;*/
+	color: #ddd;
+	font-size: 0.8em;
+	text-align: center;
+	transition: background-color 0.3s;
+}
+.heatmap label {
+	margin-left: -20px;
+}
+
+/*colours for heatmap table gradations */
+.heatmap td.hmp10 {background-color:rgb(165,0,38); color: #ddd;}
+.heatmap td.hmp9 {background-color:rgb(215,48,39); color: #ddd;}
+.heatmap td.hmp8 {background-color:rgb(244,109,67); color: #ddd;}
+.heatmap td.hmp7 {background-color:rgb(253,174,97); color: #ddd;}
+.heatmap td.hmp6 {background-color:rgb(254,224,139); color:#444;}
+.heatmap td.hmp5 {background-color:rgb(217,239,139); color: #444;}
+.heatmap td.hmp4 {background-color:rgb(166,217,106); color: #ddd;}
+.heatmap td.hmp3 {background-color:rgb(102,189,99); color: #ddd;}
+.heatmap td.hmp2 {background-color:rgb(26,152,80); color: #ddd;}
+.heatmap td.hmp1 {background-color:rgb(0,104,55); color: #ddd;}
+
+
+/* Then this class last to override any other colour */
+.heatmap td.unchecked {
+	background-color: #ddd;
+	color:#aaa;
+}
+.heatmap input[type=checkbox] {
+   position: absolute;
+   /*top: -9999px;*/
+   left: -9999px;
+   /* For mobile, it's typically better to position checkbox on top of clickable
+      area and turn opacity to 0 instead. */
+}
