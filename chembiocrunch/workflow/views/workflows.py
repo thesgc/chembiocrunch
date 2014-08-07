@@ -222,9 +222,7 @@ class WorkflowHeatmapView(WorkflowDetailView):
         #ensure the well position comes out in numerical order instead of string order
         dfs['well_number'] = dfs['well_number'].astype(int) 
         #don't pivot results as it's easier to loop through - if you need it, here's how to pivot results into the plate layout
-        #dpvt = dfs.pivot(index='well_letter', columns='well_number', values='figure')
-        #context["oleg_data"] = dpvt
-        #context["oleg_data"] = dfs
+        dpvt = dfs.pivot(index='well_letter', columns='well_number', values='figure')
         context["heatmap_form"] = HeatmapForm(oleg_data=dfs)
 
         context.update(kwargs)

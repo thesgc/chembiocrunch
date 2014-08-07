@@ -37,11 +37,30 @@ To get started upload your data and config files
 
 <div class="heatmap-container">
 
-<form  enctype="multipart/form-data"  action="" class="crispy form-horizontal col-lg-6 col-md-6 col-sm-12 col-xs-12" method="post">
+<form  enctype="multipart/form-data"  action="" class="crispy form-horizontal" method="post">
 {% crispy heatmap_form %}
 </form>
 
 </div>
+<script>
 
+$(document).ready(function() {
+
+  $('.checkboxinput').each(function(){
+
+    //apply the class
+
+    $(this).change(function(e){
+      //get parent table cell
+      //add or remove unchecked class
+      cell = $(this).closest('td');
+      cell.toggleClass("unchecked");
+    });
+
+  });
+
+});
+
+</script>
 
 {% endblock content %}
