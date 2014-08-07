@@ -149,6 +149,7 @@ table.heatmap {
 	color: #ddd;
 	font-size: 0.8em;
 	text-align: center;
+	transition: background-color 0.3s;
 }
 .heatmap label {
 	margin-left: -20px;

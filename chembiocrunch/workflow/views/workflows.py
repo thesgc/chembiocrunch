@@ -20,6 +20,7 @@ from workflow.models import GRAPH_MAPPINGS
 from seaborn import plotting_context, set_context
 import mpld3
 import pandas as pd
+from django.forms import Form
 # from pptx import Presentation
 # from pptx.util import Inches, Px
 
@@ -232,15 +233,19 @@ class WorkflowHeatmapView(WorkflowDetailView):
     def post(self, request, *args, **kwargs):
         '''This view will always add a new graph, graph updates are handled by ajax'''
         self.object = self.get_object()
-        formset = DataMappingFormSet(request.POST, prefix="data_mappings")
-        if formset.is_valid():
-            workflow_revision = formset.process(self.object)
+        #formset = DataMappingFormSet(request.POST, prefix="data_mappings")
 
-            return HttpResponseRedirect(reverse("visualisation_builder",kwargs={
-                'pk': self.object.id,
-                'workflow_revision_id' : workflow_revision.id,
-                }))
-        return self.render_to_response(self.get_context_data(formset=formset))
+        #heatmap_form = HeatmapForm(request.POST, prefix="heatmap_form")
+        form = Form(request.POST)
+
+        #if formset.is_valid():
+        #    workflow_revision = formset.process(self.object)
+
+        #    return HttpResponseRedirect(reverse("visualisation_builder",kwargs={
+        #        'pk': self.object.id,
+        #        'workflow_revision_id' : workflow_revision.id,
+        #        }))
+        return self.render_to_response(self.get_context_data())
 
 
 
