@@ -31,3 +31,8 @@ if settings.DEBUG:
     urlpatterns += patterns('',
                             url(r'^__debug__/', include(debug_toolbar.urls)),
                             )
+
+if "django_webauth" in settings.INSTALLED_APPS:
+    urlpatterns += patterns('',
+                            url(r'^webauth/', include('django_webauth.urls', 'webauth')),
+                            )

@@ -252,7 +252,7 @@ class WorkflowHeatmapView(WorkflowDetailView):
 
 
 class VisualisationBuilderView(WorkflowDetailView):
-
+    '''Creates a new visualisation for a given workflow revision'''
     workflow_revision_id = None
     template_name = "visualise/visualisation_builder.html"
 
@@ -272,7 +272,7 @@ class VisualisationBuilderView(WorkflowDetailView):
             context["workflow_revision"] = self.object.get_latest_workflow_revision()
         else:
             context["workflow_revision"] = get_object_or_404(get_model("workflow", "WorkflowDataMappingRevision"), pk=self.workflow_revision_id)
-        context["visualisation_list"] = get_model("workflow", "visualisation").objects.by_workflow_revision(context["workflow_revision"])
+        context["visualisation_list"] = get_model("workflow", "visualisation").objects.by_workflow(self.object)
         if not context.get("visualisation_form", None):
             column_data = context["workflow_revision"].get_column_form_data()
             context["visualisation_form"] = VisualisationForm(column_data=column_data)
@@ -325,7 +325,7 @@ class VisualisationUpdateView(WorkflowDetailView):
         context = super(VisualisationUpdateView, self).get_context_data(**kwargs)
         context["visualisation_id"] = self.visualisation_id
         context["workflow_revision"] = get_object_or_404(get_model("workflow", "WorkflowDataMappingRevision"), pk=self.workflow_revision_id)
-        context["visualisation_list"] = get_model("workflow", "visualisation").objects.by_workflow_revision(context["workflow_revision"])
+        context["visualisation_list"] = get_model("workflow", "visualisation").objects.by_workflow(self.object)
         context["visualisation"] = context["visualisation_list"].get(pk=self.visualisation_id)
 
         context['revisions'][1][1] = "done"
