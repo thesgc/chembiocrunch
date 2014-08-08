@@ -26,6 +26,7 @@ import pandas as pd
 import math
 
 class Slider(forms.RangeInput):
+    '''A slider input widget'''
     min = 0.2
     max = 5
     step = 0.2
@@ -48,10 +49,17 @@ class Slider(forms.RangeInput):
 
 
 class CreateWorkflowForm(forms.ModelForm):
+    '''form that validates the file type of an uploaded file'''
     title = forms.CharField(max_length=50)
     uploaded_file = forms.FileField()
 
     def clean_uploaded_file(self):
+        ''' it is necessary to test the file type of the file
+        In order to clean the data of a field in django
+        the method must raise new validation errors against that 
+        particular field. The method naming convention is to name the function as 
+        clean_[field name]
+        IT is IMPERATIVE to return the data of the file'''
         uploaded_file = self.cleaned_data['uploaded_file']
         mime = magic.from_buffer(uploaded_file.read(), mime=True)
         if 'text/' not in mime:
@@ -62,8 +70,6 @@ class CreateWorkflowForm(forms.ModelForm):
         #     forms.ValidationError('Error with file, less than two columns recognised')
         # if pd.count()[0] < 1:
         #     forms.ValidationError('Error with file, zero rows recognised or first column empty')
-    
-# -*- coding: <encoding name> -*-
         return uploaded_file
 
     class Meta:
@@ -94,7 +100,7 @@ class CreateIcFiftyWorkflowForm(forms.ModelForm):
     uploaded_data_file = forms.FileField()
     uploaded_config_file = forms.FileField()
 
-    def clean_uploaded_file(self):
+    def clean_uploaded_data_file(self):
         error_flag = ""
         uploaded_data_file = self.cleaned_data['uploaded_data_file']
         uploaded_config_file = self.cleaned_data['uploaded_config_file']
@@ -107,6 +113,22 @@ class CreateIcFiftyWorkflowForm(forms.ModelForm):
 
         #if error_flag: 
         #    raise forms.ValidationError(error_flag)
+        return uploaded_data_file
+
+
+    def clean_uploaded_config_file(self):
+        error_flag = ""
+        uploaded_config_file = self.cleaned_data['uploaded_config_file']
+        #mime = magic.from_buffer(uploaded_data_file.read(), mime=True)
+        #if 'text/' not in mime:
+        #    error_flag += 'Data file must be a CSV document'
+        #mime = magic.from_buffer(uploaded_config_file.read(), mime=True)
+        #if 'text/' not in mime:
+        #    error_flag += '\nConfig file must be a CSV document'
+
+        #if error_flag: 
+        #    raise forms.ValidationError(error_flag)
+        return uploaded_config_file
 
     class Meta:
         model = get_model("workflow", "icfiftyworkflow")

@@ -28,6 +28,8 @@ def get_labels(vis, df):
 def get_none(vis, df):
     return None
 
+
+#Graph mappings allow the choices field for graphs to be populated and also tell the plotting algo which seaborn function to use as we plot data
 GRAPH_MAPPINGS = {
     "bar" : {"xy": False, "name": "Bar Graph", "function" : sns.barplot, "get_label_function" : get_labels},
     "point" : {"xy": False, "name": "Point Plot", "function" : sns.pointplot, "get_label_function" : get_labels},
@@ -42,12 +44,16 @@ GRAPH_MAPPINGS = {
 
 
 def zero_pad_object_id(id):
+    '''used to ensure data files appear in order of ID'''
     return ('%d' % id).zfill(11)
 
 
 
 class WorkflowManager(models.Manager):
+    '''Manager allows extra functions to be added to the objects of a model so that you can run queries without having to 
+    do the query logic inline'''
     def get_user_records(self, user):
+        '''Used to filter in view to ensure only permitted workflows are seen'''
         return self.filter(created_by__id=user.id)
 
 
@@ -64,6 +70,8 @@ class BaseWorkflow(TimeStampedModel):
 
 # Create your models here.
 class Workflow(TimeStampedModel):
+    '''A workflow is a container for a set of graphs based on one file. It will have its sub objects cloned
+    when the user wants a similar graphing dashboard'''
     title = models.CharField(max_length=100)
     uploaded_file = models.FileField()
     created_by = models.ForeignKey('auth.User')
@@ -201,14 +209,11 @@ REVISION_TYPES = (
 
 class WorkflowDataMappingRevision(TimeStampedModel):
 
-    '''Every time there is a major change to the mapping type in elasticsearch we reindex
-    This object is desigimport StringIOned to store the UI side definition of that change, which is translatable 
-    to a reindex and remapping operation in elasticsearch'''
-    '''In case of doing a statistics operation
-    First we choose some columns 
-    then we choose agregations
-    then we reindex the agregated data
-    All of these are steps in a single WorkflowDataMappingRevision
+    '''Every time there is a major change to the field names or the data types in 
+    the columns of a workflow's data, we store a revision of the workflow.
+    These revisions are as far as possible invisible to the user - we just want them to be able
+    to switch between different graphs on a workflow not worrying if data is being treated as a label
+    or a number.
     '''
 
     workflow = models.ForeignKey('Workflow', related_name='workflow_data_revisions')
@@ -271,14 +276,8 @@ class WorkflowDataMappingRevision(TimeStampedModel):
 
 class IcFiftyWorkflowDataMappingRevision(TimeStampedModel):
 
-    '''Every time there is a major change to the mapping type in elasticsearch we reindex
-    This object is designed to store the UI side definition of that change, which is translatable 
-    to a reindex and remapping operation in elasticsearch'''
-    '''In case of doing a statistics operation
-    First we choose some columns 
-    then we choose agregations
-    then we reindex the agregated data
-    All of these are steps in a single WorkflowDataMappingRevision
+    '''
+
     '''
 
     workflow = models.ForeignKey('IcFiftyWorkflow', related_name='workflow_ic50_data_revisions')
@@ -334,6 +333,7 @@ class IcFiftyWorkflowDataMappingRevision(TimeStampedModel):
 
 
 class VisualisationManager(models.Manager):
+    '''Retrieves visible lists of workflows using the revision id'''
     def by_workflow(self, workflow):
         return self.filter(data_mapping_revision__workflow_id=workflow.id).order_by("-created")
 
@@ -344,6 +344,9 @@ class VisualisationManager(models.Manager):
 
 
 class Visualisation(TimeStampedModel):
+    '''Holder object for a visualisation
+    loosely bound to the visulaisation form
+    html field contains a cached svg representation of the visualisation'''
     GRAPH_TYPE_CHOICES = [(key, value["name"]) for key, value in GRAPH_MAPPINGS.iteritems()]
     data_mapping_revision = models.ForeignKey('WorkflowDataMappingRevision', related_name="data_revisions")
     x_axis = models.CharField(max_length=200)
