@@ -19,7 +19,7 @@ from StringIO import StringIO
 
 from seaborn import plotting_context, set_context
 import mpld3
-
+from workflow.basic_units import BasicUnit
 
 
 def get_labels(vis, df):
@@ -31,11 +31,11 @@ def get_none(vis, df):
 
 #Graph mappings allow the choices field for graphs to be populated and also tell the plotting algo which seaborn function to use as we plot data
 GRAPH_MAPPINGS = {
-    "bar" : {"xy": False, "name": "Bar Graph", "function" : sns.barplot, "get_label_function" : get_labels},
+    "bar" : {"xy": False, "name": "Bar", "function" : sns.barplot, "get_label_function" : get_labels},
     "point" : {"xy": False, "name": "Point Plot", "function" : sns.pointplot, "get_label_function" : get_labels},
 
-    "scatter" : {"xy": True, "name": "Scatter Graph", "function" : plt.scatter, "get_label_function" : get_none},
-    "linear_regression" : {"xy": True, "name": "Linear Regression", "function" : sns.regplot, "get_label_function" : get_none},
+    "scatter" : {"xy": True, "name": "Scatter", "function" : plt.scatter, "get_label_function" : get_none},
+    "linear_reg" : {"xy": True, "name": "Linear Regression", "function" : sns.regplot, "get_label_function" : get_none},
    # "hist" : {"name": "Histogram", "function" : plt.hist},
    # "boxplot" : {"name": "Boxplot", "function" : sns.boxplot},
 }
@@ -55,7 +55,6 @@ class WorkflowManager(models.Manager):
     def get_user_records(self, user):
         '''Used to filter in view to ensure only permitted workflows are seen'''
         return self.filter(created_by__id=user.id)
-
 
     def get_latest_workflow_revision(self, workflow_id):
         return get_model("workflow", "WorkflowDataMappingRevision").objects.filter(workflow_id=workflow_id).order_by("-created")[0]
@@ -83,10 +82,8 @@ class Workflow(TimeStampedModel):
     def create_first_data_revision(self):
 
         df = dataframe_handler.get_data_frame(self.uploaded_file.file)
-        new_workflow_revision = get_model("workflow", "WorkflowDataMappingRevision").objects.create(workflow=self, revision_type=UPLOAD, steps_json=json.dumps({"count" : int(df.count()[0])}))
-        
+        new_workflow_revision = get_model("workflow", "WorkflowDataMappingRevision").objects.create(workflow=self, revision_type=UPLOAD)   
         # types_frame = DataFrame([[str(dtype) for dtype in df.dtypes],], columns=df.dtypes.keys())
-
         df.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w', format="table")
         # types_frame.to_hdf(new_workflow_revision.get_store_filename("dtypes"), new_workflow_revision.get_store_key(), mode='w', format="table")
 
@@ -100,6 +97,7 @@ class Workflow(TimeStampedModel):
         df = rev.get_data()
         extra_data = [{"workflow_id": self.id, "column_id": index,  "name" : name ,"data_type" : df.dtypes[index].name } for index, name in enumerate(df.dtypes.keys())]
         return extra_data
+
 
 
 # PB - new Workflow for IC50 project.
@@ -156,7 +154,7 @@ class IcFiftyWorkflow(TimeStampedModel):
     #     '''
 
     #     last_rev = self.last_data_revision()
-    #     if last_rev == False:
+    #     if last_rev == False:WorkflowDataMappingRevision
     #         return True
     #     data_files_revisied = self.source_data_files.filter(modified__gte=last_rev.modified).count()
     #     if data_files_revisied > 0:
@@ -171,7 +169,7 @@ class IcFiftyWorkflow(TimeStampedModel):
     #     return False
 
 
-    # def current_es_client(self):
+    # def current_es_client(self):WorkflowDataMappingRevision
     #     '''Only to be used after an index was created by tasks.py'''
     #     last_revision = self.last_data_revision()
     #     es_processor = ElasticSearchDataProcessor(self.id, last_revision.id, {})
@@ -256,12 +254,18 @@ class WorkflowDataMappingRevision(TimeStampedModel):
         fields = df.columns.to_series().groupby(df.dtypes).groups
         fields_dict = {k.name: v for k, v in fields.items()}
         string_field_uniques = []
+        choices_overall =  []
         for field in fields_dict.get("object",[]):
             s = df[field].value_counts()
             string_field_uniques.append({"name": field,"initial":[k for k,v in s.iterkv()], "choices" : [(k,k) for k,v in s.iterkv()]})
+            choices_overall.append((field, "%s (label)" % field))
         numeric_field_max_and_min = []
-        for field in fields_dict.get("int64",[]) + fields_dict.get("float64",[]):
+        for field in fields_dict.get("float64",[]):
             numeric_field_max_and_min.append({"name" : field, "max" : s.max(), "min" : s.min(), "initial_min" :s.min(),"initial_max" : s.max() })
+            choices_overall.append((field, "%s (decimal)" % field))
+        for field in fields_dict.get("int64",[]):
+            numeric_field_max_and_min.append({"name" : field, "max" : s.max(), "min" : s.min(), "initial_min" :s.min(),"initial_max" : s.max() })
+            choices_overall.append((field, "%s (whole number)" % field))  
 
         return {
         "split_by": None,
@@ -269,7 +273,7 @@ class WorkflowDataMappingRevision(TimeStampedModel):
         "split_y_axis_by": None,
         "visualisation_type" : "bar",
         "visualisation_title" : "",
-        "x_axis": self.x_axis, "y_axis": self.y_axis, "string_field_uniques" : string_field_uniques,"numeric_field_max_and_min" :numeric_field_max_and_min , "names" : [(name,name) for name in df.dtypes.keys()]}
+        "x_axis": self.x_axis, "y_axis": self.y_axis, "string_field_uniques" : string_field_uniques,"numeric_field_max_and_min" :numeric_field_max_and_min , "names" : choices_overall}
 
 
 
@@ -314,20 +318,6 @@ class IcFiftyWorkflowDataMappingRevision(TimeStampedModel):
             return read_hdf(filename,self.get_store_key(),)
         else:
             return read_hdf(self.get_store_filename("data"),self.get_store_key(),where=where)
-
-    def get_column_form_data(self):
-        df = self.get_data()
-        fields = df.columns.to_series().groupby(df.dtypes).groups
-        fields_dict = {k.name: v for k, v in fields.items()}
-        string_field_uniques = []
-        for field in fields_dict.get("object",[]):
-            s = df[field].value_counts()
-            string_field_uniques.append({"name": field,"initial":[k for k,v in s.iterkv()], "choices" : [(k,k) for k,v in s.iterkv()]})
-        numeric_field_max_and_min = []
-        for field in fields_dict.get("int64",[]) + fields_dict.get("float64",[]):
-            numeric_field_max_and_min.append({"name" : field, "max" : s.max(), "min" : s.min(), "initial_min" :s.min(),"initial_max" : s.max() })
-
-        return {"x_axis": self.x_axis, "y_axis": self.y_axis, "string_field_uniques" : string_field_uniques,"numeric_field_max_and_min" :numeric_field_max_and_min , "names" : [(name,name) for name in df.dtypes.keys()]}
 
 
 
@@ -374,15 +364,13 @@ class Visualisation(TimeStampedModel):
         form_data = self.get_column_form_data()
         string_expressions = {form_datum["name"] : form_datum["initial"] for form_datum in form_data["string_field_uniques"]}
         df = self.data_mapping_revision.get_data()
-        # row_mask = df.isin(string_expressions)[[form_datum["name"]  for form_datum in form_data["string_field_uniques"]]]
-        # df = df[row_mask.all(1)]
+        row_mask = df.isin(string_expressions)[[form_datum["name"]  for form_datum in form_data["string_field_uniques"]]]
+        df = DataFrame(df[row_mask.all(1)])
         split_y_axis_by = self.split_y_axis_by if self.split_y_axis_by !='None' else None
         split_x_axis_by = self.split_x_axis_by if self.split_x_axis_by !='None' else None
 
-        kwargs = {"size": 4, 
-                    "aspect": 1,
-                    "row":self.split_y_axis_by if self.split_y_axis_by !='None' else None,
-                    "col":self.split_x_axis_by if self.split_x_axis_by !='None' else None,
+        kwargs = {"size": 6, 
+                    "aspect": 1.7,
                      "sharex":True, 
                      "sharey":True, 
                     }
@@ -399,7 +387,7 @@ class Visualisation(TimeStampedModel):
                 kwargs["ylim"] = ylim
          
 
-        with plotting_context( "paper" ):
+        with plotting_context( "talk" ):
             labels = GRAPH_MAPPINGS[self.visualisation_type]["get_label_function"](self, df) 
             # g = sns.factorplot(self.x_axis,
             #      y=self.y_axis, data=df, 
@@ -409,10 +397,19 @@ class Visualisation(TimeStampedModel):
             g_kwargs = {}
             if labels:
                 g_kwargs = {"x_order":labels}  
+            print kwargs
             g = sns.FacetGrid(df,**kwargs )
+            
             g.map(GRAPH_MAPPINGS[self.visualisation_type]["function"], self.x_axis, self.y_axis, **g_kwargs);
-            if labels and not split_by :
-                 g.set_xticklabels(labels, rotation=90)
+            if labels:
+                if split_by:
+                    for ax in g.axes:
+                        ax.set_xticklabels(labels, rotation=90)
+                else:
+                    g.set_xticklabels(labels, rotation=90)
+
+            #if labels and not split_by :
+             #   g.set_xticklabels(labels, rotation=90) 
             if self.visualisation_title:
                 g.fig.tight_layout()
                 height_in_inches = g.fig.get_figheight()
@@ -430,8 +427,11 @@ class Visualisation(TimeStampedModel):
         df = self.data_mapping_revision.get_data()
         fields = df.columns.to_series().groupby(df.dtypes).groups
         fields_dict = {k.name: v for k, v in fields.items()}
+
+
         string_field_uniques = []
         config_json = json.loads(self.config_json)
+        choices_overall = []
         for field in fields_dict.get("object",[]):
             s = df[field].value_counts()
             initial = []
@@ -439,10 +439,16 @@ class Visualisation(TimeStampedModel):
                 initial = config_json.get(my_slug(field))
             else:
                 initial = [k for k,v in s.iterkv()]
-            string_field_uniques.append({"name": field,"initial": initial, "choices" : [(k,k) for k,v in s.iterkv()]})
+            string_field_uniques.append({"name": field,"initial": initial, "choices" : sorted([(k,k) for k,v in s.iterkv()])})
+            choices_overall.append((field, "%s (label)" % field))
         numeric_field_max_and_min = []
-        for field in fields_dict.get("int64",[]) + fields_dict.get("float64",[]):
-            numeric_field_max_and_min.append({"name" : field, "max" : s.max(), "min" : s.min(), "initial_min" :s.min(),"initial_max" : s.max() })#Tob be completed
+        for field in fields_dict.get("float64",[]):
+            numeric_field_max_and_min.append({"name" : field, "max" : s.max(), "min" : s.min(), "initial_min" :s.min(),"initial_max" : s.max() })
+            choices_overall.append((field, "%s (decimal)" % field))
+        for field in fields_dict.get("int64",[]):
+            numeric_field_max_and_min.append({"name" : field, "max" : s.max(), "min" : s.min(), "initial_min" :s.min(),"initial_max" : s.max() })
+            choices_overall.append((field, "%s (whole number)" % field))  
+
         return {
         "visualisation_type" : self.visualisation_type,
         "visualisation_title" : self.visualisation_title,
@@ -454,7 +460,7 @@ class Visualisation(TimeStampedModel):
         "split_y_axis_by" : self.split_y_axis_by, 
         "string_field_uniques" : string_field_uniques,
         "numeric_field_max_and_min" :numeric_field_max_and_min , 
-        "names" : [(name,name) for name in df.dtypes.keys()]}
+        "names" : choices_overall}
 
 
 

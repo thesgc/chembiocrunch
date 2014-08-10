@@ -378,6 +378,8 @@ class VisualisationUpdateView(WorkflowDetailView):
                 'workflow_revision_id' : workflow_revision.id,
                 })) 
             return self.render_to_response(context)
+        else:
+            print vis_update_form.errors
 
 
 
