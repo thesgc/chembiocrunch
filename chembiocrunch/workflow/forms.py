@@ -312,6 +312,9 @@ class ResetButton(Reset):
     field_classes = 'btn btn-danger'
 
 class BaseDataMappingFormset(BaseFormSet):
+    '''Base class for the formset which al;lows fields to be auto generated
+    On save we create a new data mapping revision and then redirect the user to
+    use that particular data mapping revision for their visualisation'''
     def get_column_name_from_boolean(self, boolean_field_name):
         for form in self:
             if form.cleaned_data.get(boolean_field_name, None):
@@ -372,57 +375,7 @@ class BaseDataMappingFormset(BaseFormSet):
 
 
 
-# class FilterForm(forms.Form):
-#     def __init__(self, *args, **kwargs):
-#         column_data = kwargs.pop('column_data')
-#         super(FilterForm, self).__init__(*args, **kwargs)
-#         fields = []
-#         fieldsets = []
-#         for field_data in column_data["string_field_uniques"]:
-#             field = my_slug(field_data["name"])
-#             self.fields[field] = forms.MultipleChoiceField( 
-#                 choices = field_data["choices"],
-#                 widget = forms.CheckboxSelectMultiple,
-#                 initial = [choice[0] for choice in field_data["choices"]], #If initial data here
-#                 required=False,
-#             )
-#             fields.append(field)
-#             fieldsets.append(Fieldset('Filter %s' % field_data["name"], field ))
 
-        
-#         self.helper = FormHelper()
-#         self.helper.add_input(Submit('submit', 'Filter'))
-#         self.helper.layout = Layout(
-#             *fieldsets
-#         )
-#         self.request = kwargs.pop('request', None)
-#         self.helper.form_show_labels = False
-
-
-# class NumericFieldFilterForm(forms.Form):
-#     def __init__(self, *args, **kwargs):
-#         column_data = kwargs.pop('column_data')
-#         super(NumericFieldFilterForm, self).__init__(*args, **kwargs)
-#         fields = []
-#         for field_data in column_data["string_field_uniques"]:
-#             field = my_slug(field_data["name"])
-#             self.fields[field] = forms.MultipleChoiceField( 
-#                 choices = field_data["choices"],
-#                 widget = forms.CheckboxSelectMultiple,
-#                 initial = [choice[0] for choice in field_data["choices"]],
-#                 required=False,
-#             )
-#             fields.append(field)
-#         print self
-#         arguments = ['Label Filters',] + fields
-#         self.helper = FormHelper()
-#         self.helper.add_input(Button('submit', 'Filter'))
-#         self.helper.layout = Layout(
-#             Fieldset( 
-#                *arguments
-#             )     
-#         )
-#         self.request = kwargs.pop('request', None)
    
 class HeatmapFormHelper(FormHelper):
         form_show_labels = True
@@ -485,26 +438,14 @@ class HeatmapForm(forms.Form):
 
 
 class VisualisationForm(forms.Form):
+    '''The visualistion form has a whole set of auto-generated fields based upon whatever the
+    schema of the uploaded file is. These fields are then distributed across the UI in such a way as to
+    create a good user experience. The form is not bound as a modelform because
+    it has to be completely generated on the fly anyway'''
     PUBLICATION_TYPE_CHOICES = (("paper","Paper"),
                                 ("talk", "Talk"),
                                 ("notebook", "Notebook"),
                                 ("poster", "Poster"))
-    
-    #x_axis = forms.ChoiceField( choices=[])
-    #y_axis = forms.ChoiceField( choices=[])
-
-    # height = forms.FloatField(widget=Slider)
-    # aspect_ratio = forms.FloatField(widget=Slider)
-    # publication_type = forms.ChoiceField(choices=PUBLICATION_TYPE_CHOICES)
-    # error_bars =  forms.TypedChoiceField(
-    #     choices = ((1, "Yes"), (0, "No")),
-    #     coerce = lambda x: bool(int(x)),
-    #     widget = forms.RadioSelect,
-    #     initial = '0',
-    #     required = True,
-    # )
-
-
 
 
 
@@ -518,7 +459,7 @@ class VisualisationForm(forms.Form):
                                         #   "error_bars",
                                            "x_axis",
                                            "y_axis",
-                                           "split_x_axis_by",
+                                           "split_colour_by",
                                            "split_y_axis_by",
                                            "split_by",
                                             ]
@@ -528,15 +469,12 @@ class VisualisationForm(forms.Form):
         defaults["config_json"] = json.dumps(config_json)
         if not visualisation:
             visualisation = Visualisation(**defaults)
-            #visualisation.html = mpld3.fig_to_html(visualisation.get_fig_for_dataframe())
             visualisation.html = visualisation.get_svg()
             visualisation.save()
         else:
             qs = Visualisation.objects.filter(id=visualisation.id)
             qs.update(**defaults)
             visualisation = qs.get()
-            print visualisation.__dict__
-            #visualisation.html = mpld3.fig_to_html(visualisation.get_fig_for_dataframe())
             visualisation.html = visualisation.get_svg()
             visualisation.save()
 
@@ -565,15 +503,21 @@ class VisualisationForm(forms.Form):
             initial = column_data["visualisation_type"],
             required = True,
         )
-        self.fields["split_x_axis_by"] = forms.ChoiceField(required=False,choices=column_data["names"], initial=column_data["x_axis"])
+        split_y_axis_by = column_data["split_y_axis_by"]
         self.fields["split_y_axis_by"] = forms.ChoiceField(required=False,choices= column_data["names"], initial=column_data["y_axis"])
-        split_x_axis_by = column_data["split_x_axis_by"]
+        split_colour_by = column_data["split_colour_by"]
+        
+        self.fields["split_colour_by"] = forms.ChoiceField(required=False,
+            choices=[(None,"No colour splitting - single colour"),] + [(label[0], "Split colours by %s" % label[1]) for label in column_data["names"] if "label" in label[1]],
+            initial=split_colour_by,   
+            label="Split into multiples by"  )
+
         self.fields["x_axis"] = forms.TypedChoiceField(
                                     choices= [(label[0], "x axis - %s" % label[1]) for label in column_data["names"]],
                                     initial=column_data["x_axis"], 
                                     required=False,
                                             )
-        split_y_axis_by = column_data["split_y_axis_by"]
+        
         self.fields["y_axis"] = forms.TypedChoiceField(required=False, 
             choices= [ (label[0], "y axis - %s" % label[1]) for label in column_data["names"]],
                                                                 initial=column_data["y_axis"], 
@@ -581,7 +525,7 @@ class VisualisationForm(forms.Form):
 
         split_by = column_data["split_by"]
         self.fields["split_by"] = forms.TypedChoiceField(required=False, 
-            choices= [(None,"No multiples - plot singly"),] + [(label[0], "%s" % label[1]) for label in column_data["names"] if "label" in label[1]],
+            choices= [(None,"No multiples - plot singly"),] + [(label[0], "Split into multiples by %s" % label[1]) for label in column_data["names"] if "label" in label[1]],
                                                                 initial=split_by,   label="Split into multiples by"  )
         self.titlehelper = FormHelper()
         self.titlehelper.form_class = 'form-inline'
@@ -603,11 +547,12 @@ class VisualisationForm(forms.Form):
         self.helper.field_template = 'bootstrap3/layout/inline_field.html'
 
         self.helper.layout = Layout(
-               # Div('split_by',css_class="col-xs-4"),
-                Div('x_axis',),
-             #     Div(
-             #    Submit('sub',"Update"),
-             # )  
+                Div('split_colour_by',css_class="col-lg-4 col-sm-4 col-xs-4"),
+                Div('split_by',css_class="col-lg-4 col-sm-4 col-xs-4"),
+                Div('x_axis',css_class="col-lg-3 col-sm-3 col-xs-3"),
+                 Div(
+                Submit('sub',"Update"),css_class="col-lg-1 col-sm-1 col-xs-1"
+             )  
         )
         self.xhelper = FormHelper()
         #self.helper.form_show_labels = False
@@ -647,12 +592,6 @@ class VisualisationForm(forms.Form):
         if len(args) == 1:
             self.data = args[0]
         self.filterhelper.form_tag = False
-
-
-
-
-
-
 
 
 

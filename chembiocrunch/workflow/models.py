@@ -324,7 +324,7 @@ class WorkflowDataMappingRevision(TimeStampedModel):
 
         return {
         "split_by": None,
-        "split_x_axis_by": None,
+        "split_colour_by": None,
         "split_y_axis_by": None,
         "visualisation_type" : "bar",
         "visualisation_title" : "",
@@ -353,7 +353,7 @@ class Visualisation(TimeStampedModel):
     x_axis = models.CharField(max_length=200)
     y_axis = models.CharField(max_length=200)
     split_by = models.CharField(max_length=200, null=True, blank=True, default=None)
-    split_x_axis_by = models.CharField(max_length=200, null=True, blank=True, default=None)
+    split_colour_by = models.CharField(max_length=200, null=True, blank=True, default=None)
     split_y_axis_by = models.CharField(max_length=200, null=True, blank=True, default=None)
     error_bars = models.NullBooleanField()
     visualisation_title = models.CharField(max_length=200, null=True, blank=True)
@@ -378,12 +378,16 @@ class Visualisation(TimeStampedModel):
         row_mask = df.isin(string_expressions)[[form_datum["name"]  for form_datum in form_data["string_field_uniques"]]]
         df = DataFrame(df[row_mask.all(1)])
         split_y_axis_by = self.split_y_axis_by if self.split_y_axis_by !='None' else None
-        split_x_axis_by = self.split_x_axis_by if self.split_x_axis_by !='None' else None
+        split_colour_by = self.split_colour_by if self.split_colour_by !='None' else None
 
-        kwargs = {"size": 6, 
-                    "aspect": 1.7,
+        kwargs = {"size": 5, 
+                    "aspect": 1.75,
                      "sharex":True, 
-                     "sharey":True, 
+                     "sharey":True,
+                     "hue" : split_colour_by,
+                     "legend" : False,
+                     "legend_out" : True,
+                      #'legend.frameon': False
                     }
         split_by = self.split_by if self.split_by !='None' else None
         if split_by:
@@ -392,22 +396,23 @@ class Visualisation(TimeStampedModel):
             kwargs["col_wrap"] = 4
         if GRAPH_MAPPINGS[self.visualisation_type]["xy"] == True:
             if df.count()[0] > 0 :
-                xlim = (0, float(max(df[self.x_axis]))*1.1)
+                xlim = (0, float(max(df[self.x_axis]))*1.3)
                 ylim = (0, float(max(df[self.y_axis]))*1.1)
                 kwargs["xlim"] = xlim
                 kwargs["ylim"] = ylim
          
 
-        with plotting_context( "talk" ):
+        with plotting_context( "poster" ):
+            sns.set_style("white")
             labels = GRAPH_MAPPINGS[self.visualisation_type]["get_label_function"](self, df) 
             # g = sns.factorplot(self.x_axis,
             #      y=self.y_axis, data=df, 
             #      row=self.split_y_axis_by if self.split_y_axis_by !='None' else None, 
             #      x_order=labels, 
-            #      col=self.split_x_axis_by if self.split_x_axis_by !='None' else None,)
+            #      col=self.split_colour_by if self.split_colour_by !='None' else None,)
             g_kwargs = {}
             if labels:
-                g_kwargs = {"x_order":labels}  
+                g_kwargs["x_order"] =labels  
             print kwargs
             g = sns.FacetGrid(df,**kwargs )
             
@@ -417,8 +422,10 @@ class Visualisation(TimeStampedModel):
                     for ax in g.axes:
                         ax.set_xticklabels(labels, rotation=90)
                 else:
+                    
                     g.set_xticklabels(labels, rotation=90)
-
+            g.set_legend()
+            # frame = g.fig.legend().get_frame()
             #if labels and not split_by :
              #   g.set_xticklabels(labels, rotation=90) 
             if self.visualisation_title:
@@ -467,7 +474,7 @@ class Visualisation(TimeStampedModel):
         "x_axis": self.x_axis, 
         "y_axis": self.y_axis,
         "split_by" : self.split_by, 
-        "split_x_axis_by" : self.split_x_axis_by, 
+        "split_colour_by" : self.split_colour_by, 
         "split_y_axis_by" : self.split_y_axis_by, 
         "string_field_uniques" : string_field_uniques,
         "numeric_field_max_and_min" :numeric_field_max_and_min , 
