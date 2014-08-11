@@ -21,8 +21,8 @@ from seaborn import plotting_context, set_context
 import mpld3
 import pandas as pd
 from django.forms import Form
-# from pptx import Presentation
-# from pptx.util import Inches, Px
+from pptx import Presentation
+from pptx.util import Inches, Px
 
 class WorkflowView( LoginRequiredMixin):
 
@@ -424,30 +424,53 @@ class VisualisationUpdateView(WorkflowDetailView):
 
 class VisualisationView(DetailView,):
     model = get_model("workflow", "visualisation")
-    
+    format = None
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
-        df = self.object.data_mapping_revision.get_data()
-        with plotting_context( "talk" ):
-            labels = sorted([k for k,v in df[self.object.x_axis].value_counts().iterkv()])
-            g = sns.factorplot(self.object.x_axis,
-                y=self.object.y_axis, data=df, 
-                row=self.object.split_y_axis_by if self.object.split_y_axis_by !='None' else None, 
-                x_order=labels, 
-                col=self.object.split_x_axis_by if self.object.split_x_axis_by !='None' else None,)         
-            # g = sns.FacetGrid(df,**kwargs )
-            # g.map(GRAPH_MAPPINGS[self.visualisation_type]["function"], self.x_axis, self.y_axis, x_order=[k for k,v in df[self.x_axis].value_counts().iterkv()],);
-            
-            g.set_xticklabels(labels, rotation=90)        
-            g.fig.suptitle("self.object.visualisation_title", fontsize=20)
-            g.fig.tight_layout(rect=(0,0,1,0.93))
-            #if self.object.visualisation_title:
-            
-            g.fig.patch.set_alpha(0.0)
-            fc = matplotlib.backends.backend_agg.FigureCanvasAgg(g.fig)
-            response = HttpResponse(content_type='image/png')
-            fc.print_png(response,  transparent=True)
-            return response
+        self.format = kwargs.pop("format")
+        fig = self.object.get_fig_for_dataframe()
+        self.fc = matplotlib.backends.backend_agg.FigureCanvasAgg(fig)
+        if self.format=="png":
+            return self.get_png()
+        if self.format=="svg":
+            return self.get_svg()       
+        if self.format=="ppt":
+            return self.get_ppt()   
+
+    def get_png(self):
+        response = HttpResponse(content_type='image/png')
+        self.fc.print_png(response,  transparent=True)
+        response['Content-Disposition'] = 'attachment; filename="filename.png"'
+        return response
+
+
+
+    def get_svg(self):
+        response = HttpResponse(self.object.html, content_type='image/svg+xml')
+        response['Content-Disposition'] = 'attachment; filename="filename.svg"'
+        return response
+
+
+    def get_ppt(self):
+        prs = Presentation()
+        blank_slide_layout = prs.slide_layouts[6]
+        slide = prs.slides.add_slide(blank_slide_layout)
+        self.fc.print_png("/tmp/test.png",  transparent=True)
+        left =  Inches(0)
+        top = Inches(1.5)
+        pic = slide.shapes.add_picture("/tmp/test.png", left, top)
+        file_path = '/tmp/test.pptx'
+        prs.save(file_path)
+        fsock = open(file_path,"r")
+        response = HttpResponse(fsock, content_type='application/vnd.openxmlformats-officedocument.presentationml.presentation')
+        response['Content-Disposition'] = 'attachment; filename=TestPpt.pptx'
+        #fc.print_png(response)
+        return response
+
+
+
+
+
 
 
 # class VisualisationExportView(WorkflowView, DetailView,):
@@ -467,17 +490,7 @@ class VisualisationView(DetailView,):
 #             #from here, send this image to python-pptx
 #             #img_path = 'monty-truth.png'
 
-#             prs = Presentation()
-#             blank_slide_layout = prs.slide_layouts[6]
-#             slide = prs.slides.add_slide(blank_slide_layout)
 
-#             #left = top = Inches(1)
-#             #pic = slide.shapes.add_picture(fc.print_png, left, top)
-#             #try serving a blank ppt
-#             response = HttpResponse(prs, content_type='application/vnd.openxmlformats-officedocument.presentationml.presentation')
-#             response['Content-Disposition'] = 'attachment; filename=TestPpt.pptx'
-#             #fc.print_png(response)
-#             return response
 
 
 

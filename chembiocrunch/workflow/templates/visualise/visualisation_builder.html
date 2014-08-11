@@ -24,7 +24,6 @@ Visualisation Builder
 {% endblock help_text %}
 {% block content %}
 
-
 <form  action="#options" class="  " method="post">
 
 {% if visualisation_list %}
@@ -44,7 +43,57 @@ Visualisation Builder
 </div><!-- end vis holder -->
 {% endif %}
 
+{% if visualisation_id %}
+<div class="dropdown pull-right">
+  <button class="btn btn-primary btn-lg dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
+    Export
+    <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
 
+    
+    <li role="presentation"> <a href="{% url "visualisation_view" pk=visualisation.id format="ppt" %}" role="menuitem" tabindex="-1"  type="link"  id="submit-id3-submit"  class=" btn btn-default input-block-level">As powerpoint</a>
+
+</li>
+
+
+<!--          <button type="submit"  value="new" name="new" id="submit-id2-submit"  class="btn btn-success"><span class="glyphicon glyphicon-plus"></span></button>
+ -->         <li role="presentation"><a href="{% url "visualisation_view" pk=visualisation.id format="png" %}" class="btn btn-default input-block-level" type="link" value="new" name="new" role="menuitem" tabindex="-1" href="#">As png image</a></li>
+
+
+    <li role="presentation"><a href="{% url "visualisation_view" pk=visualisation.id format="svg" %}" role="menuitem" tabindex="-1" type="link" id="submit-id3-submit" value="delete" name="delete" class="btn btn-default input-block-level "></span>As CorelDraw SVG</a></li>
+  </ul>
+</div>
+
+    {% else %}
+
+{% endif %}
+
+
+
+<div class="dropdown pull-right">
+  <button class="btn btn-primary btn-lg dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
+    File
+    <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+
+    
+    <li role="presentation"> <button role="menuitem" tabindex="-1"  type="submit"  id="submit-id3-submit"  class=" btn btn-default input-block-level">Update</button>
+
+</li>
+{% if visualisation_id %}
+
+<!--          <button type="submit"  value="new" name="new" id="submit-id2-submit"  class="btn btn-success"><span class="glyphicon glyphicon-plus"></span></button>
+ -->         <li role="presentation"><button class="btn btn-default input-block-level"  value="new" name="new" role="menuitem" tabindex="-1" href="#">Create new</a></li>
+    {% else %}
+
+{% endif %}
+
+    <li role="presentation" class="divider"></li>
+    <li role="presentation"><button type="submit" role="menuitem" tabindex="-1"  id="submit-id3-submit" value="delete" name="delete" class="btn btn-default input-block-level "><span class="glyphicon glyphicon-remove"></span>Discard &amp; restart</button></li>
+  </ul>
+</div>
 
 <a name="options"/>
 <h2 class="row">
@@ -58,18 +107,26 @@ Editing
 </div>
 <span style="font-size:12pt">
     {% crispy visualisation_form visualisation_form.titlehelper %}
-    {% if visualisation_id %}
-
-         <button type="submit"  value="new" name="new" id="submit-id2-submit"  class="btn btn-success"><span class="glyphicon glyphicon-plus"></span>Save changes and create new</button>
-    {% else %}
+    
 
 
-{% endif %}
- <button type="submit"  id="submit-id3-submit"  class="btn btn-primary"><span class="glyphicon glyphicon-refresh"></span>Save changes and continue editing</button>
 
- <button type="submit"  id="submit-id3-submit" value="delete" name="delete" class="btn btn-danger"><span class="glyphicon glyphicon-remove"></span>Discard visualisation and restart</button>
+
+ <button type="submit"  id="submit-id3-submit"  class="btn btn-primary"></span>Update</button>
+
+
+
+
+
 </span>
+
+
+
+
 </h2>
+
+
+
 <div class="row pull-left col-xs-12">
 {% crispy visualisation_form visualisation_form.xhelper %}
 
@@ -126,13 +183,14 @@ $(".handle").trigger("click");
     $(function(){
         
       rightSlide();
+      
  });
 
 var botPos = '-400px';
 function leftSlide(){
   $('.slide-out-div').tabSlideOut({
             tabHandle: '.handle',                     //class of the element that will become your tab
-            pathToTabImage: '{% static "images/contact_tab.gif" %}', //path to the image for the tab //Optionally can be set using css
+            pathToTabImage: '{% static "images/contact_tab.gifUse of getPreventDefault() is deprecated.  Use defaultPrevented instead." %}', //path to the image for the tab //Optionally can be set using css
             imageHeight: '0px',                     //height of tab image           //Optionally can be set using css
             imageWidth: '120px',                       //width of tab image            //Optionally can be set using css
             tabLocation: 'left',                      //side of screen where tab lives, top, right, bottom, or left
@@ -205,7 +263,9 @@ window.onresize = function(){
 //     }               
 // }
 
-
+window.onload = function(){
+  $('.dropdown-toggle').dropdown();
+}
 
 
 
