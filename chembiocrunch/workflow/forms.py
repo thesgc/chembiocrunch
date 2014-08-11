@@ -522,7 +522,7 @@ class VisualisationForm(forms.Form):
         split_colour_by = column_data["split_colour_by"]
         
         self.fields["split_colour_by"] = forms.ChoiceField(required=False,
-            choices=[(None,"No colour splitting - single colour"),] + [(label[0], "%s" % label[1]) for label in column_data["names"] if "label" in label[1]],
+            choices=[(None,"No colour splitting - single colour"),] + [(label[0], "Split colours by %s" % label[1]) for label in column_data["names"] if "label" in label[1]],
             initial=split_colour_by,   
             label="Split into multiples by"  )
 
@@ -539,7 +539,7 @@ class VisualisationForm(forms.Form):
 
         split_by = column_data["split_by"]
         self.fields["split_by"] = forms.TypedChoiceField(required=False, 
-            choices= [(None,"No multiples - plot singly"),] + [(label[0], "%s" % label[1]) for label in column_data["names"] if "label" in label[1]],
+            choices= [(None,"No multiples - plot singly"),] + [(label[0], "Split into multiples by %s" % label[1]) for label in column_data["names"] if "label" in label[1]],
                                                                 initial=split_by,   label="Split into multiples by"  )
         self.titlehelper = FormHelper()
         self.titlehelper.form_class = 'form-inline'
@@ -563,10 +563,10 @@ class VisualisationForm(forms.Form):
         self.helper.layout = Layout(
                 Div('split_colour_by',css_class="col-lg-4 col-sm-4 col-xs-4"),
                 Div('split_by',css_class="col-lg-4 col-sm-4 col-xs-4"),
-                Div('x_axis',css_class="col-lg-4 col-sm-4 col-xs-4"),
-             #     Div(
-             #    Submit('sub',"Update"),
-             # )  
+                Div('x_axis',css_class="col-lg-3 col-sm-3 col-xs-3"),
+                 Div(
+                Submit('sub',"Update"),css_class="col-lg-1 col-sm-1 col-xs-1"
+             )  
         )
         self.xhelper = FormHelper()
         #self.helper.form_show_labels = False
