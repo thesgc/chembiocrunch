@@ -91,10 +91,6 @@ class Workflow(TimeStampedModel):
         # types_frame.to_hdf(new_workflow_revision.get_store_filename("dtypes"), new_workflow_revision.get_store_key(), mode='w', format="table")
 
 
-                
-
-
-
     def get_data_mapping_formset_data(self):
         rev = self.get_latest_data_revision()
         df = rev.get_data()
@@ -103,29 +99,36 @@ class Workflow(TimeStampedModel):
 
 
 # PB - new Workflow for IC50 project.
-class IcFiftyWorkflowManager(models.Manager):
+class IC50WorkflowManager(models.Manager):
     def get_user_records(self, user):
         return self.filter(created_by__id=user.id)
 
-
     def get_latest_workflow_revision(self, workflow_id):
-        return get_model("workflow", "IcFiftyWorkflowDataMappingRevision").objects.filter(workflow_id=workflow_id).order_by("-created")[0]
+        return get_model("workflow", "IC50WorkflowRevision").objects.filter(workflow_id=workflow_id).order_by("-created")[0]
 
 
-class IcFiftyWorkflow(TimeStampedModel):
+class IC50Workflow(TimeStampedModel):
     title = models.CharField(max_length=100)
     uploaded_config_file = models.FileField()
     uploaded_data_file = models.FileField()    
     created_by = models.ForeignKey('auth.User')
-    objects = WorkflowManager()
+    objects = IC50WorkflowManager()
 
-    def get_latest_data_revision(self):
-        return get_model("workflow", "IcFiftyWorkflow").objects.get_latest_workflow_revision(self.id)
+    #def get_latest_data_revision(self):
+    #    return get_model("workflow", "Ic50Workflow").objects.get_latest_workflow_revision(self.id)
 
     def create_first_data_revision(self):
         
         dcf = dataframe_handler.get_data_frame(self.uploaded_config_file.file)
         ddf = dataframe_handler.get_data_frame(self.uploaded_data_file.file)
+
+        new_workflow_revision = get_model("workflow", "IC50WorkflowRevision").objects.create(workflow=self, revision_type=UPLOAD)
+        dcf.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w', format="table")
+        ddf.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w', format="table")
+
+    def get_latest_workflow_revision(self, workflow_id):
+        return get_model("workflow", "IC50WorkflowRevision").objects.filter(workflow_id=workflow_id).order_by("-created")[0]
+        
 
         #this is where auto-munging of data can take place
         #i.e. any ipython workflows applied here
@@ -133,19 +136,71 @@ class IcFiftyWorkflow(TimeStampedModel):
         #df becomes the result of data munging? Do that elsewhere?
 
         #df = dataframe_handler.get_data_frame(self.uploaded_file.file)
-        new_workflow_revision = get_model("workflow", "IcFiftyWorkflowDataMappingRevision").objects.create(workflow=self, revision_type=UPLOAD, steps_json=json.dumps({"count" : int(ddf.count()[0]) }))
+        #new_workflow_revision = get_model("workflow", "IcFiftyWorkflowDataMappingRevision").objects.create(workflow=self, revision_type=UPLOAD, steps_json=json.dumps({"count" : int(ddf.count()[0]) }))
         
         # types_frame = DataFrame([[str(dtype) for dtype in df.dtypes],], columns=df.dtypes.keys())
 
-        dcf.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w', format="table")
-        ddf.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w', format="table")
+        #dcf.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w', format="table")
+        #ddf.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w', format="table")
         # types_frame.to_hdf(new_workflow_revision.get_store_filename("dtypes"), new_workflow_revision.get_store_key(), mode='w', format="table")
 
-    def get_data_mapping_formset_data(self):
-        rev = self.get_latest_data_revision()
-        df = rev.get_data()
-        extra_data = [{"workflow_id": self.id } ]
-        return extra_data
+
+
+
+class IC50WorkflowRevision(TimeStampedModel):
+
+    '''
+    Revision for IC50 workflows
+    '''
+
+    workflow = models.ForeignKey('IC50Workflow', related_name='workflow_ic50_revisions')
+    steps_json = models.TextField(default="[]")
+    revision_type = models.CharField(max_length=5)
+    #     x_axis = models.CharField(max_length=100)
+    #     y_axis = models.CharField(max_length=100)
+    objects = IC50WorkflowManager()
+    
+    def get_store(self):
+        return get_store('workflows.%s' % (zero_pad_object_id(self.workflow_id),))
+
+    
+#     def get_store_filename(self, key,):
+#         return 'workflows.%s.%s' % (zero_pad_object_id(self.workflow_id),key)
+
+#     def get_store_key(self):
+#         return "wfdr%s" % (  zero_pad_object_id(self.id),)
+
+#     def get_dtypes(self, where=None):
+#         if not where:
+#             filename=self.get_store_filename("dtypes")
+#             print filename
+#             return read_hdf(filename,self.get_store_key(),)
+#         else:
+#             return read_hdf(self.get_store_filename("dtypes"),self.get_store_key(),where=where)
+
+
+
+
+#     def get_data(self, where=None):
+#         if not where:
+#             filename=self.get_store_filename("data")
+#             return read_hdf(filename,self.get_store_key(),)
+#         else:
+#             return read_hdf(self.get_store_filename("data"),self.get_store_key(),where=where)
+
+#     def get_column_form_data(self):
+#         df = self.get_data()
+#         fields = df.columns.to_series().groupby(df.dtypes).groups
+#         fields_dict = {k.name: v for k, v in fields.items()}
+#         string_field_uniques = []
+#         for field in fields_dict.get("object",[]):
+#             s = df[field].value_counts()
+#             string_field_uniques.append({"name": field,"initial":[k for k,v in s.iterkv()], "choices" : [(k,k) for k,v in s.iterkv()]})
+#         numeric_field_max_and_min = []
+#         for field in fields_dict.get("int64",[]) + fields_dict.get("float64",[]):
+#             numeric_field_max_and_min.append({"name" : field, "max" : s.max(), "min" : s.min(), "initial_min" :s.min(),"initial_max" : s.max() })
+
+#         return {"x_axis": self.x_axis, "y_axis": self.y_axis, "string_field_uniques" : string_field_uniques,"numeric_field_max_and_min" :numeric_field_max_and_min , "names" : [(name,name) for name in df.dtypes.keys()]}
 
 
 
@@ -270,65 +325,6 @@ class WorkflowDataMappingRevision(TimeStampedModel):
         "visualisation_type" : "bar",
         "visualisation_title" : "",
         "x_axis": self.x_axis, "y_axis": self.y_axis, "string_field_uniques" : string_field_uniques,"numeric_field_max_and_min" :numeric_field_max_and_min , "names" : [(name,name) for name in df.dtypes.keys()]}
-
-
-
-
-class IcFiftyWorkflowDataMappingRevision(TimeStampedModel):
-
-    '''
-
-    '''
-
-    workflow = models.ForeignKey('IcFiftyWorkflow', related_name='workflow_ic50_data_revisions')
-    steps_json = models.TextField(default="[]")
-    revision_type = models.CharField(max_length=5)
-    x_axis = models.CharField(max_length=100)
-    y_axis = models.CharField(max_length=100)
-    objects = WorkflowDataMappingRevisionManager()
-    
-    def get_store(self):
-        return get_store('workflows.%s' % (zero_pad_object_id(self.workflow_id),))
-
-    
-    def get_store_filename(self, key,):
-        return 'workflows.%s.%s' % (zero_pad_object_id(self.workflow_id),key)
-
-    def get_store_key(self):
-        return "wfdr%s" % (  zero_pad_object_id(self.id),)
-
-    def get_dtypes(self, where=None):
-        if not where:
-            filename=self.get_store_filename("dtypes")
-            print filename
-            return read_hdf(filename,self.get_store_key(),)
-        else:
-            return read_hdf(self.get_store_filename("dtypes"),self.get_store_key(),where=where)
-
-
-
-
-    def get_data(self, where=None):
-        if not where:
-            filename=self.get_store_filename("data")
-            return read_hdf(filename,self.get_store_key(),)
-        else:
-            return read_hdf(self.get_store_filename("data"),self.get_store_key(),where=where)
-
-    def get_column_form_data(self):
-        df = self.get_data()
-        fields = df.columns.to_series().groupby(df.dtypes).groups
-        fields_dict = {k.name: v for k, v in fields.items()}
-        string_field_uniques = []
-        for field in fields_dict.get("object",[]):
-            s = df[field].value_counts()
-            string_field_uniques.append({"name": field,"initial":[k for k,v in s.iterkv()], "choices" : [(k,k) for k,v in s.iterkv()]})
-        numeric_field_max_and_min = []
-        for field in fields_dict.get("int64",[]) + fields_dict.get("float64",[]):
-            numeric_field_max_and_min.append({"name" : field, "max" : s.max(), "min" : s.min(), "initial_min" :s.min(),"initial_max" : s.max() })
-
-        return {"x_axis": self.x_axis, "y_axis": self.y_axis, "string_field_uniques" : string_field_uniques,"numeric_field_max_and_min" :numeric_field_max_and_min , "names" : [(name,name) for name in df.dtypes.keys()]}
-
 
 
 

@@ -6,7 +6,7 @@ from django.conf import settings
 from braces.views import LoginRequiredMixin
 
 from django.db.models import get_model
-from workflow.forms import CreateWorkflowForm, CreateIcFiftyWorkflowForm, DataMappingForm, DataMappingFormSetHelper, DataMappingFormSet, ResetButton, VisualisationForm, HeatmapForm
+from workflow.forms import CreateWorkflowForm, IC50UploadForm, DataMappingForm, DataMappingFormSetHelper, DataMappingFormSet, ResetButton, VisualisationForm, HeatmapForm
 from django.core.urlresolvers import reverse
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, Fieldset, Reset
 from django.http import HttpResponseRedirect, HttpResponse
@@ -92,31 +92,33 @@ class WorkflowCreateView(WorkflowView, CreateView ):
 
 
 
-class WorkflowCreateIcFiftyView(WorkflowView, CreateView ):
+class Ic50WorkflowCreateView(WorkflowView, CreateView ):
     '''creates a single workflow'''
     fields = ['title', 'uploaded_data_file','uploaded_config_file']
     template_name = "workflows/workflow_ic50_create.html"
-    form_class = CreateIcFiftyWorkflowForm
+    #form_class = LabcyteEchoIC50UploadForm
+    form_class = IC50UploadForm
     success_url = 'success'
 
     def get_success_url(self):
         return reverse('workflow_ic50_heatmap', kwargs={
-                'pk': self.object.pk,
+                #'pk': self.object.pk,
+                'pk': 1,
                 })
 
     def form_valid(self, form):
         user = self.request.user
         form.instance.created_by = user
-        form_valid = super(WorkflowCreateIcFiftyView, self).form_valid(form)
+        form_valid = super(Ic50WorkflowCreateView, self).form_valid(form)
         
-        if get_model("workflow", "workflowic50datamappingrevision").objects.get_mapping_revisions_for_workflow(self.object).count() == 0:
-            self.object.create_first_data_revision()
+        #if get_model("workflow", "workflowic50datamappingrevision").objects.get_mapping_revisions_for_workflow(self.object).count() == 0:
+        #    self.object.create_first_data_revision()
 
         return form_valid
 
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
-        context = super(WorkflowCreateIcFiftyView, self).get_context_data(**kwargs)
+        context = super(Ic50WorkflowCreateView, self).get_context_data(**kwargs)
         context['revisions'][0][1] = "in-progress"
         return context
 
