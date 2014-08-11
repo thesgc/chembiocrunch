@@ -7,11 +7,23 @@
     padding-top:10px;
     
 } 
-.vis-thumb {
+.dropdown {
 	
-
+z-index:10000;
+margin-left:50px;
 }
-
+.dropdown-toggle {
+	
+z-index:10000;
+}
+.btn {
+	min-width:100px;
+	border:none;
+}
+.input-block-level {
+  width: 100% !important;
+  
+}
 .arrow-box:after { 
 	left: 100%; 
 	top: 50%; 
