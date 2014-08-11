@@ -121,7 +121,7 @@ class IC50Workflow(TimeStampedModel):
         ddf = dataframe_handler.get_data_frame(self.uploaded_data_file.file)
 
         new_workflow_revision = get_model("workflow", "IC50WorkflowRevision").objects.create(workflow=self, revision_type=UPLOAD)
-        dcf.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w', format="table")
+        dcf.to_hdf(new_workflow_revision.get_store_filename("configdata"), new_workflow_revision.get_store_key(), mode='w', format="table")
         ddf.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w', format="table")
 
     def get_latest_workflow_revision(self, workflow_id):
@@ -160,6 +160,35 @@ class IC50WorkflowRevision(TimeStampedModel):
     
     def get_store(self):
         return get_store('workflows.%s' % (zero_pad_object_id(self.workflow_id),))
+
+    
+    def get_store_filename(self, key,):
+        return 'workflows.%s.%s' % (zero_pad_object_id(self.workflow_id),key)
+
+    def get_store_key(self):
+        return "wfdr%s" % (  zero_pad_object_id(self.id),)
+
+    def get_dtypes(self, where=None):
+        if not where:
+            filename=self.get_store_filename("dtypes")
+            print filename
+            return read_hdf(filename,self.get_store_key(),)
+        else:
+            return read_hdf(self.get_store_filename("dtypes"),self.get_store_key(),where=where)
+
+    def get_data(self, where=None):
+        if not where:
+            filename=self.get_store_filename("data")
+            return read_hdf(filename,self.get_store_key(),)
+        else:
+            return read_hdf(self.get_store_filename("data"),self.get_store_key(),where=where)
+
+    def get_config_data(self, where=None):
+        if not where:
+            filename=self.get_store_filename("configdata")
+            return read_hdf(filename,self.get_store_key(),)
+        else:
+            return read_hdf(self.get_store_filename("configdata"),self.get_store_key(),where=where)
 
     
 #     def get_store_filename(self, key,):

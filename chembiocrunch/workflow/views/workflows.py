@@ -100,6 +100,8 @@ class Ic50WorkflowCreateView(WorkflowView, CreateView ):
     form_class = IC50UploadForm
     success_url = 'success'
 
+    model = get_model("workflow", "IC50Workflow")
+
     def get_success_url(self):
         return reverse('workflow_ic50_heatmap', kwargs={
                 #'pk': self.object.pk,
@@ -111,8 +113,8 @@ class Ic50WorkflowCreateView(WorkflowView, CreateView ):
         form.instance.created_by = user
         form_valid = super(Ic50WorkflowCreateView, self).form_valid(form)
         
-        #if get_model("workflow", "workflowic50datamappingrevision").objects.get_mapping_revisions_for_workflow(self.object).count() == 0:
-        #    self.object.create_first_data_revision()
+        if get_model("workflow", "IC50WorkflowRevision").objects.get_mapping_revisions_for_workflow(self.object).count() == 0:
+           self.object.create_first_data_revision()
 
         return form_valid
 

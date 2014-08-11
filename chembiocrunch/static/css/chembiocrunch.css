@@ -180,7 +180,7 @@ table.heatmap {
 	text-align: center;
 	transition: background-color 0.3s;
 }
-.heatmap label {
+.heatmap td.hide-checkbox label {
 	margin-left: -20px;
 }
 
@@ -202,12 +202,15 @@ table.heatmap {
 	background-color: #ddd;
 	color:#aaa;
 }
-.heatmap input[type=checkbox] {
+.heatmap td.hide-checkbox input[type=checkbox] {
    position: absolute;
    /*top: -9999px;*/
    left: -9999px;
    /* For mobile, it's typically better to position checkbox on top of clickable
       area and turn opacity to 0 instead. */
+}
+.heatmap th input[type=checkbox] {
+	margin-left:20px;
 }
 .ninehundred {
 	margin-bottom: 30px;

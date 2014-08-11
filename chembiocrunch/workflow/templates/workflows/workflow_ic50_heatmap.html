@@ -40,7 +40,7 @@ To get started upload your data and config files
 <script>
 
 $(document).ready(function() {
-
+  //monitor the heatmap well checkboxes
   $('.checkboxinput').each(function(){
 
     //apply the class
@@ -52,6 +52,22 @@ $(document).ready(function() {
       cell.toggleClass("unchecked");
     });
 
+  });
+
+  //monitor the column header checkboxes
+  $('.hmp_header .checkbox').change(function(e) {
+      trigger = $(this);
+      cell = $(this).closest('th');
+      column_number = cell.attr('data_column').toString();
+      //get the value of data-column
+      //set all of those to reflect the reverse checked state of the header
+      $('td[data_column="' + column_number + '"]').each(function(){
+        checkbox = $(this).find('.checkboxinput');
+        if (checkbox.prop('checked') != trigger.prop('checked')) {
+          checkbox.click();
+        }
+      });
+    
   });
 
 });
