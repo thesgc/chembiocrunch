@@ -9,7 +9,7 @@ H = re.compile('height="\d+pt"')
 def add_responsive_tags(svg):
     
     svg = PATTERN.sub('width="100%" preserveAspectRatio="xMinYMin meet" ',svg)
-    #svg = H.sub('height="100%"', svg)
+    svg = H.sub('', svg)
     return svg
 
 
