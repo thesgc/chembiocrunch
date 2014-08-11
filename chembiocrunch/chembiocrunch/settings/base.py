@@ -4,11 +4,12 @@
 from os.path import abspath, basename, dirname, join, normpath
 from sys import path
 
-
+SELECT2_BOOTSTRAP = True
 ########## PATH CONFIGURATION
 # Absolute filesystem path to the Django project directory:
 DJANGO_ROOT = dirname(dirname(abspath(__file__)))
-
+LOGIN_REDIRECT_URL = '/my_workflows/'
+LOGOUT_REDIRECT_URL = '/logged_out/'
 # Absolute filesystem path to the top-level project folder:
 SITE_ROOT = dirname(DJANGO_ROOT)
 
@@ -58,10 +59,9 @@ DATABASES = {
 
 ########## GENERAL CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#time-zone
-TIME_ZONE = 'America/Los_Angeles'
-
+TIME_ZONE = 'Europe/London'
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#language-code
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'en-gb'
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#site-id
 SITE_ID = 1

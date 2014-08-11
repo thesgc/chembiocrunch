@@ -7,6 +7,12 @@
     padding-top:10px;
     
 } 
+.vis-thumb {
+	max-height:50px;
+	min-height:50px;
+	height:50px;
+
+}
 
 .arrow-box:after { 
 	left: 100%; 
@@ -183,4 +189,13 @@ table.heatmap {
    left: -9999px;
    /* For mobile, it's typically better to position checkbox on top of clickable
       area and turn opacity to 0 instead. */
+}
+.ninehundred {
+	height:600px;
+	min-height: 600px;
+		max-height: 600px;
+
+}
+.pieces {
+	margin-bottom: 30px;
 }

@@ -4,7 +4,11 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, Fieldset, Reset
 from django.db.models import get_model 
 import magic
-from crispy_forms.bootstrap import PrependedText
+from crispy_forms.bootstrap import (
+PrependedAppendedText, AppendedText, PrependedText, InlineRadios,
+Tab, TabHolder, AccordionGroup, Accordion, Alert, InlineCheckboxes,
+FieldWithButtons, StrictButton, InlineField
+)
 from django.forms.formsets import formset_factory, BaseFormSet
 from workflow.backends.dataframe_handler import change_column_type, get_data_frame
 
@@ -21,9 +25,28 @@ import json
 
 import mpld3
 import copy
-
+from workflow.basic_units import BasicUnit
 import pandas as pd
 import math
+from django.contrib.auth.forms import AuthenticationForm
+from crispy_forms.bootstrap import StrictButton
+
+class UserLoginForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super(UserLoginForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper(self)
+        self.helper.form_class = 'form-horizontal'
+        self.helper.add_input(Submit('save', 'Sign in'))
+        self.helper.layout = Layout(
+            Fieldset( '',
+            'username',
+            'password',
+            )
+        )
+        self.helper.form_tag = True
+
+
+
 
 class Slider(forms.RangeInput):
     '''A slider input widget'''
@@ -219,29 +242,30 @@ DATA_TYPE_CHOICES = (
 )
 
 UNIT_CHOICES = (
-        ("", "Please Select"),
-    ("mM", "mM"),
-
-    ("μl", "μl"),
-    ("nM", "nM"),
-    ("pM", "pM"),
-
-    ("ml", "ml"),
-    ("mol", "mol"),
+        ("", "Not applicable"),
+  #      ("%", "% (specify of what)"),
+        (" ", "Other (specify)"),
+    ("mM", "millimolar (mM)"),
+    ("μM", "micromolar (μl)"),
+    ("nM", "nanomolar (nM)"),
+    ("pM", "picomolar (pM)"),
+    
+    ("μl", "millilitre (μl)"),
+    ("ml", "microlitre (ml)"),
+    ("l", "litre (l)"),
+    ("mol", "moles (M)"),
     ("Angstrom", "Angstrom (Å)"),
-    ("K", "K"),
-    ("nm", "nm"),
-    ("degrees-c", "°C"),
-    ("l", "l"),
-    ("g", "g"),
-    ("mg", "mg"),
-    ("kg", "kg"),
-    ("nm", "nm"),
-    ("m/s", "m/s")
+    ("K", "Kelivin (K)"),
+    ("degrees-c", "degrees (°C)"),
+    # ("g", "g"),
+    # ("mg", "mg"),
+    # ("kg", "kg"),
+    #("nm", "nm"),
+    #("m/s", "m/s")
 )
 
 
-
+UNIT_OBJECTS = { unit[0] : BasicUnit(unit[0],unit[1]) for unit in UNIT_CHOICES if unit[0] not in ["", "%", " "]}
 
 class DataMappingForm(forms.Form):
     readonly_fields = ('name',)
@@ -260,7 +284,11 @@ class DataMappingForm(forms.Form):
             choices=UNIT_CHOICES,
             required=False,
         )
-
+    other_unit = forms.CharField(
+        required=False,
+    max_length=15, 
+        show_hidden_initial=True, 
+        widget=forms.TextInput(attrs={'placeholder': '', 'size':5}))
     
     use_as_x_axis = forms.BooleanField(required=False, show_hidden_initial=True)
     use_as_y_axis = forms.BooleanField(required=False, show_hidden_initial=True)
@@ -299,6 +327,7 @@ class DataMappingFormSetHelper(FormHelper):
             #'hide',
             'description',
             'unit',
+            Field('other_unit',css_class='other_unit'),
             Field('use_as_x_axis', css_class='use_as_x_axis'),
             Field('use_as_y_axis', css_class='use_as_y_axis'),
             )
@@ -364,6 +393,8 @@ class BaseDataMappingFormset(BaseFormSet):
             #Not a data revision, we are just changing the default x and y axes
             current_data_revision.x_axis = x_axis
             current_data_revision.y_axis = y_axis
+            current_data_revision.steps_json = json.dumps(steps_json)
+            current_data_revision.revision_type = VALIDATE_COLUMNS
             current_data_revision.save()
             return current_data_revision
         return None
@@ -535,65 +566,75 @@ class VisualisationForm(forms.Form):
         super(VisualisationForm, self).__init__(*args, **kwargs)
         self.fields = copy.deepcopy(self.base_fields)
         self.fields["visualisation_title"] = forms.CharField(max_length=50,
-            widget=forms.TextInput(attrs={'placeholder': 'Visualisation Title'}), 
+            label="Title",
+            widget=forms.TextInput(attrs={"size":1}), 
             required=False, 
             initial = column_data["visualisation_title"],
         )
         self.fields["visualisation_type"] = forms.ChoiceField(
             label = "",
-            choices = [(key, "Graph type: " +value["name"]) for key, value in GRAPH_MAPPINGS.iteritems()],
+            choices = [(key, value["name"]) for key, value in GRAPH_MAPPINGS.iteritems()],
             #choices = [("bar" , "Graph type: bar")],
             widget = forms.RadioSelect,
             initial = column_data["visualisation_type"],
             required = True,
         )
-        self.fields["x_axis"] = forms.ChoiceField(choices=column_data["names"], initial=column_data["x_axis"])
-        self.fields["y_axis"] = forms.ChoiceField(choices= column_data["names"], initial=column_data["y_axis"])
+        self.fields["split_x_axis_by"] = forms.ChoiceField(required=False,choices=column_data["names"], initial=column_data["x_axis"])
+        self.fields["split_y_axis_by"] = forms.ChoiceField(required=False,choices= column_data["names"], initial=column_data["y_axis"])
         split_x_axis_by = column_data["split_x_axis_by"]
-        self.fields["split_x_axis_by"] = forms.TypedChoiceField(
-                                    choices= [(None,"Do not split x axis"),] + [(label[0], "Split x axis by %s" % label[1]) for label in column_data["names"]],
-                                    initial=split_x_axis_by, 
+        self.fields["x_axis"] = forms.TypedChoiceField(
+                                    choices= [(label[0], "x axis - %s" % label[1]) for label in column_data["names"]],
+                                    initial=column_data["x_axis"], 
                                     required=False,
                                             )
         split_y_axis_by = column_data["split_y_axis_by"]
-        self.fields["split_y_axis_by"] = forms.TypedChoiceField(required=False, 
-            choices= [(None,"Do not split y axis"),] + [(label[0], "Split y axis by %s" % label[1]) for label in column_data["names"]],
-                                                                initial=split_y_axis_by, 
+        self.fields["y_axis"] = forms.TypedChoiceField(required=False, 
+            choices= [ (label[0], "y axis - %s" % label[1]) for label in column_data["names"]],
+                                                                initial=column_data["y_axis"], 
                                                                 )
 
         split_by = column_data["split_by"]
         self.fields["split_by"] = forms.TypedChoiceField(required=False, 
-            choices= [(None,"Do not split into grid"),] + [(label[0], "Split by %s only" % label[1]) for label in column_data["names"]],
-                                                                initial=split_by, 
-                                                                )
-        self.helper = FormHelper()
-        self.helper.form_show_labels = False
-        self.helper.form_tag = False
-        #self.helper.form_class = 'form-horizontal'
-        self.helper.add_input(Submit('submit', 'Update and Save'))
-        # self.helper.add_input(Button('export', 'Export to PPT'))
-        self.helper.layout = Layout(
-            Fieldset( 'Chart Options',
-                'visualisation_title', 
-                'visualisation_type', 
-            ),
-            Fieldset( 'X axis ',
-                'x_axis',
-                ),
-            Fieldset('Y axis ',
-                'y_axis',
-            ),
-            Fieldset(
-                'Create grid',
-                 'split_by',
-            ),
-            Fieldset(
-                'Create grid with 2 variables',
-                 'split_x_axis_by',
-                 'split_y_axis_by',
-            )
+            choices= [(None,"No multiples - plot singly"),] + [(label[0], "%s" % label[1]) for label in column_data["names"] if "label" in label[1]],
+                                                                initial=split_by,   label="Split into multiples by"  )
+        self.titlehelper = FormHelper()
+        self.titlehelper.form_class = 'form-inline'
+        self.titlehelper.field_template = 'bootstrap3/layout/inline_field.html'
+        
+        self.titlehelper.layout = Layout(
+            Div(
+            'visualisation_title',
+            css_class="col-xs-3 col-sm-2"),
+            
         )
+             
+        self.titlehelper.form_tag = False
 
+        self.helper = FormHelper()
+        #self.helper.form_show_labels = False
+        self.helper.form_tag = False
+        self.helper.form_class = 'form-inline'
+        self.helper.field_template = 'bootstrap3/layout/inline_field.html'
+
+        self.helper.layout = Layout(
+               # Div('split_by',css_class="col-xs-4"),
+                Div('x_axis',),
+             #     Div(
+             #    Submit('sub',"Update"),
+             # )  
+        )
+        self.xhelper = FormHelper()
+        #self.helper.form_show_labels = False
+        self.xhelper.form_tag = False
+        self.xhelper.form_class = 'form-inline'
+        self.xhelper.field_template = 'bootstrap3/layout/inline_field.html'
+
+        self.xhelper.layout = Layout(
+                Div('y_axis',css_class="col-xs-3"),
+                Div(
+                InlineRadios('visualisation_type',),css_class="col-xs-9 col-sm-9"
+            ),
+        )
         fields = []
         fieldsets = []
         for field_data in column_data["string_field_uniques"]:
@@ -605,17 +646,22 @@ class VisualisationForm(forms.Form):
                 required=False,
             )
             fields.append(field)
-            fieldsets.append(Fieldset('Filter %s' % field_data["name"], field ))
+            fieldsets.append(InlineCheckboxes(field ))
 
         
         self.filterhelper = FormHelper()
-        self.filterhelper.add_input(Submit('submit', 'Filter and Save'))
+        self.filterhelper.add_input(Submit('submit', 'Filter'))
+        fieldsets = ["",] + fieldsets
         self.filterhelper.layout = Layout(
+            Fieldset( 
             *fieldsets
+            )
         )
         self.filterhelper.form_show_labels = False
         if len(args) == 1:
             self.data = args[0]
+        self.filterhelper.form_tag = False
+
 
 
 

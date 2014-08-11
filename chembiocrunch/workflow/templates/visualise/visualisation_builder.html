@@ -1,26 +1,66 @@
 {% extends "workflow_base.html" %}
 {% load crispy_forms_tags %}
+{% load staticfiles %}
+{% load svg_responsive %}
+
+
+
 
 {% block action_title %}
-{% if not visualisation_id %}
-Adding a new Visualisation
-{% else %}
-Editing Visualisation - {% if visualisation.visualisation_title %}{{ visualisation.visualisation_title|title }}{% else %} no title yet{% endif %}
-{% endif %}
+Visualisation Builder
 
-
-{% endblock action_title %}
-
+{% endblock  %}
 
 
 {% block help_text %}
+
 <p>
+
         The visualisation builder lets you create, save and export multiple visualisations
 </p>
-<form    action="" class="  " method="post">
-{% if visualisation_id %}
 
-         <button type="submit" value="new" name="new" id="submit-id2-submit"  class="btn btn-success"><span class="glyphicon glyphicon-plus"></span>Save changes and create new</button>
+
+
+{% endblock help_text %}
+{% block content %}
+
+
+<form  action="#options" class="  " method="post">
+
+{% if visualisation_list %}
+<a name="list">
+</a>
+
+    <div class='row'>
+    {% for visualisation_item in visualisation_list %}
+        
+        <div class ="btn col-lg-2 col-md-2 col-sd-4 col-xs-6 "><a id="carousel-selector-{{ visualisation_item.id }}" href="{% url 'visualisation_update_view' pk=object.id workflow_revision_id=workflow_revision.id visualisation_id=visualisation_item.id %}#options"><div class="well col-sd-8 col-sd-offset-2 {% ifequal visualisation_item.id visualisation.id %} activeitem {% endifequal %}">
+            <div class="row">
+            <span class="workflow-title">{% if visualisation_item.visualisation_title %}{{ visualisation_item.visualisation_title|title }}{% else %} no title yet{% endif %}</span></div><div class="row"><span class="workflow-date">{{ visualisation_item.created }}</span>
+            </div><div class="vis-thumb ">{% comment %}{{ visualisation_item.html|add_responsive_height|safe }}{% endcomment %}</div>
+        </div></a></div> 
+        
+    {% endfor %}
+</div><!-- end vis holder -->
+{% endif %}
+
+
+
+<a name="options"/>
+<h2 class="row">
+ 
+  <div class="col-lg-2 col-md-2 col-sm-2 hidden-xs">
+{% if not visualisation_id %}
+Adding
+{% else %}
+Editing 
+{% endif %}
+</div>
+<span style="font-size:12pt">
+    {% crispy visualisation_form visualisation_form.titlehelper %}
+    {% if visualisation_id %}
+
+         <button type="submit"  value="new" name="new" id="submit-id2-submit"  class="btn btn-success"><span class="glyphicon glyphicon-plus"></span>Save changes and create new</button>
     {% else %}
 
 
@@ -28,99 +68,214 @@ Editing Visualisation - {% if visualisation.visualisation_title %}{{ visualisati
  <button type="submit"  id="submit-id3-submit"  class="btn btn-primary"><span class="glyphicon glyphicon-refresh"></span>Save changes and continue editing</button>
 
  <button type="submit"  id="submit-id3-submit" value="delete" name="delete" class="btn btn-danger"><span class="glyphicon glyphicon-remove"></span>Discard visualisation and restart</button>
+</span>
+</h2>
+<div class="row pull-left col-xs-12">
+{% crispy visualisation_form visualisation_form.xhelper %}
 
-{% endblock help_text %}
-{% block content %}
-  
 
-{% if visualisation_list %}
-    <div class='row'>
-    {% for visualisation_item in visualisation_list %}
-        <a id="carousel-selector-{{ visualisation_item.id }}" href="{% url 'visualisation_update_view' pk=object.id workflow_revision_id=workflow_revision.id visualisation_id=visualisation_item.id %}">
-        <div class ="btn col-lg-2 col-md-2 col-sd-4 col-xs-6 "><div class="well col-sd-10 col-sd-offset-1 {% ifequal visualisation_item.id visualisation.id %} activeitem {% endifequal %}"><span class="workflow-title">{% if visualisation_item.visualisation_title %}{{ visualisation_item.visualisation_title|title }}{% else %} no title yet{% endif %}</span><br/><br/><span class="workflow-date">{{ visualisation_item.created }}</span></div></div> 
-        </a>
-    {% endfor %}
-</div><!-- end vis holder -->
-{% endif %}
+</div>
 
-    <div class="row">
-        <div class="col-md-12" id="slider">
-            
-                <div id="carousel-bounding-box">
-                    <div id="myCarousel" class="carousel slide">
-                        <!-- main slider carousel items -->
-                        <div class="carousel-inner">
-                             <div class="active item" data-slide-number="0">
-                               
-                                <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 crispy form-horizontal">
-                                    {% crispy visualisation_form visualisation_form.helper %}
-                                </div>
-                                <div class="col-lg-6 col-md-6 col-sm-6 col-xs-6">
-                                    {{ visualisation.html|safe }}
-                                </div>
-                                <div class="col-lg-3 col-md-3 col-sm-3 col-xs-3 crispy form-horizontal">
-                                    {% crispy visualisation_form visualisation_form.filterhelper %}
-                                    Numeric fields coming soon
-                                </div>
-                                </form>
-                            </div>
-                        </div>
+<div class="row  ninehundred">
+           <div class="col-lg-11 col-md-11 col-sm-11 col-xs-11 ninehundred">
+
+                                    {{ visualisation.html|add_responsive_tags|safe }}
+              
+          </div>
+          <div class="col-xs-1 col-lg-1" >
+
+                                        {% crispy visualisation_form visualisation_form.helper %}
+</div>
+
+</div>               
                         <!-- main slider carousel nav controls <a class="carousel-control left" href="#myCarousel" data-slide="prev">‹</a>
 
                         <a class="carousel-control right" href="#myCarousel" data-slide="next">›</a>--> 
-                    </div>
-                </div>
 
         </div>
+        
+        <div style="position:abolute; bottom:200px">
+       <!-- <div class="col-lg-4 slide-out-div crispy form-horizontal well"  >
+                <a class="handle" ><button class="btn btn-lg btn-info" style="position: absolute;  " id="submit-id3-submit" type="none"><span class="glyphicon glyphicon-cog"></span> Options</button></a>
+        Colour form
+</div> -->
+ <div class="col-lg-4 col-md-4 col-sm-6 col-xs-8 slide-out-div-right crispy form-horizontal well"  >
+                <a class="handle-right" href="http://link-for-non-js-users.html"><button style="position: absolute;  " class="btn btn-lg btn-info"  id="submit-id3-submit" type="none"><span class="glyphicon glyphicon-filter"></span> Filter</button></a>
+
+   
+                                    {% crispy visualisation_form visualisation_form.filterhelper %}
+
+</div>
     </div>
 
-
-
+  </form>
 
 {% endblock content %}
 
 
 {% block extra_js %}
-<script>
-$.fn.xml = function() {
-    if (typeof window.XMLSerializer != "undefined") {
-        return (new window.XMLSerializer()).serializeToString(this[0]);
-    } else if (typeof xmlNode.xml != "undefined") {
-        return this[0].xml;
-    }
-    return "";
-    //(new XMLSerializer()).serializeToString(this[0]);
-};
 
-$.fn.DOMRefresh = function() {
-    return $($(this.xml()).replaceAll(this));
-};
 
-$( document ).ready(function() {
-    $(window).load(function() {
-var backendheight= "0";
-var backendwidth = "0";
-var items = $(".mpld3-figure");
-if (items instanceof Array){
-    backendheight = items[0].attr("height");
-    backendwidth = items[0].attr("width");
 
-}else {
-    backendheight = items.attr("height");
-    backendwidth = items.attr("width");
+    <script type="text/javascript">
+    $(function(){
+        leftSlide();
+{% if  visualisation_id %}
+{% else %}
+$(".handle").trigger("click");
+   
+{% endif  %}
+ });
+    $(function(){
+        
+      rightSlide();
+ });
+
+var botPos = '-400px';
+function leftSlide(){
+  $('.slide-out-div').tabSlideOut({
+            tabHandle: '.handle',                     //class of the element that will become your tab
+            pathToTabImage: '{% static "images/contact_tab.gif" %}', //path to the image for the tab //Optionally can be set using css
+            imageHeight: '0px',                     //height of tab image           //Optionally can be set using css
+            imageWidth: '120px',                       //width of tab image            //Optionally can be set using css
+            tabLocation: 'left',                      //side of screen where tab lives, top, right, bottom, or left
+            speed: 100,                               //speed of animation
+            action: 'click',                          //options: 'click' or 'hover', action to trigger animation
+            topPos: botPos,                          //position from the top/ use if tabLocation is left or right
+            leftPos: '1%',                          //position from left/ use if tabLocation is bottom or top
+            fixedPosition: false                      //options: true makes it stick(fixed position) on scroll
+        });
 }
-items.attr("preserveAspectRatio", "xMinYMin slice");
-items.attr("viewBox", "0 0 "+ backendwidth + " " backendheight);
-items.attr("x", "100%");
-items.attr("y", "100%");
-items.attr("height", "100%");
-items.attr("width", "100%");
-items.attr("version", "1.1");
-items.DOMRefresh();
-//items.parent().html=$(".mpld3-figure").parent().html;
+function rightSlide(){
+  $('.slide-out-div-right').tabSlideOut({
+            tabHandle: '.handle-right',                     //class of the element that will become your tab
+            pathToTabImage: '{% static "images/contact_tab.gif" %}', //path to the image for the tab //Optionally can be set using css
+            imageHeight: '0px',                     //height of tab image           //Optionally can be set using css
+            imageWidth: '120px',                       //width of tab image            //Optionally can be set using css
+            tabLocation: 'right',                      //side of screen where tab lives, top, right, bottom, or left
+            speed: 100,                               //speed of animation
+            action: 'click',                          //options: 'click' or 'hover', action to trigger animation
+            topPos: botPos,                          //position from the top/ use if tabLocation is left or right
+            rightPos: '1%',                          //position from left/ use if tabLocation is bottom or top
+            fixedPosition: false                      //options: true makes it stick(fixed position) on scroll
+        });
+}
 
-});
-});
-</script>
+
+
+function resizedw(){
+    // Haven't resized in 100ms!
+            var w = $('.slide-out-div-right').width();
+            $('.slide-out-div-right').css({
+                //'height' : properties.containerHeight,
+                'right' :"-" + (w +40) +"px",
+                'bottom' : botPos
+              }
+            );
+            var l = $('.slide-out-div').width();
+            $('.slide-out-div').css({
+                //'height' : properties.containerHeight,
+                'left' : "-" + (l +40) +"px",
+                'bottom' : botPos
+            });
+}
+
+var doit;
+window.onresize = function(){
+  clearTimeout(doit);
+  doit = setTimeout(resizedw, 120);
+};
+
+// var rtime = new Date(1, 1, 2000, 12,00,00);
+// var timeout = false;
+// var delta = 200;
+// $(".ninehundred").resize(function() {
+//     rtime = new Date();
+//     if (timeout === false) {
+//         timeout = true;
+//         setTimeout(resizeend, delta);
+//     }
+// });
+
+// function resizeend() {
+//     if (new Date() - rtime < delta) {
+//         setTimeout(resizeend, delta);
+//     } else {
+//         timeout = false;
+//         alert("done");
+//         //leftSlide();
+//         //rightSlide();
+//     }               
+// }
+
+
+
+
+
+
+    </script>
+                
+
+    
+      <style type="text/css">
+      
+      .slide-out-div {
+        z-index:1000;
+          padding: 20px;
+          background: rgba(255,255,255,.95);
+          /*background: #ccc;
+          border: 1px solid #29216d;*/
+      }   
+      .slide-out-div a {
+        z-index:99 !important;
+position
+/* Safari */
+-webkit-transform: rotate(-90deg);
+
+/* Firefox */
+-moz-transform: rotate(-90deg);
+
+/* IE */
+-ms-transform: rotate(-90deg);
+
+/* Opera */
+-o-transform: rotate(-90deg);
+
+/* Internet Explorer */
+filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+
+
+}   
+
+.slide-out-div-right {
+        z-index:1000;
+          padding: 20px;
+          background: rgba(255,255,255,.95);
+
+          /*background: #ccc;
+          border: 1px solid #29216d;*/
+      }   
+      .slide-out-div-right a {
+        z-index:99 !important;
+position
+/* Safari */
+-webkit-transform: rotate(90deg);
+
+/* Firefox */
+-moz-transform: rotate(90deg);
+
+/* IE */
+-ms-transform: rotate(90deg);
+
+/* Opera */
+-o-transform: rotate(90deg);
+
+/* Internet Explorer */
+filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
+
+
+}
+      </style>
+
 {% endblock extra_js %}
 
