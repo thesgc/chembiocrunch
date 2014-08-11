@@ -332,49 +332,6 @@ class WorkflowDataMappingRevision(TimeStampedModel):
 
 
 
-class IcFiftyWorkflowDataMappingRevision(TimeStampedModel):
-
-    '''
-
-    '''
-
-    workflow = models.ForeignKey('IcFiftyWorkflow', related_name='workflow_ic50_data_revisions')
-    steps_json = models.TextField(default="[]")
-    revision_type = models.CharField(max_length=5)
-    x_axis = models.CharField(max_length=100)
-    y_axis = models.CharField(max_length=100)
-    objects = WorkflowDataMappingRevisionManager()
-    
-    def get_store(self):
-        return get_store('workflows.%s' % (zero_pad_object_id(self.workflow_id),))
-
-    
-    def get_store_filename(self, key,):
-        return 'workflows.%s.%s' % (zero_pad_object_id(self.workflow_id),key)
-
-    def get_store_key(self):
-        return "wfdr%s" % (  zero_pad_object_id(self.id),)
-
-    def get_dtypes(self, where=None):
-        if not where:
-            filename=self.get_store_filename("dtypes")
-            print filename
-            return read_hdf(filename,self.get_store_key(),)
-        else:
-            return read_hdf(self.get_store_filename("dtypes"),self.get_store_key(),where=where)
-
-
-
-
-    def get_data(self, where=None):
-        if not where:
-            filename=self.get_store_filename("data")
-            return read_hdf(filename,self.get_store_key(),)
-        else:
-            return read_hdf(self.get_store_filename("data"),self.get_store_key(),where=where)
-
-
-
 
 class VisualisationManager(models.Manager):
     '''Retrieves visible lists of workflows using the revision id'''
