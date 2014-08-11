@@ -118,59 +118,121 @@ class CreateWorkflowForm(forms.ModelForm):
         self.request = kwargs.pop('request', None)
         return super(CreateWorkflowForm, self).__init__(*args, **kwargs)
 
-class CreateIcFiftyWorkflowForm(forms.ModelForm):
+
+class IC50UploadForm(forms.ModelForm):
+
+    '''This is (sort of) an abstract class. Extend this if you are creating an IC50 related workflow'''
     title = forms.CharField(max_length=50)
     uploaded_data_file = forms.FileField()
     uploaded_config_file = forms.FileField()
+    #also needa field which holds the "type", obtained from the URL
+    form_type = forms.CharField()
 
-    def clean_uploaded_data_file(self):
-        error_flag = ""
-        uploaded_data_file = self.cleaned_data['uploaded_data_file']
-        uploaded_config_file = self.cleaned_data['uploaded_config_file']
-        #mime = magic.from_buffer(uploaded_data_file.read(), mime=True)
-        #if 'text/' not in mime:
-        #    error_flag += 'Data file must be a CSV document'
-        #mime = magic.from_buffer(uploaded_config_file.read(), mime=True)
-        #if 'text/' not in mime:
-        #    error_flag += '\nConfig file must be a CSV document'
-
-        #if error_flag: 
-        #    raise forms.ValidationError(error_flag)
-        return uploaded_data_file
-
-
-    def clean_uploaded_config_file(self):
-        error_flag = ""
-        uploaded_config_file = self.cleaned_data['uploaded_config_file']
-        #mime = magic.from_buffer(uploaded_data_file.read(), mime=True)
-        #if 'text/' not in mime:
-        #    error_flag += 'Data file must be a CSV document'
-        #mime = magic.from_buffer(uploaded_config_file.read(), mime=True)
-        #if 'text/' not in mime:
-        #    error_flag += '\nConfig file must be a CSV document'
-
-        #if error_flag: 
-        #    raise forms.ValidationError(error_flag)
-        return uploaded_config_file
 
     class Meta:
-        model = get_model("workflow", "icfiftyworkflow")
-        exclude = ('created_by',)
+        model = get_model('workflow', "IC50Workflow")
+        exclude = ('created_by','form_type')
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.form_class = 'form-horizontal'
-        self.helper.add_input(Submit('save', 'Next'))
+        self.helper.add_input(Submit('save', 'Save'))
         self.helper.layout = Layout(
             Fieldset( '',
                 'title', 'uploaded_data_file', 
                 'uploaded_config_file','save',
          )
         )
-        
+
         self.request = kwargs.pop('request', None)
-        return super(CreateIcFiftyWorkflowForm, self).__init__(*args, **kwargs)
+        return super(IC50UploadForm, self).__init__(*args, **kwargs)
+
+
+# class LabcyteEchoIC50UploadForm(IC50UploadForm):
+    
+#     '''This is an IC50UploadForm for use with a LabcyteEcho machine output'''
+
+#     uploaded_data_file = forms.FileField()
+#     uploaded_config_file = forms.FileField()
+
+#     def save(self):
+#         return self
+
+#     def process(self):
+#         raise NotImplementedError
+
+#     def __init__(self, *args, **kwargs):
+#         self.helper = FormHelper()
+#         self.helper.form_tag = False
+#         self.helper.form_class = 'form-horizontal'
+#         self.helper.layout = Layout(
+#             Fieldset( '',
+#                 'title', 'uploaded_data_file', 
+#                 'uploaded_config_file','save',
+#          )
+#         )
+
+#         self.request = kwargs.pop('request', None)
+#         return super(LabcyteEchoIC50UploadForm, self).__init__(*args, **kwargs)
+
+
+
+
+
+# class CreateIcFiftyWorkflowForm(forms.ModelForm):
+#     title = forms.CharField(max_length=50)
+#     uploaded_data_file = forms.FileField()
+#     uploaded_config_file = forms.FileField()
+
+#     def clean_uploaded_data_file(self):
+#         error_flag = ""
+#         uploaded_data_file = self.cleaned_data['uploaded_data_file']
+#         uploaded_config_file = self.cleaned_data['uploaded_config_file']
+#         #mime = magic.from_buffer(uploaded_data_file.read(), mime=True)
+#         #if 'text/' not in mime:
+#         #    error_flag += 'Data file must be a CSV document'
+#         #mime = magic.from_buffer(uploaded_config_file.read(), mime=True)
+#         #if 'text/' not in mime:
+#         #    error_flag += '\nConfig file must be a CSV document'
+
+#         #if error_flag: 
+#         #    raise forms.ValidationError(error_flag)
+#         return uploaded_data_file
+
+
+#     def clean_uploaded_config_file(self):
+#         error_flag = ""
+#         uploaded_config_file = self.cleaned_data['uploaded_config_file']
+#         #mime = magic.from_buffer(uploaded_data_file.read(), mime=True)
+#         #if 'text/' not in mime:
+#         #    error_flag += 'Data file must be a CSV document'
+#         #mime = magic.from_buffer(uploaded_config_file.read(), mime=True)
+#         #if 'text/' not in mime:
+#         #    error_flag += '\nConfig file must be a CSV document'
+
+#         #if error_flag: 
+#         #    raise forms.ValidationError(error_flag)
+#         return uploaded_config_file
+
+#     class Meta:
+#         model = get_model("workflow", "icfiftyworkflow")
+#         exclude = ('created_by',)
+
+#     def __init__(self, *args, **kwargs):
+#         self.helper = FormHelper()
+#         self.helper.form_tag = False
+#         self.helper.form_class = 'form-horizontal'
+#         self.helper.add_input(Submit('save', 'Next'))
+#         self.helper.layout = Layout(
+#             Fieldset( '',
+#                 'title', 'uploaded_data_file', 
+#                 'uploaded_config_file','save',
+#          )
+#         )
+        
+#         self.request = kwargs.pop('request', None)
+#         return super(CreateIcFiftyWorkflowForm, self).__init__(*args, **kwargs)
 
 
 DATA_TYPE_CHOICES = (
