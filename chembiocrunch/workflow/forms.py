@@ -149,35 +149,6 @@ class IC50UploadForm(forms.ModelForm):
         return super(IC50UploadForm, self).__init__(*args, **kwargs)
 
 
-# class LabcyteEchoIC50UploadForm(IC50UploadForm):
-    
-#     '''This is an IC50UploadForm for use with a LabcyteEcho machine output'''
-
-#     uploaded_data_file = forms.FileField()
-#     uploaded_config_file = forms.FileField()
-
-#     def save(self):
-#         return self
-
-#     def process(self):
-#         raise NotImplementedError
-
-#     def __init__(self, *args, **kwargs):
-#         self.helper = FormHelper()
-#         self.helper.form_tag = False
-#         self.helper.form_class = 'form-horizontal'
-#         self.helper.layout = Layout(
-#             Fieldset( '',
-#                 'title', 'uploaded_data_file', 
-#                 'uploaded_config_file','save',
-#          )
-#         )
-
-#         self.request = kwargs.pop('request', None)
-#         return super(LabcyteEchoIC50UploadForm, self).__init__(*args, **kwargs)
-
-
-
 
 
 # class CreateIcFiftyWorkflowForm(forms.ModelForm):
@@ -469,6 +440,11 @@ class HeatmapForm(forms.Form):
         self.helper.layout=Layout(
             HTML('<table class="heatmap">')
         )
+        #set up a column header helper containing checkboxes to deselct every well in a column
+        column_helper = HeatmapFormHelper()
+        column_helper.layout=Layout(
+            HTML('<tr>')
+        )
         for letter in well_letters:
             #create table row
             loophelper = HeatmapFormHelper()
@@ -485,10 +461,20 @@ class HeatmapForm(forms.Form):
                 cond_class = int(math.ceil((float(row['figure']) / float(hi_value)) * 10))
                 self.fields[well_str] = forms.BooleanField(initial=True, label=row['figure'])
                 loophelper.layout.fields.extend([
-                    HTML('<td data_row="' + row['well_letter'] + '" data_column="' + str(row['well_number']) + '" class="hmp' + str(cond_class) + '">'),
+                    HTML('<td data_row="' + row['well_letter'] + '" data_column="' + str(row['well_number']) + '" class="hide-checkbox hmp' + str(cond_class) + '">'),
                     well_str,
                     HTML('</td>')
                 ])
+                #add a table heading cell for each column - only do this for the first row
+                if (letter == 'A'):
+                    self.fields['header_' + str(row['well_number'])] = forms.BooleanField(initial=False, label='')
+                    column_helper.layout.fields.extend([
+                            HTML('<th data_column="' + str(row['well_number']) + '" class="hmp_header">'),
+                            'header_' + str(row['well_number']),
+                            HTML('</th>')
+                        ])
+            if(letter == 'A'):
+                self.helper.layout.append(column_helper.layout)    
             self.helper.layout.append(loophelper.layout)
         stop_helper = HeatmapFormHelper()
         stop_helper.layout=Layout(
