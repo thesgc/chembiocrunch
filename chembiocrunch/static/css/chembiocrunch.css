@@ -176,10 +176,31 @@ table.heatmap {
 	/*border-bottom: 1px solid #eee;
 	border-right: 1px solid #eee;*/
 	color: #ddd;
-	font-size: 0.8em;
+	font-size: 0.7em;
 	text-align: center;
 	transition: background-color 0.3s;
 }
+
+/* Medium devices (desktops, 992px and up) */
+@media (max-width: 992px) {  
+	.heatmap td {
+		border-bottom: 1px solid #eee;
+		border-right: 1px solid #eee;
+		font-size: 0.6em;
+	}
+}
+/* Small devices (tablets, 768px and up) */
+@media (max-width: 768px) { 
+	.heatmap td {
+		border-bottom: 1px solid #eee;
+		border-right: 1px solid #eee;
+		font-size: 0.5em;
+	}
+}
+
+
+
+
 .heatmap td.hide-checkbox label {
 	margin-left: -20px;
 }
@@ -202,15 +223,12 @@ table.heatmap {
 	background-color: #ddd;
 	color:#aaa;
 }
-.heatmap td.hide-checkbox input[type=checkbox] {
+.heatmap td.hide-checkbox input[type=checkbox], .heatmap th input[type=checkbox]  {
    position: absolute;
    /*top: -9999px;*/
    left: -9999px;
    /* For mobile, it's typically better to position checkbox on top of clickable
       area and turn opacity to 0 instead. */
-}
-.heatmap th input[type=checkbox] {
-	margin-left:20px;
 }
 .ninehundred {
 	margin-bottom: 30px;

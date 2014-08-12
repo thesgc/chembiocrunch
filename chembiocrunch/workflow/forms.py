@@ -391,7 +391,7 @@ class HeatmapForm(forms.Form):
         well_letters = olegdata['well_letter'].unique()
         hi_value = olegdata['figure'].max()
         self.helper.layout=Layout(
-            HTML('<table class="heatmap">')
+            HTML('<div class="table-responsive"><table class="heatmap">')
         )
         #set up a column header helper containing checkboxes to deselct every well in a column
         column_helper = HeatmapFormHelper()
@@ -420,18 +420,19 @@ class HeatmapForm(forms.Form):
                 ])
                 #add a table heading cell for each column - only do this for the first row
                 if (letter == 'A'):
-                    self.fields['header_' + str(row['well_number'])] = forms.BooleanField(initial=False, label='')
+                    self.fields['header_' + str(row['well_number'])] = forms.BooleanField(initial=False, label=row['well_number'])
                     column_helper.layout.fields.extend([
                             HTML('<th data_column="' + str(row['well_number']) + '" class="hmp_header">'),
                             'header_' + str(row['well_number']),
                             HTML('</th>')
                         ])
+            #this may have to change to reflect how the row names have been assigned - will work for 99% of current examples though
             if(letter == 'A'):
                 self.helper.layout.append(column_helper.layout)    
             self.helper.layout.append(loophelper.layout)
         stop_helper = HeatmapFormHelper()
         stop_helper.layout=Layout(
-            HTML('</table>')
+            HTML('</table></div>')
         )
         self.helper.layout.append(stop_helper)
         self.helper.layout.append(Submit('submit', 'Update and Save'))
