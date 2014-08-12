@@ -38,7 +38,7 @@ class WorkflowView( LoginRequiredMixin):
         context['revisions'] = [["upload" ,"not-done"],
                                 ["validate" ,"not-done"],
                                 ["visualise", "not-done"],
-                                ["cleanse" , "not-done"]]
+                                ["customise" , "not-done"]]
         return context
 
 

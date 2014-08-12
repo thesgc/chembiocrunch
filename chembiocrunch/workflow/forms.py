@@ -509,9 +509,9 @@ class VisualisationForm(forms.Form):
         split_colour_by = column_data["split_colour_by"]
         
         self.fields["split_colour_by"] = forms.ChoiceField(required=False,
-            choices=[(None,"No colour splitting - single colour"),] + [(label[0], "Split colours by %s" % label[1]) for label in column_data["names"] if "label" in label[1]],
+            choices=[(None,"Do not split into colours"),] + [(label[0], "Split into colours by %s" % label[1]) for label in column_data["names"] if "label" in label[1]],
             initial=split_colour_by,   
-            label="Split into multiples by"  )
+            label="Split into colours by"  )
 
         self.fields["x_axis"] = forms.TypedChoiceField(
                                     choices= [(label[0], "x axis - %s" % label[1]) for label in column_data["names"]],
@@ -526,7 +526,7 @@ class VisualisationForm(forms.Form):
 
         split_by = column_data["split_by"]
         self.fields["split_by"] = forms.TypedChoiceField(required=False, 
-            choices= [(None,"No multiples - plot singly"),] + [(label[0], "Split into multiples by %s" % label[1]) for label in column_data["names"] if "label" in label[1]],
+            choices= [(None,"Do not split into multiples"),] + [(label[0], "Split into multiples by %s" % label[1]) for label in column_data["names"] if "label" in label[1]],
                                                                 initial=split_by,   label="Split into multiples by"  )
         self.titlehelper = FormHelper()
         self.titlehelper.form_class = 'form-inline'

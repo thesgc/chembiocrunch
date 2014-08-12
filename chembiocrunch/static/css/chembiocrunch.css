@@ -12,6 +12,15 @@
 z-index:10000;
 margin-left:50px;
 }
+/*Making button always large
+*/
+.btn, .btn-group  {
+    border-radius: 6px;
+    font-size: 18px;
+    line-height: 1.33;
+    padding: 10px 16px;
+}
+
 .dropdown-toggle {
 	
 z-index:10000;
