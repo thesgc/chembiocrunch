@@ -1,27 +1,5 @@
 {% extends "base.html" %}
-{% block breadcrumbs %}
 
-
-        <div class="row">
-            {% for key, value in revisions %}
-            <div class="col-xs-2">
-                
-
-
-
-
-            <div class="arrow-box {{key}} {{value}}" >
-                {{ key|title }}
-            </div>
-            </div>
-            <div class="col-xs-1">
-            <div class="arrow-box" >           
-            </div>
-            </div>
-            {% endfor %}
-        </div>
-
-{% endblock breadcrumbs %}
 <h3> 
 {% block action_title %}
 Action title to be overridden 
