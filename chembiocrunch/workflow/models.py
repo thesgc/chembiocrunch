@@ -189,7 +189,7 @@ class IC50WorkflowRevision(TimeStampedModel):
     revision_type = models.CharField(max_length=5)
     #     x_axis = models.CharField(max_length=100)
     #     y_axis = models.CharField(max_length=100)
-    heatmap_json = models.TextField(default="{}")
+    #heatmap_json = models.TextField(default="{}")
     objects = IC50WorkflowManager()
 
 

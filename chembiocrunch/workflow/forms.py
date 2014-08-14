@@ -143,7 +143,7 @@ class IC50UploadForm(forms.ModelForm):
 
 
     def clean_uploaded_data_file(self):
-
+        #TODO validate datafile tocheck only one plate present
         uploaded_data_file = self.files['uploaded_data_file']
         mime = magic.from_buffer(self.files["uploaded_data_file"].read(), mime=True)
         print mime
@@ -172,7 +172,7 @@ class IC50UploadForm(forms.ModelForm):
         print mime
         if 'text/' in mime:
             try:
-                self.uploaded_config = get_data_frame(uploaded_config_file.temporary_file_path())
+                self.uploaded_config = get_data_frame(uploaded_config_file.temporary_file_path(), skiprows=8, header=0)
             except AttributeError:
                 raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
             except Exception:
@@ -199,6 +199,8 @@ class IC50UploadForm(forms.ModelForm):
         indexed_config = indexed_config.set_index('fullname')
         data_with_index_refs = self.uploaded_data.apply(get_ic50_data_columns, axis=1)
         fully_indexed = data_with_index_refs.set_index('fullname')
+        #join both dataframes along fullname axis.
+        #Assumed that datafile contains only one plate worth of data
         self.uploaded_data = fully_indexed.join(indexed_config)
         included_plate_wells = self.uploaded_data.apply(get_plate_wells_with_sample_ids, axis=1)
         self.included_plate_wells = {included_plate_well[1][0]: included_plate_well[1][1] for included_plate_well in included_plate_wells.iteritems()}
@@ -464,8 +466,8 @@ class HeatmapForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         ud = kwargs.pop('uploaded_data')
-        hj = kwargs.pop('heatmap_json')
-        j = json.loads(hj)
+        j = kwargs.pop('steps_json')
+        #j = json.loads(hj)
         super(HeatmapForm, self).__init__(*args, **kwargs)
 
         self.helper = HeatmapFormHelper()

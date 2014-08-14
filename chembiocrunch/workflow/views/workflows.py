@@ -104,8 +104,7 @@ class IC50WorkflowCreateView(WorkflowView, CreateView ):
 
     def get_success_url(self):
         return reverse('workflow_ic50_heatmap', kwargs={
-                #'pk': self.object.pk,
-                'pk': 1,
+                'pk': self.object.pk,
                 })
 
     def form_valid(self, form):
@@ -121,7 +120,7 @@ class IC50WorkflowCreateView(WorkflowView, CreateView ):
 
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
-        context = super(Ic50WorkflowCreateView, self).get_context_data(**kwargs)
+        context = super(IC50WorkflowCreateView, self).get_context_data(**kwargs)
         context['revisions'][0][1] = "in-progress"
         return context
 
@@ -214,25 +213,12 @@ class WorkflowHeatmapView(WorkflowDetailView):
         #    context["formset"] = DataMappingFormSet(initial=self.object.get_data_mapping_formset_data(), prefix="data_mappings")
         form_class = HeatmapForm
         model = get_model("workflow", "IC50Workflow")
-        heatmap_json = model.get_latest_workflow_revision().heatmap_json
-        context['heatmap_json'] = heatmap_json
-        #using a static file until I can get file upload working
-        link = settings.SITE_ROOT + "/static/misc/olegdata.xls"
-        #socket = rq.get(link)
-        uploaded_data_file = pd.ExcelFile(link) #you may need to import xlrd as a dependency
-        dfs = uploaded_data_file.parse(uploaded_data_file.sheet_names[0], header=None)
-        dfs[2] = [item.split(':')[1] for item in dfs[0]]
-        dfs[3] = [item[1] for item in dfs[2]]           #letter part of well coordinate
-        dfs[4] = [item[2:len(item)] for item in dfs[2]] #numeric part of well coordinate
-
-        #name the columns to enable easier pivoting
-        dfs.columns = ['fullname', 'figure', 'full_ref', 'well_letter', 'well_number']
-
+        steps_json = json.loads(model.get_latest_workflow_revision().steps_json)
+        #context['steps_json'] = heatmap_json
+        
         #ensure the well position comes out in numerical order instead of string order
-        dfs['well_number'] = dfs['well_number'].astype(int) 
         #don't pivot results as it's easier to loop through - if you need it, here's how to pivot results into the plate layout
-        dpvt = dfs.pivot(index='well_letter', columns='well_number', values='figure')
-        context["heatmap_form"] = HeatmapForm(uploaded_data=dfs, heatmap_json=heatmap_json)
+        context["heatmap_form"] = HeatmapForm(uploaded_data=model.get_data(), steps_json=steps_json)
 
         context.update(kwargs)
         
@@ -256,7 +242,7 @@ class WorkflowHeatmapView(WorkflowDetailView):
         #get the request containing the json
         form.cleaned_data()
         #loop through the stored json and for each pair, set the value to that in the form data
-        heatmap_json = context["heatmap_json"]
+        heatmap_json = context["steps_json"]
         for key in heatmap_json[0].iteritems():
             heatmap_json[key] = form.cleaned_data()["id_" + key]
 

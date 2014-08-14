@@ -6,7 +6,7 @@ from .views import calculations, visualise, workflows
 urlpatterns = [
     url(r'^$', workflows.WorkflowListView.as_view() , name='workflow_list'),
     url(r'^create/$', workflows.WorkflowCreateView.as_view(), name='workflow_create'),
-    url(r'^create-ic50/(?P<form_type>[a-zA-Z0-9]+)$', workflows.Ic50WorkflowCreateView.as_view(), name='workflow_ic50_create'),
+    url(r'^create-ic50/(?P<form_type>[a-zA-Z0-9]+)$', workflows.IC50WorkflowCreateView.as_view(), name='workflow_ic50_create'),
     url(r'^(?P<pk>[0-9]+)/workflow_data_mappings_edit/$', workflows.WorkflowDataMappingEditView.as_view(), name='workflow_data_mappings_edit'),
     url(r'^(?P<pk>[0-9]+)/heatmap/$', workflows.WorkflowHeatmapView.as_view(), name='workflow_ic50_heatmap'),
     url(r'^(?P<pk>[0-9]+)/visualisation_view/(?P<format>[a-zA-Z0-9]+)/$', workflows.VisualisationView.as_view(), name='visualisation_view'),
