@@ -202,6 +202,7 @@ class IC50UploadForm(forms.ModelForm):
         #join both dataframes along fullname axis.
         #Assumed that datafile contains only one plate worth of data
         self.uploaded_data = indexed_config.join(fully_indexed, how="outer")
+        print self.uploaded_data["row_number"]
         included_plate_wells = self.uploaded_data.apply(get_plate_wells_with_sample_ids, axis=1)
         self.included_plate_wells = {included_plate_well[1][0]: included_plate_well[1][1] for included_plate_well in included_plate_wells.iteritems()}
 

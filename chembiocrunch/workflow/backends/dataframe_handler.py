@@ -1,4 +1,4 @@
- 
+
 import csv
 from pandas import DataFrame, ExcelFile, Series
 import re
@@ -33,6 +33,11 @@ def change_column_type(df, column_id, new_type):
     df[[previous_column_name,]]= df[[previous_column_name,]].astype(DATA_TYPE_TYPES[new_type])
     return df
 
+def get_row_number(ref):
+    multiple = len(ref.lower()) - 1
+    return multiple * 26 + ord(ref[-1]) -96
+
+
 
 def get_ic50_data_columns(series):
     '''
@@ -42,7 +47,8 @@ def get_ic50_data_columns(series):
     match = re.match(r"([a-z]+)([0-9]+)", full_ref, re.I)
     if match:
         items = match.groups()
-        return Series(np.array([ series[0],full_ref, series[1]] + list(items)), index=[ 'fullname', 'full_ref', 'figure', 'well_letter', 'well_number'])
+        row_number = get_row_number(items[0])
+        return Series(np.array([ series[0],full_ref, series[1]] + list(items) + [row_number,]), index=[ 'fullname', 'full_ref', 'figure', 'well_letter', 'well_number', "row_number"])
     return None
 
 #['fullname', 'figure', 'full_ref', 'well_letter', 'well_number']
@@ -71,5 +77,5 @@ def change_all_columns(df, steps_json):
 
 def get_plate_wells_with_sample_ids(series):
     if str(series["Sample ID"]).startswith("BVD"):
-        return (series["Destination Well"], True)
-    return (series["Destination Well"], False)
+        return (series["full_ref"], True)
+    return (series["full_ref"], False)

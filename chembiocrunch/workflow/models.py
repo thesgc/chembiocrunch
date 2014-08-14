@@ -450,7 +450,7 @@ class IC50Visualisation(TimeStampedModel):
     Holder object for an IC50 visualisation - there will be a set of these for each
     IC50 workflow revision
     l'''
-    data_mapping_revision = models.ForeignKey('WorkflowDataMappingRevision', related_name="data_revisions")
+    data_mapping_revision = models.ForeignKey('IC50WorkflowRevision', related_name="data_revisions")
     x_axis = models.CharField(max_length=200, default="Destination Concentration")
     y_axis = models.CharField(max_length=200, default='Percent inhibition')
     compound_id = models.CharField(max_length=200)
