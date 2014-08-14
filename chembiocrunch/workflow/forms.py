@@ -506,7 +506,6 @@ class HeatmapForm(forms.Form):
                 try:
                     
                     initial = j.pop(well_str)
-                    print float(hi_value)
                     condclassint = int(math.ceil((float(row['figure']) / float(hi_value)) * 10))
                     cond_class = str(condclassint)
                     if initial:
@@ -540,7 +539,7 @@ class HeatmapForm(forms.Form):
             HTML('</table></div>')
         )
         self.helper.layout.append(stop_helper)
-        self.helper.layout.append(Submit('submit', 'Update and Save'))
+        self.helper.layout.append(Submit('submit', 'Submit'))
 
 
 class VisualisationForm(forms.Form):
