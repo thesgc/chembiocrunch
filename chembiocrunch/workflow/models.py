@@ -123,24 +123,7 @@ class IC50Workflow(TimeStampedModel):
         new_workflow_revision = get_model("workflow", "IC50WorkflowRevision").objects.create(workflow=self, revision_type=UPLOAD)
         dcf.to_hdf(new_workflow_revision.get_store_filename("configdata"), new_workflow_revision.get_store_key(), mode='w', format="table")
         ddf.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w', format="table")
-
-    def get_latest_workflow_revision(self, workflow_id):
-        return get_model("workflow", "IC50WorkflowRevision").objects.filter(workflow_id=workflow_id).order_by("-created")[0]
-        
-
-        #this is where auto-munging of data can take place
-        #i.e. any ipython workflows applied here
-
-        #df becomes the result of data munging? Do that elsewhere?
-
-        #df = dataframe_handler.get_data_frame(self.uploaded_file.file)
-        #new_workflow_revision = get_model("workflow", "IcFiftyWorkflowDataMappingRevision").objects.create(workflow=self, revision_type=UPLOAD, steps_json=json.dumps({"count" : int(ddf.count()[0]) }))
-        
-        # types_frame = DataFrame([[str(dtype) for dtype in df.dtypes],], columns=df.dtypes.keys())
-
-        #dcf.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w', format="table")
-        #ddf.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w', format="table")
-        # types_frame.to_hdf(new_workflow_revision.get_store_filename("dtypes"), new_workflow_revision.get_store_key(), mode='w', format="table")
+        new_workflow_revision.heatmap_json = open(settings.SITE_ROOT + "/static/misc/test-heatmap-json.json", "r").read()
 
 
 
@@ -156,6 +139,7 @@ class IC50WorkflowRevision(TimeStampedModel):
     revision_type = models.CharField(max_length=5)
     #     x_axis = models.CharField(max_length=100)
     #     y_axis = models.CharField(max_length=100)
+    heatmap_json = models.TextField(default="{}")
     objects = IC50WorkflowManager()
     
     def get_store(self):
@@ -189,86 +173,6 @@ class IC50WorkflowRevision(TimeStampedModel):
             return read_hdf(filename,self.get_store_key(),)
         else:
             return read_hdf(self.get_store_filename("configdata"),self.get_store_key(),where=where)
-
-    
-#     def get_store_filename(self, key,):
-#         return 'workflows.%s.%s' % (zero_pad_object_id(self.workflow_id),key)
-
-#     def get_store_key(self):
-#         return "wfdr%s" % (  zero_pad_object_id(self.id),)
-
-#     def get_dtypes(self, where=None):
-#         if not where:
-#             filename=self.get_store_filename("dtypes")
-#             print filename
-#             return read_hdf(filename,self.get_store_key(),)
-#         else:
-#             return read_hdf(self.get_store_filename("dtypes"),self.get_store_key(),where=where)
-
-
-
-
-#     def get_data(self, where=None):
-#         if not where:
-#             filename=self.get_store_filename("data")
-#             return read_hdf(filename,self.get_store_key(),)
-#         else:
-#             return read_hdf(self.get_store_filename("data"),self.get_store_key(),where=where)
-
-#     def get_column_form_data(self):
-#         df = self.get_data()
-#         fields = df.columns.to_series().groupby(df.dtypes).groups
-#         fields_dict = {k.name: v for k, v in fields.items()}
-#         string_field_uniques = []
-#         for field in fields_dict.get("object",[]):
-#             s = df[field].value_counts()
-#             string_field_uniques.append({"name": field,"initial":[k for k,v in s.iterkv()], "choices" : [(k,k) for k,v in s.iterkv()]})
-#         numeric_field_max_and_min = []
-#         for field in fields_dict.get("int64",[]) + fields_dict.get("float64",[]):
-#             numeric_field_max_and_min.append({"name" : field, "max" : s.max(), "min" : s.min(), "initial_min" :s.min(),"initial_max" : s.max() })
-
-#         return {"x_axis": self.x_axis, "y_axis": self.y_axis, "string_field_uniques" : string_field_uniques,"numeric_field_max_and_min" :numeric_field_max_and_min , "names" : [(name,name) for name in df.dtypes.keys()]}
-
-
-
-
-    # def data_requires_update(self):
-    #     '''
-    #     method will test if the files attached to the class or the child pages have been updated since the data was last updated
-    #     '''
-
-    #     last_rev = self.last_data_revision()
-    #     if last_rev == False:WorkflowDataMappingRevision
-    #         return True
-    #     data_files_revisied = self.source_data_files.filter(modified__gte=last_rev.modified).count()
-    #     if data_files_revisied > 0:
-    #         return True
-    #     return False
-
-
-    # def last_data_revision(self):
-    #     revisions = WorkflowDataMappingRevision.objects.fbarilter(page_id=self.id).order_by("-modified")
-    #     if revisions.count() > 0:
-    #         return revisions[0]
-    #     return False
-
-
-    # def current_es_client(self):WorkflowDataMappingRevision
-    #     '''Only to be used after an index was created by tasks.py'''
-    #     last_revision = self.last_data_revision()
-    #     es_processor = ElasticSearchDataProcessor(self.id, last_revision.id, {})
-    #     return es_processor
-
-
-    # def create_data_revision(self, new_steps_json, label=""):
-    #     '''Generate a workflow revision using the list of steps in the json
-    #     This might be an empty list if this is revision 1 for the particular dataset'''
-    #     return WorkflowDataMappingRevision.objects.create(page=self, steps_json=json.dumps(new_steps_json), label=label)
-        # pd = get_data_frame(uploaded_file)
-        # if pd.columns.size <2:
-        #     forms.ValidationError('Error with file, less than two columns recognised')
-        # if pd.count()[0] < 1:
-        #     forms.ValidationError('Error with file, zero rows recognised or first column empty')
     
 
 

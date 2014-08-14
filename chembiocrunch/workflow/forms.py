@@ -384,12 +384,14 @@ class HeatmapFormHelper(FormHelper):
 class HeatmapForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
-        olegdata = kwargs.pop('oleg_data')
+        ud = kwargs.pop('uploaded_data')
+        hj = kwargs.pop('heatmap_json')
+        j = json.loads(hj)
         super(HeatmapForm, self).__init__(*args, **kwargs)
 
         self.helper = HeatmapFormHelper()
-        well_letters = olegdata['well_letter'].unique()
-        hi_value = olegdata['figure'].max()
+        well_letters = ud['well_letter'].unique()
+        hi_value = ud['figure'].max()
         self.helper.layout=Layout(
             HTML('<div class="table-responsive"><table class="heatmap">')
         )
@@ -405,14 +407,15 @@ class HeatmapForm(forms.Form):
             loophelper.layout.fields.extend([
                 HTML('<tr>')
             ])
-            #loop through subset of olegdata which has that letter
-            subset = olegdata[olegdata['well_letter'] == letter]
+            #loop through subset of ud which has that letter
+            subset = ud[ud['well_letter'] == letter]
             for index, row in subset.iterrows():
                 well_str = row['well_letter'] + str(row['well_number'])
                 #work out the class number to apply for conditional formatting - 
                 #an integer between 1-10 worked out from the fraction this value is of the maximum
                 cond_class = int(math.ceil((float(row['figure']) / float(hi_value)) * 10))
-                self.fields[well_str] = forms.BooleanField(initial=True, label=row['figure'])
+                intial = j[well_str]
+                self.fields[well_str] = forms.BooleanField(initial=initial, label=row['figure'])
                 loophelper.layout.fields.extend([
                     HTML('<td data_row="' + row['well_letter'] + '" data_column="' + str(row['well_number']) + '" class="hide-checkbox hmp' + str(cond_class) + '">'),
                     well_str,
