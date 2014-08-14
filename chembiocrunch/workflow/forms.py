@@ -201,7 +201,7 @@ class IC50UploadForm(forms.ModelForm):
         fully_indexed = data_with_index_refs.set_index('fullname')
         #join both dataframes along fullname axis.
         #Assumed that datafile contains only one plate worth of data
-        self.uploaded_data = fully_indexed.join(indexed_config)
+        self.uploaded_data = indexed_config.join(fully_indexed, how="outer")
         included_plate_wells = self.uploaded_data.apply(get_plate_wells_with_sample_ids, axis=1)
         self.included_plate_wells = {included_plate_well[1][0]: included_plate_well[1][1] for included_plate_well in included_plate_wells.iteritems()}
 
@@ -495,7 +495,7 @@ class HeatmapForm(forms.Form):
                 #work out the class number to apply for conditional formatting - 
                 #an integer between 1-10 worked out from the fraction this value is of the maximum
                 cond_class = int(math.ceil((float(row['figure']) / float(hi_value)) * 10))
-                intial = j[well_str]
+                initial = j[well_str]
                 self.fields[well_str] = forms.BooleanField(initial=initial, label=row['figure'])
                 loophelper.layout.fields.extend([
                     HTML('<td data_row="' + row['well_letter'] + '" data_column="' + str(row['well_number']) + '" class="hide-checkbox hmp' + str(cond_class) + '">'),

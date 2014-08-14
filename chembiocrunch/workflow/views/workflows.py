@@ -15,6 +15,8 @@ import matplotlib
 
 import matplotlib.pyplot as plt
 
+import json
+
 import seaborn as sns
 from workflow.models import GRAPH_MAPPINGS
 from seaborn import plotting_context, set_context
@@ -35,6 +37,23 @@ class WorkflowView(LoginRequiredMixin):
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
         context = super(WorkflowView, self).get_context_data(**kwargs)
+        context['revisions'] = [["upload" ,"not-done"],
+                                ["validate" ,"not-done"],
+                                ["visualise", "not-done"],
+                                ["customise" , "not-done"]]
+        return context
+
+class IC50WorkflowView(LoginRequiredMixin):
+
+    model = get_model("workflow", "IC50Workflow")
+
+    def get_queryset(self):
+        '''Make sure that all of the views cannot see the object unless they own it!'''
+        return self.model.objects.get_user_records(self.request.user)
+
+    def get_context_data(self, **kwargs):
+        # Call the base implementation first to get a context
+        context = super(IC50WorkflowView, self).get_context_data(**kwargs)
         context['revisions'] = [["upload" ,"not-done"],
                                 ["validate" ,"not-done"],
                                 ["visualise", "not-done"],
@@ -92,7 +111,7 @@ class WorkflowCreateView(WorkflowView, CreateView ):
 
 
 
-class IC50WorkflowCreateView(WorkflowView, CreateView ):
+class IC50WorkflowCreateView(IC50WorkflowView, CreateView ):
     '''creates a single workflow'''
     fields = ['title', 'uploaded_data_file','uploaded_config_file']
     template_name = "workflows/workflow_ic50_create.html"
@@ -112,10 +131,6 @@ class IC50WorkflowCreateView(WorkflowView, CreateView ):
         form.instance.created_by = user
         form_valid = super(IC50WorkflowCreateView, self).form_valid(form)
 
-        
-        # if get_model("workflow", "IC50WorkflowRevision").objects.get_mapping_revisions_for_workflow(self.object).count() == 0:
-        #    self.object.create_first_data_revision()
-
         return form_valid
 
     def get_context_data(self, **kwargs):
@@ -128,6 +143,9 @@ class IC50WorkflowCreateView(WorkflowView, CreateView ):
 
 
 class WorkflowDetailView(WorkflowView, DetailView, ):
+    pass
+
+class IC50WorkflowDetailView(IC50WorkflowView, DetailView, ):
     pass
 
 
@@ -201,7 +219,7 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
         return self.render_to_response(self.get_context_data(formset=formset))
 
 
-class WorkflowHeatmapView(WorkflowDetailView):
+class WorkflowHeatmapView(IC50WorkflowDetailView):
     
     template_name = "workflows/workflow_ic50_heatmap.html"
     
@@ -212,27 +230,27 @@ class WorkflowHeatmapView(WorkflowDetailView):
         #if not "formset" in kwargs:
         #    context["formset"] = DataMappingFormSet(initial=self.object.get_data_mapping_formset_data(), prefix="data_mappings")
         form_class = HeatmapForm
-        model = get_model("workflow", "IC50Workflow")
-        steps_json = json.loads(model.get_latest_workflow_revision().steps_json)
+        #model = get_model("workflow", "IC50Workflow")
+        steps_json = json.loads(self.object.get_latest_workflow_revision().steps_json)
         #context['steps_json'] = heatmap_json
         
         #ensure the well position comes out in numerical order instead of string order
         #don't pivot results as it's easier to loop through - if you need it, here's how to pivot results into the plate layout
-        context["heatmap_form"] = HeatmapForm(uploaded_data=model.get_data(), steps_json=steps_json)
+        context["heatmap_form"] = HeatmapForm(uploaded_data=self.object.get_data(), steps_json=steps_json)
 
         context.update(kwargs)
         
         return context
 
-    def form_valid(self, form):
-        user = self.request.user
-        form.instance.created_by = user
-        form_valid = super(WorkflowHeatmapView, self).form_valid(form)
+    # def form_valid(self, form):
+    #     user = self.request.user
+    #     form.instance.created_by = user
+    #     form_valid = super(WorkflowHeatmapView, self).form_valid(form)
         
-        if get_model("workflow", "IC50WorkflowRevision").objects.get_mapping_revisions_for_workflow(self.object).count() == 0:
-           self.object.create_first_data_revision()
+    #     if get_model("workflow", "IC50WorkflowRevision").objects.get_mapping_revisions_for_workflow(self.object).count() == 0:
+    #        self.object.create_first_data_revision()
 
-        return form_valid
+    #     return form_valid
 
     def post(self, request, *args, **kwargs):
         '''This view will always add a new graph, graph updates are handled by ajax'''

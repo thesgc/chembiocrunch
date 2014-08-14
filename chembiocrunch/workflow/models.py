@@ -124,8 +124,8 @@ class IC50Workflow(TimeStampedModel):
 
         data.to_hdf(self.get_store_filename(), self.get_store_key(), mode='w')
 
-    def get_latest_workflow_revision(self, workflow_id):
-        return get_model("workflow", "IC50WorkflowRevision").objects.filter(workflow_id=workflow_id).order_by("-created")[0]
+    def get_latest_workflow_revision(self):
+        return get_model("workflow", "IC50WorkflowRevision").objects.filter(workflow_id=self.id).order_by("-created")[0]
         
  
     def get_store(self):
