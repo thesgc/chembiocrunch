@@ -10,10 +10,10 @@ DATA_TYPE_TYPES = {
 }
 
 
-def get_data_frame(read_csv):
+def get_data_frame(read_csv, skiprows=0, header=0):
     '''Returns a dataframe from a csv buffer'''
     pd = DataFrame()
-    pd = pd.from_csv(read_csv, infer_datetime_format=True,index_col=None)
+    pd = pd.from_csv(read_csv, infer_datetime_format=True,index_col=None, skiprows=skiprows, header=header)
     return pd
 
 def get_excel_data_frame(read_excel, skiprows=0, header=None):
@@ -35,6 +35,9 @@ def change_column_type(df, column_id, new_type):
 
 
 def get_ic50_data_columns(series):
+    '''
+    Split up plate well reference using regex
+    '''
     full_ref = (series[0].split(':')[1]).strip()
     match = re.match(r"([a-z]+)([0-9]+)", full_ref, re.I)
     if match:
@@ -47,6 +50,9 @@ def get_ic50_data_columns(series):
 
 
 def get_ic50_config_columns(series):
+    '''
+    Add plate well reference with same format as data file
+    '''
     series["fullname"] = "%s: %s" % (series["Destination Plate Name"], series["Destination Well"])
     return series
 

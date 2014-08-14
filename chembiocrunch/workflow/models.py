@@ -177,6 +177,7 @@ class IC50Workflow(TimeStampedModel):
 
 
 
+
 class IC50WorkflowRevision(TimeStampedModel):
 
     '''
@@ -188,89 +189,8 @@ class IC50WorkflowRevision(TimeStampedModel):
     revision_type = models.CharField(max_length=5)
     #     x_axis = models.CharField(max_length=100)
     #     y_axis = models.CharField(max_length=100)
+    #heatmap_json = models.TextField(default="{}")
     objects = IC50WorkflowManager()
-    
-  
-    
-#     def get_store_filename(self, key,):
-#         return 'workflows.%s.%s' % (zero_pad_object_id(self.workflow_id),key)
-
-#     def get_store_key(self):
-#         return "wfdr%s" % (  zero_pad_object_id(self.id),)
-
-#     def get_dtypes(self, where=None):
-#         if not where:
-#             filename=self.get_store_filename("dtypes")
-#             print filename
-#             return read_hdf(filename,self.get_store_key(),)
-#         else:
-#             return read_hdf(self.get_store_filename("dtypes"),self.get_store_key(),where=where)
-
-
-
-
-#     def get_data(self, where=None):
-#         if not where:
-#             filename=self.get_store_filename("data")
-#             return read_hdf(filename,self.get_store_key(),)
-#         else:
-#             return read_hdf(self.get_store_filename("data"),self.get_store_key(),where=where)
-
-#     def get_column_form_data(self):
-#         df = self.get_data()
-#         fields = df.columns.to_series().groupby(df.dtypes).groups
-#         fields_dict = {k.name: v for k, v in fields.items()}
-#         string_field_uniques = []
-#         for field in fields_dict.get("object",[]):
-#             s = df[field].value_counts()
-#             string_field_uniques.append({"name": field,"initial":[k for k,v in s.iterkv()], "choices" : [(k,k) for k,v in s.iterkv()]})
-#         numeric_field_max_and_min = []
-#         for field in fields_dict.get("int64",[]) + fields_dict.get("float64",[]):
-#             numeric_field_max_and_min.append({"name" : field, "max" : s.max(), "min" : s.min(), "initial_min" :s.min(),"initial_max" : s.max() })
-
-#         return {"x_axis": self.x_axis, "y_axis": self.y_axis, "string_field_uniques" : string_field_uniques,"numeric_field_max_and_min" :numeric_field_max_and_min , "names" : [(name,name) for name in df.dtypes.keys()]}
-
-
-
-
-    # def data_requires_update(self):
-    #     '''
-    #     method will test if the files attached to the class or the child pages have been updated since the data was last updated
-    #     '''
-
-    #     last_rev = self.last_data_revision()
-    #     if last_rev == False:WorkflowDataMappingRevision
-    #         return True
-    #     data_files_revisied = self.source_data_files.filter(modified__gte=last_rev.modified).count()
-    #     if data_files_revisied > 0:
-    #         return True
-    #     return False
-
-
-    # def last_data_revision(self):
-    #     revisions = WorkflowDataMappingRevision.objects.fbarilter(page_id=self.id).order_by("-modified")
-    #     if revisions.count() > 0:
-    #         return revisions[0]
-    #     return False
-
-
-    # def current_es_client(self):WorkflowDataMappingRevision
-    #     '''Only to be used after an index was created by tasks.py'''
-    #     last_revision = self.last_data_revision()
-    #     es_processor = ElasticSearchDataProcessor(self.id, last_revision.id, {})
-    #     return es_processor
-
-
-    # def create_data_revision(self, new_steps_json, label=""):
-    #     '''Generate a workflow revision using the list of steps in the json
-    #     This might be an empty list if this is revision 1 for the particular dataset'''
-    #     return WorkflowDataMappingRevision.objects.create(page=self, steps_json=json.dumps(new_steps_json), label=label)
-        # pd = get_data_frame(uploaded_file)
-        # if pd.columns.size <2:
-        #     forms.ValidationError('Error with file, less than two columns recognised')
-        # if pd.count()[0] < 1:
-        #     forms.ValidationError('Error with file, zero rows recognised or first column empty')
-    
 
 
     # @classmethod
@@ -525,22 +445,6 @@ class Visualisation(TimeStampedModel):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 class IC50Visualisation(TimeStampedModel):
     '''
     Holder object for an IC50 visualisation - there will be a set of these for each
@@ -646,58 +550,3 @@ class IC50Visualisation(TimeStampedModel):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# class WorkflowDataColumnsRevision(TimeStampedModel):
-#     '''Every time that there is a column added in elasticsearch then this object is designed to store the 
-#     Column add and remove process which yields also a version id for the mapping type'''
-#     schema_revision = models.ForeignKey('WorkflowDataMappingRevision', related_name="data_revisions")
-#     steps_json = models.TextField(default="[]")
-
-
-
-# class UserColumnDataMapping(TimeStampedModel):
-#     CATEGORY = "ca"
-#     FULLTEXT = "ft"
-#     DATE = "da"
-#     FLOAT = "fl"
-#     DATA_TYPE_CHOICES = (
-#         (CATEGORY, "Category"),
-#         (FULLTEXT, "Full Text"),
-#         (DATE, "Date"),
-#         (FLOAT, "Decimal Number"),
-#         )
-#     DATA_TYPE_PANDAS_LOOKUP = {
-
-#     }
-#     '''A user is expected to maintain a list of the columns they use and the type of data in them
-#     The contents of a new column description will be predicted based on previous ones but the scientist will not
-#     be forced to change their previous version'''
-#     name = models.CharField(max_length=250)
-#     slug = models.CharField(max_length=250)
-#     created_by = models.ForeignKey('auth.User')
-#     data_type = models.CharField(max_length=2, choices=DATA_TYPE_CHOICES)
-
-
-
-# class WorkflowDataMappingRevisionColumnLink(TimeStampedModel):
-#     '''Links a revision of a set of mapping types to one of the Users' columns'''
-
-#     user_column_data_mapping = models.ForeignKey(UserColumnDataMapping)
-#     workflow_data_column_revision = models.ForeignKey(WorkflowDataColumnsRevision)
-
-#     class Meta():
-#         verbose_name = "WDCR linked to UCDM"
