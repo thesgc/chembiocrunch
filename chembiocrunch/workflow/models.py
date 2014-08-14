@@ -431,3 +431,122 @@ class Visualisation(TimeStampedModel):
         "names" : choices_overall}
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class IC50Visualisation(TimeStampedModel):
+    '''
+    Holder object for an IC50 visualisation - there will be a set of these for each
+    IC50 workflow revision
+    l'''
+    data_mapping_revision = models.ForeignKey('WorkflowDataMappingRevision', related_name="data_revisions")
+    x_axis = models.CharField(max_length=200, default="Destination Concentration")
+    y_axis = models.CharField(max_length=200, default='Percent inhibition')
+    compound_id = models.CharField(max_length=200)
+    error_bars = models.NullBooleanField()
+    visualisation_title = models.CharField(max_length=200, null=True, blank=True) #Will be used for the sample name
+    config_json = models.TextField(default="{}")
+    html = models.TextField(default="")
+    objects = VisualisationManager()
+
+
+    def get_svg(self):
+        imgdata = StringIO()
+        fig = self.get_fig_for_dataframe()
+        fig.savefig(imgdata, format='svg')
+        imgdata.seek(0)
+        return imgdata.buf
+
+
+    def get_data(self):
+        '''Returns a filtered version of the dataset specific to this visualisation'''
+
+
+
+    def get_fig_for_dataframe(self):
+        form_data = self.get_column_form_data()
+        string_expressions = {form_datum["name"] : form_datum["initial"] for form_datum in form_data["string_field_uniques"]}
+        df = self.data_mapping_revision.get_data()
+        row_mask = df.isin(string_expressions)[[form_datum["name"]  for form_datum in form_data["string_field_uniques"]]]
+        df = DataFrame(df[row_mask.all(1)])
+        split_y_axis_by = self.split_y_axis_by if self.split_y_axis_by !='None' else None
+        split_colour_by = self.split_colour_by if self.split_colour_by !='None' else None
+
+        kwargs = {"size": 5, 
+                    "aspect": 1.75,
+                     "sharex":True, 
+                     "sharey":True,
+                     "hue" : split_colour_by,
+                     "legend" : False,
+                     "legend_out" : True,
+                      #'legend.frameon': False
+                    }
+        split_by = self.split_by if self.split_by !='None' else None
+        if split_by:
+            kwargs["row"] = None
+            kwargs["col"] = split_by
+            kwargs["col_wrap"] = 4
+        if GRAPH_MAPPINGS[self.visualisation_type]["xy"] == True:
+            if df.count()[0] > 0 :
+                xlim = (0, float(max(df[self.x_axis]))*1.3)
+                ylim = (0, float(max(df[self.y_axis]))*1.1)
+                kwargs["xlim"] = xlim
+                kwargs["ylim"] = ylim
+         
+
+        with plotting_context( "poster" ):
+            sns.set_style("white")
+            labels = GRAPH_MAPPINGS[self.visualisation_type]["get_label_function"](self, df) 
+            # g = sns.factorplot(self.x_axis,
+            #      y=self.y_axis, data=df, 
+            #      row=self.split_y_axis_by if self.split_y_axis_by !='None' else None, 
+            #      x_order=labels, 
+            #      col=self.split_colour_by if self.split_colour_by !='None' else None,)
+            g_kwargs = {}
+            if labels:
+                g_kwargs["x_order"] =labels  
+            print kwargs
+            g = sns.FacetGrid(df,**kwargs )
+            
+            g.map(GRAPH_MAPPINGS[self.visualisation_type]["function"], self.x_axis, self.y_axis, **g_kwargs);
+            if labels:
+                if split_by:
+                    for ax in g.axes:
+                        ax.set_xticklabels(labels, rotation=90)
+                else:
+                    
+                    g.set_xticklabels(labels, rotation=90)
+            g.set_legend()
+            # frame = g.fig.legend().get_frame()
+            #if labels and not split_by :
+             #   g.set_xticklabels(labels, rotation=90) 
+            if self.visualisation_title:
+                g.fig.tight_layout()
+                height_in_inches = g.fig.get_figheight()
+                title_height_fraction = 0.2 / (height_in_inches ** (0.5)) #20px is ~0.3 inches
+                g.fig.suptitle(self.visualisation_title, fontsize=20)
+                g.fig.tight_layout(rect=(0,0,1,1 - title_height_fraction))
+            else:
+                g.fig.tight_layout()            
+            g.fig.patch.set_alpha(0.0)
+            return g.fig
+
+
+
+
+
+
+
+
+

@@ -205,13 +205,11 @@ class IC50UploadForm(forms.ModelForm):
         included_plate_wells = self.uploaded_data.apply(get_plate_wells_with_sample_ids, axis=1)
         self.included_plate_wells = {included_plate_well[1][0]: included_plate_well[1][1] for included_plate_well in included_plate_wells.iteritems()}
 
-    def save(self, force_insert=True, force_update=False, commit=True):
+    def save(self, force_insert=False, force_update=False, commit=True):
         model = super(IC50UploadForm, self).save()
         # do custom stuff
-
         model.create_first_data_revision(self.uploaded_data, self.included_plate_wells)
-        if commit:
-            model.save()
+        model.save()
         return model
 
 
