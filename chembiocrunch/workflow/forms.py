@@ -203,13 +203,17 @@ class IC50UploadForm(forms.ModelForm):
         #Assumed that datafile contains only one plate worth of data
         self.uploaded_data = fully_indexed
         self.uploaded_config = indexed_config
-        included_plate_wells = set(self.uploaded_config.apply(get_plate_wells_with_sample_ids, axis=1))
+
+        wells = [str(row) for row in indexed_config["Destination Well"]]
+        print "wellllls"
+        print wells
+        included_plate_wells = set(wells)
         inc_plates = {}
         for item in fully_indexed["full_ref"]:
             if item in included_plate_wells:
                 inc_plates[str(item)] = True
             else:
-                inc_plates[str(item)] = False
+                inc_plates[str(item)] = None
         self.included_plate_wells = inc_plates
         
 
@@ -248,7 +252,7 @@ class IC50UploadForm(forms.ModelForm):
 #         error_flag = ""
 #         uploaded_data_file = self.cleaned_data['uploaded_data_file']
 #         uploaded_config_file = self.cleaned_data['uploaded_config_file']
-#         #mime = magic.from_buffer(uploaded_data_file.read(), mime=True)
+#         #mime = magic.from_buffer(uploaded_data_fileget_plate_wells_with_sample_ids.read(), mime=True)
 #         #if 'text/' not in mime:
 #         #    error_flag += 'Data file must be a CSV document'
 #         #mime = magic.from_buffer(uploaded_config_file.read(), mime=True)
@@ -511,7 +515,7 @@ class HeatmapForm(forms.Form):
                     print float(hi_value)
                     condclassint = int(math.ceil((float(row['figure']) / float(hi_value)) * 10))
                     cond_class = str(condclassint)
-                    if(initial == False):
+                    if not initial:
                         cond_class += " unchecked"
 
                     self.fields[well_str] = forms.BooleanField(initial=initial, label=int(row['figure']))
