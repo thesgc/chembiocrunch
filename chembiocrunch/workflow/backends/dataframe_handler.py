@@ -77,5 +77,4 @@ def change_all_columns(df, steps_json):
 
 def get_plate_wells_with_sample_ids(series):
     if str(series["Sample ID"]).startswith("BVD"):
-        return (series["full_ref"], True)
-    return (series["full_ref"], False)
+        return series["full_ref"]

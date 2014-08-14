@@ -115,14 +115,16 @@ class IC50Workflow(TimeStampedModel):
     #def get_latest_data_revision(self):
     #    return get_model("workflow", "Ic50Workflow").objects.get_latest_workflow_revision(self.id)
 
-    def create_first_data_revision(self, data, included_plate_wells):
+    def create_first_data_revision(self, data, included_plate_wells, configdata):
         
         #dcf = dataframe_handler.get_data_frame(self.uploaded_config_file.file)
         #ddf = dataframe_handler.get_data_frame(self.uploaded_data_file.file)
         
         new_workflow_revision = get_model("workflow", "IC50WorkflowRevision").objects.create(workflow=self, revision_type=UPLOAD, steps_json=json.dumps(included_plate_wells))
 
-        data.to_hdf(self.get_store_filename(), self.get_store_key(), mode='w')
+        data.to_hdf(self.get_store_filename("data"), self.get_store_key(), mode='w')
+        configdata.to_hdf(self.get_store_filename("configdata"), self.get_store_key(), mode='w')
+
 
     def get_latest_workflow_revision(self):
         return get_model("workflow", "IC50WorkflowRevision").objects.filter(workflow_id=self.id).order_by("-created")[0]
@@ -132,19 +134,19 @@ class IC50Workflow(TimeStampedModel):
         return get_store('workflows.%s' % (zero_pad_object_id(self.id),))
 
     
-    def get_store_filename(self, ):
-        return 'ic50_workflows.%s' % (zero_pad_object_id(self.id))
+    def get_store_filename(self,dtype ):
+        return 'ic50_workflows%s.%s' % (dtype, zero_pad_object_id(self.id))
 
     def get_store_key(self):
-        return "ic50_wfdr%s" % (  zero_pad_object_id(self.id),)
+        return "ic50_wfdr_%s" % (  zero_pad_object_id(self.id),)
 
 
     def get_data(self, where=None):
         if not where:
-            filename=self.get_store_filename()
+            filename=self.get_store_filename("data")
             return read_hdf(filename,self.get_store_key(),)
         else:
-            return read_hdf(self.get_store_filename(),self.get_store_key(),where=where)
+            return read_hdf(self.get_store_filename("data"),self.get_store_key(),where=where)
 
     def get_config_data(self, where=None):
         if not where:

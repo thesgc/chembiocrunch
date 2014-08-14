@@ -201,15 +201,23 @@ class IC50UploadForm(forms.ModelForm):
         fully_indexed = data_with_index_refs.set_index('fullname')
         #join both dataframes along fullname axis.
         #Assumed that datafile contains only one plate worth of data
-        self.uploaded_data = indexed_config.join(fully_indexed, how="outer")
-        print self.uploaded_data["row_number"]
-        included_plate_wells = self.uploaded_data.apply(get_plate_wells_with_sample_ids, axis=1)
-        self.included_plate_wells = {included_plate_well[1][0]: included_plate_well[1][1] for included_plate_well in included_plate_wells.iteritems()}
+        self.uploaded_data = fully_indexed
+        self.uploaded_config = indexed_config
+        included_plate_wells = set(self.uploaded_config.apply(get_plate_wells_with_sample_ids, axis=1))
+        inc_plates = {}
+        for item in fully_indexed["full_ref"]:
+            if item in included_plate_wells:
+                inc_plates[str(item)] = True
+            else:
+                inc_plates[str(item)] = False
+        self.included_plate_wells = inc_plates
+        
+
 
     def save(self, force_insert=False, force_update=False, commit=True):
         model = super(IC50UploadForm, self).save()
         # do custom stuff
-        model.create_first_data_revision(self.uploaded_data, self.included_plate_wells)
+        model.create_first_data_revision(self.uploaded_data, self.included_plate_wells, self.uploaded_config)
         model.save()
         return model
 
