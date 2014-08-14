@@ -535,11 +535,15 @@ class HeatmapForm(forms.Form):
                 self.helper.layout.append(column_helper.layout)    
             self.helper.layout.append(loophelper.layout)
         stop_helper = HeatmapFormHelper()
+        
         stop_helper.layout=Layout(
-            HTML('</table></div>')
+            HTML('</table></div>'), 
+            "save"
         )
         self.helper.layout.append(stop_helper)
-        self.helper.layout.append(Submit('submit', 'Submit'))
+        self.helper.add_input(Submit('save', 'Save'))
+        self.helper.layout.append("save")
+        
 
 
 class VisualisationForm(forms.Form):
