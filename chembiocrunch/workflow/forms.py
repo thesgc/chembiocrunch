@@ -465,14 +465,15 @@ class HeatmapForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         ud = kwargs.pop('uploaded_data')
-        ud.sort(["well_letter","well_number"])
         j = kwargs.pop('steps_json')
         #j = json.loads(hj)
         super(HeatmapForm, self).__init__(*args, **kwargs)
 
         self.helper = HeatmapFormHelper()
-        well_letters = ud['well_letter'].unique()
+        ud[["figure"]] = ud[["figure"]].astype(float)
         hi_value = ud['figure'].max()
+        well_letters = ud['well_letter'].unique()
+        
         self.helper.layout=Layout(
             HTML('<div class="table-responsive"><table class="heatmap">')
         )
@@ -490,26 +491,40 @@ class HeatmapForm(forms.Form):
             ])
             #loop through subset of ud which has that letter
             subset = ud[ud['well_letter'] == letter]
+            subset = subset.convert_objects(convert_numeric=True).sort("well_number")
             for index, row in subset.iterrows():
                 well_str = row['well_letter'] + str(row['well_number'])
                 #work out the class number to apply for conditional formatting - 
                 #an integer between 1-10 worked out from the fraction this value is of the maximum
-                cond_class = int(math.ceil((float(row['figure']) / float(hi_value)) * 10))
-                initial = j[well_str]
-                self.fields[well_str] = forms.BooleanField(initial=initial, label=row['figure'])
-                loophelper.layout.fields.extend([
-                    HTML('<td data_row="' + row['well_letter'] + '" data_column="' + str(row['well_number']) + '" class="hide-checkbox hmp' + str(cond_class) + '">'),
-                    well_str,
-                    HTML('</td>')
-                ])
-                #add a table heading cell for each column - only do this for the first row
-                if (letter == 'A'):
-                    self.fields['header_' + str(row['well_number'])] = forms.BooleanField(initial=False, label=row['well_number'])
-                    column_helper.layout.fields.extend([
-                            HTML('<th data_column="' + str(row['well_number']) + '" class="hmp_header">'),
-                            'header_' + str(row['well_number']),
-                            HTML('</th>')
-                        ])
+                
+                try:
+                    
+                    initial = j.pop(well_str)
+                    print float(hi_value)
+                    condclassint = int(math.ceil((float(row['figure']) / float(hi_value)) * 10))
+                    cond_class = str(condclassint)
+                    if(initial == False):
+                        cond_class += " unchecked"
+
+                    self.fields[well_str] = forms.BooleanField(initial=initial, label=int(row['figure']))
+                    loophelper.layout.fields.extend([
+                        HTML('<td data_row="' + row['well_letter'] + '" data_column="' + str(row['well_number']) + '" class="hide-checkbox hmp' + cond_class + '">'),
+                        well_str,
+                        HTML('</td>')
+                    ])
+                    #add a table heading cell for each column - only do this for the first row
+                    if (letter == 'A'):
+                        self.fields['header_' + str(row['well_number'])] = forms.BooleanField(initial=False, label=row['well_number'])
+                        column_helper.layout.fields.extend([
+                                HTML('<th data_column="' + str(row['well_number']) + '" class="hmp_header">'),
+                                'header_' + str(row['well_number']),
+                                HTML('</th>')
+                            ])
+                    #print cond_class
+                    cond_class = ""
+                except KeyError:
+                    #value already popped
+                    pass
             #this may have to change to reflect how the row names have been assigned - will work for 99% of current examples though
             if(letter == 'A'):
                 self.helper.layout.append(column_helper.layout)    
