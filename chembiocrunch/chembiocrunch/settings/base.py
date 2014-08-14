@@ -21,7 +21,7 @@ SITE_NAME = basename(DJANGO_ROOT)
 path.append(DJANGO_ROOT)
 ########## END PATH CONFIGURATION
 
-
+FILE_UPLOAD_HANDLERS = ( "django.core.files.uploadhandler.TemporaryFileUploadHandler","django.core.files.uploadhandler.MemoryFileUploadHandler",)
 ########## DEBUG CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#debug
 DEBUG = False

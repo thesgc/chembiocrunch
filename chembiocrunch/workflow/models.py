@@ -72,7 +72,7 @@ class Workflow(TimeStampedModel):
     '''A workflow is a container for a set of graphs based on one file. It will have its sub objects cloned
     when the user wants a similar graphing dashboard'''
     title = models.CharField(max_length=100)
-    uploaded_file = models.FileField()
+    uploaded_file = models.FileField(max_length=1024)
     created_by = models.ForeignKey('auth.User')
     objects = WorkflowManager()
 
@@ -107,26 +107,58 @@ class IC50WorkflowManager(models.Manager):
 
 class IC50Workflow(TimeStampedModel):
     title = models.CharField(max_length=100)
-    uploaded_config_file = models.FileField()
-    uploaded_data_file = models.FileField()    
+    uploaded_config_file = models.FileField(max_length=1024)
+    uploaded_data_file = models.FileField(max_length=1024)    
     created_by = models.ForeignKey('auth.User')
     objects = IC50WorkflowManager()
 
     #def get_latest_data_revision(self):
     #    return get_model("workflow", "Ic50Workflow").objects.get_latest_workflow_revision(self.id)
 
-    def create_first_data_revision(self):
+    def create_first_data_revision(self, data, included_plate_wells):
         
-        dcf = dataframe_handler.get_data_frame(self.uploaded_config_file.file)
-        ddf = dataframe_handler.get_data_frame(self.uploaded_data_file.file)
+        #dcf = dataframe_handler.get_data_frame(self.uploaded_config_file.file)
+        #ddf = dataframe_handler.get_data_frame(self.uploaded_data_file.file)
+        
+        new_workflow_revision = get_model("workflow", "IC50WorkflowRevision").objects.create(workflow=self, revision_type=UPLOAD, steps_json=json.dumps(included_plate_wells))
 
-        new_workflow_revision = get_model("workflow", "IC50WorkflowRevision").objects.create(workflow=self, revision_type=UPLOAD)
-        dcf.to_hdf(new_workflow_revision.get_store_filename("configdata"), new_workflow_revision.get_store_key(), mode='w', format="table")
-        ddf.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w', format="table")
+        data.to_hdf(self.get_store_filename(), self.get_store_key(), mode='w')
 
     def get_latest_workflow_revision(self, workflow_id):
         return get_model("workflow", "IC50WorkflowRevision").objects.filter(workflow_id=workflow_id).order_by("-created")[0]
         
+ 
+    def get_store(self):
+        return get_store('workflows.%s' % (zero_pad_object_id(self.id),))
+
+    
+    def get_store_filename(self, ):
+        return 'ic50_workflows.%s' % (zero_pad_object_id(self.id))
+
+    def get_store_key(self):
+        return "ic50_wfdr%s" % (  zero_pad_object_id(self.id),)
+
+
+    def get_data(self, where=None):
+        if not where:
+            filename=self.get_store_filename()
+            return read_hdf(filename,self.get_store_key(),)
+        else:
+            return read_hdf(self.get_store_filename(),self.get_store_key(),where=where)
+
+    def get_config_data(self, where=None):
+        if not where:
+            filename=self.get_store_filename("configdata")
+            return read_hdf(filename,self.get_store_key(),)
+        else:
+            return read_hdf(self.get_store_filename("configdata"),self.get_store_key(),where=where)
+
+
+
+    def create_ic50_curves(self):
+        pass
+
+
 
         #this is where auto-munging of data can take place
         #i.e. any ipython workflows applied here
@@ -158,38 +190,7 @@ class IC50WorkflowRevision(TimeStampedModel):
     #     y_axis = models.CharField(max_length=100)
     objects = IC50WorkflowManager()
     
-    def get_store(self):
-        return get_store('workflows.%s' % (zero_pad_object_id(self.workflow_id),))
-
-    
-    def get_store_filename(self, key,):
-        return 'workflows.%s.%s' % (zero_pad_object_id(self.workflow_id),key)
-
-    def get_store_key(self):
-        return "wfdr%s" % (  zero_pad_object_id(self.id),)
-
-    def get_dtypes(self, where=None):
-        if not where:
-            filename=self.get_store_filename("dtypes")
-            print filename
-            return read_hdf(filename,self.get_store_key(),)
-        else:
-            return read_hdf(self.get_store_filename("dtypes"),self.get_store_key(),where=where)
-
-    def get_data(self, where=None):
-        if not where:
-            filename=self.get_store_filename("data")
-            return read_hdf(filename,self.get_store_key(),)
-        else:
-            return read_hdf(self.get_store_filename("data"),self.get_store_key(),where=where)
-
-    def get_config_data(self, where=None):
-        if not where:
-            filename=self.get_store_filename("configdata")
-            return read_hdf(filename,self.get_store_key(),)
-        else:
-            return read_hdf(self.get_store_filename("configdata"),self.get_store_key(),where=where)
-
+  
     
 #     def get_store_filename(self, key,):
 #         return 'workflows.%s.%s' % (zero_pad_object_id(self.workflow_id),key)

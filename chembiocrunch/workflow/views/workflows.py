@@ -111,10 +111,11 @@ class Ic50WorkflowCreateView(WorkflowView, CreateView ):
     def form_valid(self, form):
         user = self.request.user
         form.instance.created_by = user
+        print form.instance.__dict__
         form_valid = super(Ic50WorkflowCreateView, self).form_valid(form)
         
-        if get_model("workflow", "IC50WorkflowRevision").objects.get_mapping_revisions_for_workflow(self.object).count() == 0:
-           self.object.create_first_data_revision()
+        # if get_model("workflow", "IC50WorkflowRevision").objects.get_mapping_revisions_for_workflow(self.object).count() == 0:
+        #    self.object.create_first_data_revision()
 
         return form_valid
 
@@ -494,4 +495,81 @@ class VisualisationView(DetailView,):
 
 
 
+
+
+class Ic50UpdateView(WorkflowDetailView):
+
+    workflow_revision_id = None
+    visualisation_id = None
+    template_name = "visualise/visualisation_builder.html"
+    
+    def get_context_data(self,  **kwargs):
+        # visualisation_form = None
+        # if "visualisation_form" in kwargs:
+        #     visualisation_form = kwargs.pop("visualisation_form")
+
+        context = super(Ic50UpdateView, self).get_context_data(**kwargs)
+        context["workflow_revision"] = get_object_or_404(get_model("workflow", "IC50WorkflowRevision"), pk=self.workflow_revision_id)
+
+        if not self.visualisation_id:
+            #This will return the first of the IC50 curves but also generate the others
+            self.visualisation_id = context["workflow_revision"].create_ic50_curves()
+
+
+        context["visualisation_id"] = self.visualisation_id
+        context["visualisation_list"] = get_model("workflow", "visualisation").objects.by_workflow(self.object)
+        context["visualisation"] = context["visualisation_list"].get(pk=self.visualisation_id)
+
+        context['revisions'][1][1] = "done"
+        context['revisions'][2][1] = "done"
+        context['revisions'][0][1] = "done"
+        context['revisions'][3][1] = "in-progress"
+
+        if not visualisation_form:
+            column_data = context["visualisation"].get_column_form_data()
+            context["visualisation_form"] = VisualisationForm(column_data=column_data, prefix="")
+        else:
+            context["visualisation_form"] = visualisation_form
+        return context
+
+
+    def get(self, request, *args, **kwargs):
+        '''Borrowed from django base detail view'''
+        self.workflow_revision_id = kwargs.pop("workflow_revision_id")
+        self.visualisation_id = kwargs.pop("visualisation_id")
+
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+
+
+    def post(self, request, *args, **kwargs):
+
+        self.workflow_revision_id = kwargs.pop("workflow_revision_id")
+        self.visualisation_id = kwargs.pop("visualisation_id")
+
+        self.object = self.get_object()
+        workflow_revision = get_object_or_404(get_model("workflow", "WorkflowDataMappingRevision"), pk=self.workflow_revision_id)
+        visualisation_list = get_model("workflow", "visualisation").objects.by_workflow_revision(workflow_revision)
+        visualisation = visualisation_list.get(pk=self.visualisation_id)
+        if request.POST.get("delete", False) == "delete":
+            visualisation.delete()
+            return HttpResponseRedirect(reverse("visualisation_builder",kwargs={
+                'pk': self.object.id,
+                'workflow_revision_id' : workflow_revision.id,
+                })) 
+        column_data = visualisation.get_column_form_data()
+        vis_update_form = VisualisationForm(request.POST,column_data=column_data )
+        if vis_update_form.is_valid():
+            new_object = vis_update_form.save(workflow_revision, visualisation=visualisation)
+            context = self.get_context_data(object=self.object, visualisation_form=vis_update_form)
+            print request.POST
+            if request.POST.get("new", False) == "new":
+                return HttpResponseRedirect(reverse("visualisation_builder",kwargs={
+                'pk': self.object.id,
+                'workflow_revision_id' : workflow_revision.id,
+                })) 
+            return self.render_to_response(context)
+        else:
+            print vis_update_form.errors
 

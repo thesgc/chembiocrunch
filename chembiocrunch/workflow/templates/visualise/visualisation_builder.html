@@ -15,7 +15,7 @@ Visualisation Builder
 {% block help_text %}
 
 <p>
-
+ 
         The visualisation builder lets you create, save and export multiple visualisations
 </p>
 
@@ -26,141 +26,42 @@ Visualisation Builder
 
 <form  action="#options" class="  " method="post">
 
-{% if visualisation_list %}
-<a name="list">
-</a>
+{% include "visualise/visualisation_list.html" %}
 
-    <div class='row'>
-    {% for visualisation_item in visualisation_list %}
-        
-        <div class ="btn col-lg-2 col-md-2 col-sd-4 col-xs-6 "><a id="carousel-selector-{{ visualisation_item.id }}" href="{% url 'visualisation_update_view' pk=object.id workflow_revision_id=workflow_revision.id visualisation_id=visualisation_item.id %}#options"><div class="well col-sd-8 col-sd-offset-2 {% ifequal visualisation_item.id visualisation.id %} activeitem {% endifequal %}">
-            <div class="row">
-            <span class="workflow-title">{% if visualisation_item.visualisation_title %}{{ visualisation_item.visualisation_title|title }}{% else %} no title yet{% endif %}</span></div><div class="row"><span class="workflow-date">{{ visualisation_item.created }}</span>
-            </div><div class="vis-thumb ">{{ visualisation_item.html|add_responsive_tags|safe }}</div>
-        </div></a></div> 
-        
-    {% endfor %}
-</div><!-- end vis holder -->
-{% endif %}
-
-{% if visualisation_id %}
-<div class="dropdown pull-right">
-  <button class="btn btn-primary btn-lg dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
-    Export
-    <span class="caret"></span>
-  </button>
-  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
-
-    
-    <li role="presentation"> <a href="{% url "visualisation_view" pk=visualisation.id format="ppt" %}" role="menuitem" tabindex="-1"  type="link"  id="submit-id3-submit"  class=" btn btn-default input-block-level">As powerpoint</a>
-
-</li>
-
-
-<!--          <button type="submit"  value="new" name="new" id="submit-id2-submit"  class="btn btn-success"><span class="glyphicon glyphicon-plus"></span></button>
- -->         <li role="presentation"><a href="{% url "visualisation_view" pk=visualisation.id format="png" %}" class="btn btn-default input-block-level" type="link" value="new" name="new" role="menuitem" tabindex="-1" href="#">As png image</a></li>
-
-
-    <li role="presentation"><a href="{% url "visualisation_view" pk=visualisation.id format="svg" %}" role="menuitem" tabindex="-1" type="link" id="submit-id3-submit" value="delete" name="delete" class="btn btn-default input-block-level "></span>As SVG for CorelDraw/Illustrator</a></li>
-  </ul>
-</div>
-
-    {% else %}
-
-{% endif %}
-
-
-
-<div class="dropdown pull-right">
-  <button class="btn btn-primary btn-lg dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
-    File
-    <span class="caret"></span>
-  </button>
-  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
-
-    
-    <li role="presentation"> <button role="menuitem" tabindex="-1"  type="submit"  id="submit-id3-submit"  class=" btn btn-default input-block-level">Update</button>
-
-</li>
-{% if visualisation_id %}
-
-<!--          <button type="submit"  value="new" name="new" id="submit-id2-submit"  class="btn btn-success"><span class="glyphicon glyphicon-plus"></span></button>
- -->         <li role="presentation"><button class="btn btn-default input-block-level"  value="new" name="new" role="menuitem" tabindex="-1" href="#">Create new</a></li>
-    {% else %}
-
-{% endif %}
-
-    <li role="presentation" class="divider"></li>
-    <li role="presentation"><button type="submit" role="menuitem" tabindex="-1"  id="submit-id3-submit" value="delete" name="delete" class="btn btn-default input-block-level "><span class="glyphicon glyphicon-remove"></span>Discard &amp; restart</button></li>
-  </ul>
-</div>
+{% include "visualise/visualisation_dropdowns.html" %}
 
 <a name="options"/>
 <h2 class="row">
- 
-  <div class="col-lg-2 col-md-2 col-sm-2 hidden-xs">
-{% if not visualisation_id %}
-Adding
-{% else %}
-Editing 
-{% endif %}
+<div class="col-lg-2 col-md-2 col-sm-2 hidden-xs">
+    {% if not visualisation_id %}
+    Adding
+    {% else %}
+    Editing 
+    {% endif %}
 </div>
 <span style="font-size:12pt">
-    {% crispy visualisation_form visualisation_form.titlehelper %}
-    
-
-
-
-
+  {% if visualisation_form %}
+    {% crispy visualisation_form visualisation_form.titlehelper %}   
+{% endif %}
  <button type="submit"  id="submit-id3-submit"  class="btn btn-primary"></span>Update</button>
-
-
-
-
-
 </span>
-
-
-
-
 </h2>
-
-
-
 <div class="row pull-left col-xs-12">
-{% crispy visualisation_form visualisation_form.xhelper %}
-
-
+    {% if visualisation_form %}
+        {% crispy visualisation_form visualisation_form.xhelper %}
+    {% endif %}
 </div>
-
 <div class="row  ninehundred">
-           <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12 ninehundred">
-
-                                    {{ visualisation.html|add_responsive_tags|safe }}
-                                        {% crispy visualisation_form visualisation_form.helper %}
+    <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12 ninehundred">
+          {{ visualisation.html|add_responsive_tags|safe }}
+              {% if visualisation_form %}
+                  {% crispy visualisation_form visualisation_form.helper %}
+              {% endif %}
           </div>
-          
-
 </div>               
-                        <!-- main slider carousel nav controls <a class="carousel-control left" href="#myCarousel" data-slide="prev">‹</a>
+ 
+{% include "visualise/visualisation_filter.html" %} 
 
-                        <a class="carousel-control right" href="#myCarousel" data-slide="next">›</a>--> 
-
-        </div>
-        
-        <div style="position:abolute; bottom:200px">
-       <!-- <div class="col-lg-4 slide-out-div crispy form-horizontal well"  >
-                <a class="handle" ><button class="btn btn-lg btn-info" style="position: absolute;  " id="submit-id3-submit" type="none"><span class="glyphicon glyphicon-cog"></span> Options</button></a>
-        Colour form
-</div> -->
- <div class="col-lg-4 col-md-4 col-sm-6 col-xs-8 slide-out-div-right crispy form-horizontal well"  >
-                <a class="handle-right" href="http://link-for-non-js-users.html"><button style="position: absolute;  " class="btn btn-lg btn-info"  id="submit-id3-submit" type="none"><span class="glyphicon glyphicon-filter"></span> Filter</button></a>
-
-   
-                                    {% crispy visualisation_form visualisation_form.filterhelper %}
-
-</div>
-    </div>
 
   </form>
 
@@ -171,170 +72,7 @@ Editing
 
 
 
-    <script type="text/javascript">
-    $(function(){
-        leftSlide();
-{% if  visualisation_id %}
-{% else %}
-$(".handle").trigger("click");
-   
-{% endif  %}
- });
-    $(function(){
-        
-      rightSlide();
-      
- });
 
-var botPos = '-400px';
-function leftSlide(){
-  $('.slide-out-div').tabSlideOut({
-            tabHandle: '.handle',                     //class of the element that will become your tab
-            pathToTabImage: '{% static "images/contact_tab.gifUse of getPreventDefault() is deprecated.  Use defaultPrevented instead." %}', //path to the image for the tab //Optionally can be set using css
-            imageHeight: '0px',                     //height of tab image           //Optionally can be set using css
-            imageWidth: '120px',                       //width of tab image            //Optionally can be set using css
-            tabLocation: 'left',                      //side of screen where tab lives, top, right, bottom, or left
-            speed: 100,                               //speed of animation
-            action: 'click',                          //options: 'click' or 'hover', action to trigger animation
-            topPos: botPos,                          //position from the top/ use if tabLocation is left or right
-            leftPos: '1%',                          //position from left/ use if tabLocation is bottom or top
-            fixedPosition: false                      //options: true makes it stick(fixed position) on scroll
-        });
-}
-function rightSlide(){
-  $('.slide-out-div-right').tabSlideOut({
-            tabHandle: '.handle-right',                     //class of the element that will become your tab
-            pathToTabImage: '{% static "images/contact_tab.gif" %}', //path to the image for the tab //Optionally can be set using css
-            imageHeight: '0px',                     //height of tab image           //Optionally can be set using css
-            imageWidth: '120px',                       //width of tab image            //Optionally can be set using css
-            tabLocation: 'right',                      //side of screen where tab lives, top, right, bottom, or left
-            speed: 100,                               //speed of animation
-            action: 'click',                          //options: 'click' or 'hover', action to trigger animation
-            topPos: botPos,                          //position from the top/ use if tabLocation is left or right
-            rightPos: '1%',                          //position from left/ use if tabLocation is bottom or top
-            fixedPosition: false                      //options: true makes it stick(fixed position) on scroll
-        });
-}
-
-
-
-function resizedw(){
-    // Haven't resized in 100ms!
-            var w = $('.slide-out-div-right').width();
-            $('.slide-out-div-right').css({
-                //'height' : properties.containerHeight,
-                'right' :"-" + (w +40) +"px",
-                'bottom' : botPos
-              }
-            );
-            var l = $('.slide-out-div').width();
-            $('.slide-out-div').css({
-                //'height' : properties.containerHeight,
-                'left' : "-" + (l +40) +"px",
-                'bottom' : botPos
-            });
-}
-
-var doit;
-window.onresize = function(){
-  clearTimeout(doit);
-  doit = setTimeout(resizedw, 120);
-};
-
-// var rtime = new Date(1, 1, 2000, 12,00,00);
-// var timeout = false;
-// var delta = 200;
-// $(".ninehundred").resize(function() {
-//     rtime = new Date();
-//     if (timeout === false) {
-//         timeout = true;
-//         setTimeout(resizeend, delta);
-//     }
-// });
-
-// function resizeend() {
-//     if (new Date() - rtime < delta) {
-//         setTimeout(resizeend, delta);
-//     } else {
-//         timeout = false;
-//         alert("done");
-//         //leftSlide();
-//         //rightSlide();
-//     }               
-// }
-
-window.onload = function(){
-  $('.dropdown-toggle').dropdown();
-}
-
-
-
-
-    </script>
-                
-
-    
-      <style type="text/css">
-      
-      .slide-out-div {
-        z-index:1000;
-          padding: 20px;
-          background: rgba(255,255,255,.95);
-          /*background: #ccc;
-          border: 1px solid #29216d;*/
-      }   
-      .slide-out-div a {
-        z-index:99 !important;
-position
-/* Safari */
--webkit-transform: rotate(-90deg);
-
-/* Firefox */
--moz-transform: rotate(-90deg);
-
-/* IE */
--ms-transform: rotate(-90deg);
-
-/* Opera */
--o-transform: rotate(-90deg);
-
-/* Internet Explorer */
-filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
-
-
-}   
-
-.slide-out-div-right {
-        z-index:1000;
-          padding: 20px;
-          background: rgba(255,255,255,.95);
-
-          /*background: #ccc;
-          border: 1px solid #29216d;*/
-      }   
-      .slide-out-div-right a {
-        z-index:99 !important;
-position
-/* Safari */
--webkit-transform: rotate(90deg);
-
-/* Firefox */
--moz-transform: rotate(90deg);
-
-/* IE */
--ms-transform: rotate(90deg);
-
-/* Opera */
--o-transform: rotate(90deg);
-
-/* Internet Explorer */
-filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
-
-/* General CSS3 compliance */
-transform: rotate(90deg);
-
-}
-      </style>
 
 {% endblock extra_js %}
 

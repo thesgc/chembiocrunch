@@ -1,0 +1,55 @@
+{% if visualisation_id %}
+<div class="dropdown pull-right">
+  <button class="btn btn-primary btn-lg dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
+    Export
+    <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+
+    
+    <li role="presentation"> <a href="{% url "visualisation_view" pk=visualisation.id format="ppt" %}" role="menuitem" tabindex="-1"  type="link"  id="submit-id3-submit"  class=" btn btn-default input-block-level">As powerpoint</a>
+
+</li>
+
+
+<!--          <button type="submit"  value="new" name="new" id="submit-id2-submit"  class="btn btn-success"><span class="glyphicon glyphicon-plus"></span></button>
+ -->         <li role="presentation"><a href="{% url "visualisation_view" pk=visualisation.id format="png" %}" class="btn btn-default input-block-level" type="link" value="new" name="new" role="menuitem" tabindex="-1" href="#">As png image</a></li>
+
+
+    <li role="presentation"><a href="{% url "visualisation_view" pk=visualisation.id format="svg" %}" role="menuitem" tabindex="-1" type="link" id="submit-id3-submit" value="delete" name="delete" class="btn btn-default input-block-level "></span>As SVG for CorelDraw/Illustrator</a></li>
+  </ul>
+</div>
+
+    {% else %}
+
+{% endif %}
+
+<div class="dropdown pull-right">
+  <button class="btn btn-primary btn-lg dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
+    File
+    <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+
+    
+    <li role="presentation"> <button role="menuitem" tabindex="-1"  type="submit"  id="submit-id3-submit"  class=" btn btn-default input-block-level">Update</button>
+
+</li>
+{% if visualisation_id %}
+
+<!--          <button type="submit"  value="new" name="new" id="submit-id2-submit"  class="btn btn-success"><span class="glyphicon glyphicon-plus"></span></button>
+ -->         <li role="presentation"><button class="btn btn-default input-block-level"  value="new" name="new" role="menuitem" tabindex="-1" href="#">Create new</a></li>
+    {% else %}
+
+{% endif %}
+
+    <li role="presentation" class="divider"></li>
+    <li role="presentation"><button type="submit" role="menuitem" tabindex="-1"  id="submit-id3-submit" value="delete" name="delete" class="btn btn-default input-block-level "><span class="glyphicon glyphicon-remove"></span>Discard &amp; restart</button></li>
+  </ul>
+</div>
+ 
+<script>
+window.onload = function(){
+  $('.dropdown-toggle').dropdown();
+}
+</script>
