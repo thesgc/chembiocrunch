@@ -464,6 +464,7 @@ class HeatmapForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         ud = kwargs.pop('uploaded_data')
+        ud.sort(["well_letter","well_number"])
         j = kwargs.pop('steps_json')
         #j = json.loads(hj)
         super(HeatmapForm, self).__init__(*args, **kwargs)

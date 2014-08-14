@@ -222,6 +222,11 @@ class WorkflowDataMappingEditView(WorkflowDetailView):
 class WorkflowHeatmapView(IC50WorkflowDetailView):
     
     template_name = "workflows/workflow_ic50_heatmap.html"
+
+    def get_success_url(self):
+        return reverse('workflow_ic50_graphs', kwargs={
+                'pk': self.object.pk,
+                })
     
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
@@ -241,16 +246,6 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
         context.update(kwargs)
         
         return context
-
-    # def form_valid(self, form):
-    #     user = self.request.user
-    #     form.instance.created_by = user
-    #     form_valid = super(WorkflowHeatmapView, self).form_valid(form)
-        
-    #     if get_model("workflow", "IC50WorkflowRevision").objects.get_mapping_revisions_for_workflow(self.object).count() == 0:
-    #        self.object.create_first_data_revision()
-
-    #     return form_valid
 
     def post(self, request, *args, **kwargs):
         '''This view will always add a new graph, graph updates are handled by ajax'''
