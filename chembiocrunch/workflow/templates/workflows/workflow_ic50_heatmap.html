@@ -69,6 +69,23 @@ $(document).ready(function() {
     
   });
 
+  //monitor the column row checkboxes
+  
+  $('.hmp_row_header .checkbox').change(function(e) {
+      trigger = $(this);
+      cell = $(this).closest('th');
+      row_letter = cell.attr('data_row').toString();
+      //get the value of data-column
+      //set all of those to reflect the reverse checked state of the header
+      $('td[data_row="' + row_letter + '"]').each(function(){
+        checkbox = $(this).find('.checkboxinput');
+        if (checkbox.prop('checked') != trigger.prop('checked')) {
+          checkbox.click();
+        }
+      });
+    
+  });
+
 });
 
 </script>

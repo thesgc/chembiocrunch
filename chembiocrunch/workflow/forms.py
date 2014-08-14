@@ -492,7 +492,7 @@ class HeatmapForm(forms.Form):
         #set up a column header helper containing checkboxes to deselct every well in a column
         column_helper = HeatmapFormHelper()
         column_helper.layout=Layout(
-            HTML('<tr>')
+            HTML('<tr><td>&nbsp;</td>')
         )
         for letter in well_letters:
             #create table row
@@ -501,6 +501,12 @@ class HeatmapForm(forms.Form):
             loophelper.layout.fields.extend([
                 HTML('<tr>')
             ])
+            self.fields['header_' + str(letter)] = forms.BooleanField(initial=False, label=letter)
+            loophelper.layout.fields.extend([
+                    HTML('<th data_row="' + str(letter) + '" class="hmp_row_header">'),
+                    'header_' + str(letter),
+                    HTML('</th>')
+                ])
             #loop through subset of ud which has that letter
             subset = ud[ud['well_letter'] == letter]
             subset = subset.convert_objects(convert_numeric=True).sort("well_number")
@@ -512,10 +518,13 @@ class HeatmapForm(forms.Form):
                 try:
                     
                     initial = j.pop(well_str)
-                    print float(hi_value)
                     condclassint = int(math.ceil((float(row['figure']) / float(hi_value)) * 10))
                     cond_class = str(condclassint)
+<<<<<<< HEAD
                     if not initial:
+=======
+                    if initial:
+>>>>>>> 17bdf7c79c170ddb426d85b54f0f652468d7ce3e
                         cond_class += " unchecked"
 
                     self.fields[well_str] = forms.BooleanField(initial=initial, label=int(row['figure']))
@@ -546,7 +555,7 @@ class HeatmapForm(forms.Form):
             HTML('</table></div>')
         )
         self.helper.layout.append(stop_helper)
-        self.helper.layout.append(Submit('submit', 'Update and Save'))
+        self.helper.layout.append(Submit('submit', 'Submit'))
 
 
 class VisualisationForm(forms.Form):

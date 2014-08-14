@@ -224,9 +224,10 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
     template_name = "workflows/workflow_ic50_heatmap.html"
 
     def get_success_url(self):
-        return reverse('workflow_ic50_graphs', kwargs={
-                'pk': self.object.pk,
-                })
+        # return reverse('workflow_ic50_builder_view', kwargs={
+        #         'pk': self.object.pk,
+        #         })
+        return "success"
     
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
@@ -251,28 +252,25 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
         '''This view will always add a new graph, graph updates are handled by ajax'''
         self.object = self.get_object()
 
-        form = HeatmapForm(request.POST, prefix="heatmap_form")
+        workflow_revision = self.object.get_latest_workflow_revision()
+
+        steps_json = json.loads(workflow_revision.steps_json)
+
+        form = HeatmapForm(request.POST, uploaded_data=self.object.get_data(), steps_json=steps_json)
         #get the request containing the json
-        form.cleaned_data()
-        #loop through the stored json and for each pair, set the value to that in the form data
-        heatmap_json = context["steps_json"]
-        for key in heatmap_json[0].iteritems():
-            heatmap_json[key] = form.cleaned_data()["id_" + key]
+        if form.is_valid():
+
+            #form.cleaned_data()
+            #loop through the stored json and for each pair, set the value to that in the form data
+            #heatmap_json = context["steps_json"]
+            for key in steps_json.iteritems():
+                steps_json[key] = form.cleaned_data()["id_" + key]
+            workflow_revision.steps_json = steps_json
+            workflow_revision.save()
 
 
 
-        #retrieve all values from the form and map to the json file in the context
-        #save the json into the data revision
 
-
-        #if formset.is_valid():
-        #    workflow_revision = formset.process(self.object)
-
-        #    return HttpResponseRedirect(reverse("visualisation_builder",kwargs={
-        #        'pk': self.object.id,
-        #        'workflow_revision_id' : workflow_revision.id,
-        #        }))
-        return self.render_to_response(self.get_context_data())
 
 
 
