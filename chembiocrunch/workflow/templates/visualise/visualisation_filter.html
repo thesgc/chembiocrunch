@@ -1,0 +1,92 @@
+ {% load crispy_forms_tags %}
+ {% load staticfiles %}
+
+<div style="position:abolute; bottom:200px">
+       <!-- <div class="col-lg-4 slide-out-div crispy form-horizontal well"  >
+                <a class="handle" ><button class="btn btn-lg btn-info" style="position: absolute;  " id="submit-id3-submit" type="none"><span class="glyphicon glyphicon-cog"></span> Options</button></a>
+        Colour form
+</div> -->
+ <div class="col-lg-4 col-md-4 col-sm-6 col-xs-8 slide-out-div-right crispy form-horizontal well"  >
+    <a class="handle-right" href="http://link-for-non-js-users.html"><button style="position: absolute;  " class="btn btn-lg btn-info"  id="submit-id3-submit" type="none"><span class="glyphicon glyphicon-filter"></span> Filter</button></a>
+{% if visualisation_form %}
+    {% crispy visualisation_form visualisation_form.filterhelper %}
+{% endif %}
+
+</div>
+</div>
+
+
+
+    <script type="text/javascript">
+//     $(function(){
+//         leftSlide();
+// {% if  visualisation_id %}
+// {% else %}
+// $(".handle").trigger("click");
+   
+// {% endif  %}
+//  });
+$(function(){
+    rightSlide();    
+ });
+
+var botPos = '-400px';
+// function leftSlide(){
+//   $('.slide-out-div').tabSlideOut({
+//             tabHandle: '.handle',                     //class of the element that will become your tab
+//             pathToTabImage: '{% static "images/contact_tab.gifUse of getPreventDefault() is deprecated.  Use defaultPrevented instead." %}', //path to the image for the tab //Optionally can be set using css
+//             imageHeight: '0px',                     //height of tab image           //Optionally can be set using css
+//             imageWidth: '120px',                       //width of tab image            //Optionally can be set using css
+//             tabLocation: 'left',                      //side of screen where tab lives, top, right, bottom, or left
+//             speed: 100,                               //speed of animation
+//             action: 'click',                          //options: 'click' or 'hover', action to trigger animation
+//             topPos: botPos,                          //position from the top/ use if tabLocation is left or right
+//             leftPos: '1%',                          //position from left/ use if tabLocation is bottom or top
+//             fixedPosition: false                      //options: true makes it stick(fixed position) on scroll
+//         });
+// }
+function rightSlide(){
+  $('.slide-out-div-right').tabSlideOut({
+            tabHandle: '.handle-right',                     //class of the element that will become your tab
+            pathToTabImage: '{% static "images/contact_tab.gif" %}', //path to the image for the tab //Optionally can be set using css
+            imageHeight: '0px',                     //height of tab image           //Optionally can be set using css
+            imageWidth: '120px',                       //width of tab image            //Optionally can be set using css
+            tabLocation: 'right',                      //side of screen where tab lives, top, right, bottom, or left
+            speed: 100,                               //speed of animation
+            action: 'click',                          //options: 'click' or 'hover', action to trigger animation
+            topPos: botPos,                          //position from the top/ use if tabLocation is left or right
+            rightPos: '1%',                          //position from left/ use if tabLocation is bottom or top
+            fixedPosition: false                      //options: true makes it stick(fixed position) on scroll
+        });
+}
+
+
+
+function resizedw(){
+    // Haven't resized in 100ms!
+            var w = $('.slide-out-div-right').width();
+            $('.slide-out-div-right').css({
+                //'height' : properties.containerHeight,
+                'right' :"-" + (w +40) +"px",
+                'bottom' : botPos
+              }
+            );
+            // var l = $('.slide-out-div').width();
+            // $('.slide-out-div').css({
+            //     //'height' : properties.containerHeight,
+            //     'left' : "-" + (l +40) +"px",
+            //     'bottom' : botPos
+            // });
+}
+
+var doit;
+window.onresize = function(){
+  clearTimeout(doit);
+  doit = setTimeout(resizedw, 120);
+};
+
+
+
+
+    </script>
+                

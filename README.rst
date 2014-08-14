@@ -66,6 +66,15 @@ Permissions
 * The get_queryset function limits the data based on the request user, this defers to models.py. 
 * Future sharing implementations will have to alter this functionality
 
+
+Settings
+=======================
+The following has been set up in the settings file which allows the temprary file path to be read during upload
+
+    FILE_UPLOAD_HANDLERS = ( "django.core.files.uploadhandler.TemporaryFileUploadHandler","django.core.files.uploadhandler.MemoryFileUploadHandler",)
+
+
+
 Based upon
 
 A project template for Django 1.6 (with a tag for Django 1.5).

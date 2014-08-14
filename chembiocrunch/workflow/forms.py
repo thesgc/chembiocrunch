@@ -10,7 +10,7 @@ Tab, TabHolder, AccordionGroup, Accordion, Alert, InlineCheckboxes,
 FieldWithButtons, StrictButton, InlineField
 )
 from django.forms.formsets import formset_factory, BaseFormSet
-from workflow.backends.dataframe_handler import change_column_type, get_data_frame
+from workflow.backends.dataframe_handler import change_column_type, get_data_frame, get_excel_data_frame, get_plate_wells_with_sample_ids
 
 #from easy_select2.widgets import Select2TextInput
 from django_select2.fields import Select2ChoiceField
@@ -19,7 +19,6 @@ import floppyforms as forms
 from workflow.models import VALIDATE_COLUMNS, my_slug, GRAPH_MAPPINGS
 
 import django.forms as vanillaforms
-
 
 import json
 
@@ -30,6 +29,9 @@ import pandas as pd
 import math
 from django.contrib.auth.forms import AuthenticationForm
 from crispy_forms.bootstrap import StrictButton
+import pandas as pd
+
+from backends.dataframe_handler import get_ic50_data_columns, get_ic50_config_columns
 
 class UserLoginForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
@@ -57,7 +59,7 @@ class Slider(forms.RangeInput):
 
     class Media:
         js = (
-            'js/jquery.min.js',
+            'js/jquery.min.jsget_ic50_data_columns',
             'js/jquery-ui.min.js',
         )
         css = {
@@ -66,7 +68,7 @@ class Slider(forms.RangeInput):
             )
         }
 
-"http://filamentgroup.com/lab/update-jquery-ui-slider-from-a-select-element-now-with-aria-support.html"
+"http://filamentgroup.com/lab/update-jquery-ui-slider-from-a-selectself.uploaded_data-element-now-with-aria-support.html"
 
 
 
@@ -121,17 +123,95 @@ class CreateWorkflowForm(forms.ModelForm):
 
 class IC50UploadForm(forms.ModelForm):
 
-    '''This is (sort of) an abstract class. Extend this if you are creating an IC50 related workflow'''
+    '''This is (sort of) an abstract class. Extend this if you are creating an IC50 related workflow
+    FILES will not validate correctly unless the temporary uploaded file file upload handler has been set 
+    in the settings
+    '''
     title = forms.CharField(max_length=50)
     uploaded_data_file = forms.FileField()
     uploaded_config_file = forms.FileField()
     #also needa field which holds the "type", obtained from the URL
-    form_type = forms.CharField()
+    form_type = None
+    uploaded_config = None
+    uploaded_data = None
+    included_plate_wells = None
 
 
     class Meta:
         model = get_model('workflow', "IC50Workflow")
         exclude = ('created_by','form_type')
+
+
+    def clean_uploaded_data_file(self):
+
+        uploaded_data_file = self.files['uploaded_data_file']
+        mime = magic.from_buffer(self.files["uploaded_data_file"].read(), mime=True)
+        print mime
+        if 'text/' in mime:
+            try:
+                self.uploaded_data = get_data_frame(uploaded_data_file.temporary_file_path())
+            except AttributeError:
+                raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
+            except Exception:
+                    raise forms.ValidationError("Error processing data Excel File")
+        elif "application/" in mime:
+            try:
+                self.uploaded_data = get_excel_data_frame(uploaded_data_file.temporary_file_path())
+            except AttributeError:
+                raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
+            except Exception:
+                    raise forms.ValidationError("Error processing data Excel File")
+        else:
+            raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
+        return self.cleaned_data['uploaded_data_file']
+
+    
+    def clean_uploaded_config_file(self):
+        uploaded_config_file = self.files['uploaded_config_file']
+        mime = magic.from_buffer(self.files["uploaded_config_file"].read(), mime=True)
+        print mime
+        if 'text/' in mime:
+            try:
+                self.uploaded_config = get_data_frame(uploaded_config_file.temporary_file_path())
+            except AttributeError:
+                raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
+            except Exception:
+                    raise forms.ValidationError("Error processing config CSV File")
+        elif "application/" in mime:
+            try:
+                try:
+                    self.uploaded_config = get_excel_data_frame(uploaded_config_file.temporary_file_path(), skiprows=8, header=0)
+                    print self.uploaded_config.dtypes.keys()
+                    #self.uploaded_config["full_ref"] = self.uploaded_config["Destination Well"]
+                    self.uploaded_config = self.uploaded_config[self.uploaded_config["Source Plate Name"]=="Intermediate Sample Plate[1]"]
+                except Exception:
+                    raise forms.ValidationError("Error processing config Excel File")
+            except AttributeError:
+                raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
+        else:
+            raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
+        return self.cleaned_data['uploaded_config_file']           
+
+
+
+    def clean(self):
+        indexed_config = self.uploaded_config.apply(get_ic50_config_columns, axis=1)
+        indexed_config = indexed_config.set_index('fullname')
+        data_with_index_refs = self.uploaded_data.apply(get_ic50_data_columns, axis=1)
+        fully_indexed = data_with_index_refs.set_index('fullname')
+        self.uploaded_data = fully_indexed.join(indexed_config)
+        included_plate_wells = self.uploaded_data.apply(get_plate_wells_with_sample_ids, axis=1)
+        self.included_plate_wells = {included_plate_well[1][0]: included_plate_well[1][1] for included_plate_well in included_plate_wells.iteritems()}
+
+    def save(self, force_insert=True, force_update=False, commit=True):
+        model = super(IC50UploadForm, self).save()
+        # do custom stuff
+
+        model.create_first_data_revision(self.uploaded_data, self.included_plate_wells)
+        if commit:
+            model.save()
+        return model
+
 
     def __init__(self, *args, **kwargs):
         self.helper = FormHelper()
@@ -144,7 +224,6 @@ class IC50UploadForm(forms.ModelForm):
                 'uploaded_config_file','save',
          )
         )
-
         self.request = kwargs.pop('request', None)
         return super(IC50UploadForm, self).__init__(*args, **kwargs)
 

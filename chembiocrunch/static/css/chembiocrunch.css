@@ -245,3 +245,62 @@ table.heatmap {
 .pieces {
 
 }
+
+   .slide-out-div {
+        z-index:1000;
+          padding: 20px;
+          background: rgba(255,255,255,.95);
+          /*background: #ccc;
+          border: 1px solid #29216d;*/
+      }   
+      .slide-out-div a {
+        z-index:99 !important;
+position
+/* Safari */
+-webkit-transform: rotate(-90deg);
+
+/* Firefox */
+-moz-transform: rotate(-90deg);
+
+/* IE */
+-ms-transform: rotate(-90deg);
+
+/* Opera */
+-o-transform: rotate(-90deg);
+
+/* Internet Explorer */
+filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+
+
+}   
+
+.slide-out-div-right {
+        z-index:1000;
+          padding: 20px;
+          background: rgba(255,255,255,.95);
+
+          /*background: #ccc;
+          border: 1px solid #29216d;*/
+      }   
+      .slide-out-div-right a {
+        z-index:99 !important;
+position
+/* Safari */
+-webkit-transform: rotate(90deg);
+
+/* Firefox */
+-moz-transform: rotate(90deg);
+
+/* IE */
+-ms-transform: rotate(90deg);
+
+/* Opera */
+-o-transform: rotate(90deg);
+
+/* Internet Explorer */
+filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
+
+/* General CSS3 compliance */
+transform: rotate(90deg);
+
+}
