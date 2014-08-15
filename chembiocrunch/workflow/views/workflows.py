@@ -227,25 +227,19 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
         # return reverse('workflow_ic50_builder_view', kwargs={
         #         'pk': self.object.pk,
         #         })
+        print "success"
         return "success"
     
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
         context = super(WorkflowHeatmapView, self).get_context_data(**kwargs)
-
-        #if not "formset" in kwargs:
-        #    context["formset"] = DataMappingFormSet(initial=self.object.get_data_mapping_formset_data(), prefix="data_mappings")
         form_class = HeatmapForm
-        #model = get_model("workflow", "IC50Workflow")
-        steps_json = json.loads(self.object.get_latest_workflow_revision().steps_json)
-        #context['steps_json'] = heatmap_json
+        #steps_json = json.loads(self.object.get_latest_workflow_revision().steps_json)
+        workflow_revision = self.object.get_latest_workflow_revision()
+        steps_json = json.loads(workflow_revision.steps_json)
         
-        #ensure the well position comes out in numerical order instead of string order
-        #don't pivot results as it's easier to loop through - if you need it, here's how to pivot results into the plate layout
         context["heatmap_form"] = HeatmapForm(uploaded_data=self.object.get_data(), steps_json=steps_json)
-
         context.update(kwargs)
-        
         return context
 
     def post(self, request, *args, **kwargs):
@@ -253,18 +247,25 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
         self.object = self.get_object()
 
         workflow_revision = self.object.get_latest_workflow_revision()
+        print "Workflow revision:" 
+        
 
         steps_json = json.loads(workflow_revision.steps_json)
+        #print steps_json
+
 
         form = HeatmapForm(request.POST, uploaded_data=self.object.get_data(), steps_json=steps_json)
         #get the request containing the json
         if form.is_valid():
-
+            print "cleaned data"
+            #print form.cleaned_data
+            steps_json = json.loads(workflow_revision.steps_json)
             #form.cleaned_data()
             #loop through the stored json and for each pair, set the value to that in the form data
             #heatmap_json = context["steps_json"]
-            for key in steps_json.iteritems():
-                steps_json[key] = form.cleaned_data()["id_" + key]
+            for key, value in steps_json.iteritems():
+                print key
+                steps_json[key] = form.cleaned_data[key]
             workflow_revision.steps_json = steps_json
             workflow_revision.save()
 

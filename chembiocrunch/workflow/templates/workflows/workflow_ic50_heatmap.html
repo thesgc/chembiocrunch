@@ -20,7 +20,7 @@ To get started upload your data and config files
 </ul>
 {% endblock help_text %}
 {% block content %}
-        
+<form action="" class="crispy form-horizontal" method="post">
 
 <!-- Build heatmap content here
   Div containing a table
@@ -32,11 +32,17 @@ To get started upload your data and config files
 
 <div class="heatmap-container">
 
-<form action="" class="crispy form-horizontal" method="post">
+
 {% crispy heatmap_form %}
-</form>
+
 
 </div>
+
+</form>
+
+{% endblock content %}
+{% block extra_js %}
+
 <script>
 
 $(document).ready(function() {
@@ -90,4 +96,5 @@ $(document).ready(function() {
 
 </script>
 
-{% endblock content %}
+
+{% endblock extra_js %}

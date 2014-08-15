@@ -501,7 +501,7 @@ class HeatmapForm(forms.Form):
             loophelper.layout.fields.extend([
                 HTML('<tr>')
             ])
-            self.fields['header_' + str(letter)] = forms.BooleanField(initial=False, label=letter)
+            self.fields['header_' + str(letter)] = forms.BooleanField(initial=False, label=letter, required=False)
             loophelper.layout.fields.extend([
                     HTML('<th data_row="' + str(letter) + '" class="hmp_row_header">'),
                     'header_' + str(letter),
@@ -520,14 +520,10 @@ class HeatmapForm(forms.Form):
                     initial = j.pop(well_str)
                     condclassint = int(math.ceil((float(row['figure']) / float(hi_value)) * 10))
                     cond_class = str(condclassint)
-<<<<<<< HEAD
                     if not initial:
-=======
-                    if initial:
->>>>>>> 17bdf7c79c170ddb426d85b54f0f652468d7ce3e
                         cond_class += " unchecked"
 
-                    self.fields[well_str] = forms.BooleanField(initial=initial, label=int(row['figure']))
+                    self.fields[well_str] = forms.BooleanField(initial=initial, required=False, label=int(row['figure']))
                     loophelper.layout.fields.extend([
                         HTML('<td data_row="' + row['well_letter'] + '" data_column="' + str(row['well_number']) + '" class="hide-checkbox hmp' + cond_class + '">'),
                         well_str,
@@ -535,7 +531,7 @@ class HeatmapForm(forms.Form):
                     ])
                     #add a table heading cell for each column - only do this for the first row
                     if (letter == 'A'):
-                        self.fields['header_' + str(row['well_number'])] = forms.BooleanField(initial=False, label=row['well_number'])
+                        self.fields['header_' + str(row['well_number'])] = forms.BooleanField(initial=False, required=False, label=row['well_number'])
                         column_helper.layout.fields.extend([
                                 HTML('<th data_column="' + str(row['well_number']) + '" class="hmp_header">'),
                                 'header_' + str(row['well_number']),
