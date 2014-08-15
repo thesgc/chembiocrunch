@@ -196,12 +196,12 @@ class IC50UploadForm(forms.ModelForm):
 
     def clean(self):
         indexed_config = self.uploaded_config.apply(get_ic50_config_columns, axis=1)
-        indexed_config = indexed_config.set_index('fullname')
+        #indexed_config = indexed_config.set_index('fullname')
         data_with_index_refs = self.uploaded_data.apply(get_ic50_data_columns, axis=1)
-        fully_indexed = data_with_index_refs.set_index('fullname')
+        #fully_indexed = data_with_index_refs.set_index('fullname')
         #join both dataframes along fullname axis.
         #Assumed that datafile contains only one plate worth of data
-        self.uploaded_data = fully_indexed
+        self.uploaded_data = data_with_index_refs
         self.uploaded_config = indexed_config
 
         wells = [str(row) for row in indexed_config["Destination Well"]]
@@ -209,7 +209,7 @@ class IC50UploadForm(forms.ModelForm):
         print wells
         included_plate_wells = set(wells)
         inc_plates = {}
-        for item in fully_indexed["full_ref"]:
+        for item in data_with_index_refs["full_ref"]:
             if item in included_plate_wells:
                 inc_plates[str(item)] = True
             else:
@@ -520,11 +520,7 @@ class HeatmapForm(forms.Form):
                     initial = j.pop(well_str)
                     condclassint = int(math.ceil((float(row['figure']) / float(hi_value)) * 10))
                     cond_class = str(condclassint)
-<<<<<<< HEAD
                     if not initial:
-=======
-                    if initial:
->>>>>>> 17bdf7c79c170ddb426d85b54f0f652468d7ce3e
                         cond_class += " unchecked"
 
                     self.fields[well_str] = forms.BooleanField(initial=initial, label=int(row['figure']))

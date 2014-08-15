@@ -60,6 +60,7 @@ def get_ic50_config_columns(series):
     Add plate well reference with same format as data file
     '''
     series["fullname"] = "%s: %s" % (series["Destination Plate Name"], series["Destination Well"])
+    series["full_ref"] = series["Destination Well"]
     return series
 
 
@@ -78,3 +79,26 @@ def change_all_columns(df, steps_json):
 def get_plate_wells_with_sample_ids(series):
     if str(series["Sample ID"]).startswith("BVD"):
         return series["full_ref"]
+
+
+
+
+def get_config_columns(series, sample_codes):
+    group = str(series["fullname"])
+    if group in sample_codes.groups:
+        conf = sample_codes.get_group(group)
+        found = None
+        for s in conf.iterrows():   
+            if s[1]["Sample ID"]:
+                #print s[1]["Destination Concentration"]
+                if str(s[1]["Destination Concentration"]).lower() !="nan":
+                    found = True
+                    series["concentration"] = float(s[1]["Destination Concentration"]) * float(1000000)
+                    series["global_compound_id"] = s[1]["Sample ID"]
+                    series["plate_type"]  = s[1]["Destination Plate Type"]
+        if not found:
+            series["concentration"] = -1
+            series["global_compound_id"] = "NONE"
+            series["plate_type"]  = "NONE"
+    return series
+

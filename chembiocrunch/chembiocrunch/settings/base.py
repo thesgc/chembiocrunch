@@ -197,6 +197,7 @@ DJANGO_APPS = (
     #'select2light',
     #'pptx'
     'django_select2',
+    'ic50',
 )
 
 # Apps specific for this project go here.

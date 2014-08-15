@@ -20,7 +20,8 @@ from StringIO import StringIO
 from seaborn import plotting_context, set_context
 import mpld3
 from workflow.basic_units import BasicUnit
-
+from backends.dataframe_handler import get_config_columns
+from ic50.curve_fit import IC50CurveFit
 
 def get_labels(vis, df):
     return sorted([k for k,v in df[vis.x_axis].value_counts().iterkv()])
@@ -157,9 +158,13 @@ class IC50Workflow(TimeStampedModel):
 
 
 
-    def create_ic50_curves(self):
-        pass
 
+
+    
+
+
+
+    
 
 
         #this is where auto-munging of data can take place
@@ -193,6 +198,47 @@ class IC50WorkflowRevision(TimeStampedModel):
     #     y_axis = models.CharField(max_length=100)
     #heatmap_json = models.TextField(default="{}")
     objects = IC50WorkflowManager()
+
+
+    def create_ic50_data(self):
+        config = self.workflow.get_config_data()
+        sample_codes = config.groupby(["fullname"])
+        data = self.workflow.get_data()
+        config_columns = data.apply(get_config_columns,args=(sample_codes,), axis=1)
+        config_columns[["figure"]] = config_columns[["figure"]].astype(float)
+        minimum = min(config_columns["figure"])
+        config_columns["percent_inhib"] = config_columns["figure"] * 0
+        #
+        ic50_groups = config_columns.groupby("global_compound_id")
+        controls = ic50_groups.get_group("NONE")
+
+        for ic50_group in ic50_groups.groups:
+            if ic50_group != "NONE":
+                
+                group_df = ic50_groups.get_group(ic50_group)
+                group_well_letters = [k for k,v in group_df["well_letter"].value_counts().iterkv()]
+                if group_df['well_number'].max() > 12:
+                    column = 24
+                else:
+                    column = 12
+                group_full_refs = ["%s%d" % (letter , column) for letter in group_well_letters]
+                group_controls = controls[controls["full_ref"].isin(group_full_refs)]
+                group_max = group_controls["figure"].mean()
+                group_df["percent_inhib"] =  100*(group_max - group_df["figure"] )/(group_max - minimum)
+                self.plot_ic50(group_df)
+    
+    def plot_ic50(self, group_df):
+        curve_fitter = IC50CurveFit(group_df["concentration"],
+                                    group_df["percent_inhib"],
+                                    )
+        fit_res = curve_fitter.get_fit()
+        get_latest_workflow_revision
+        constrained = curve_fitter.get_fit(constrained=True)
+
+
+
+
+
 
 
     # @classmethod
@@ -457,6 +503,7 @@ class IC50Visualisation(TimeStampedModel):
     y_axis = models.CharField(max_length=200, default='Percent inhibition')
     compound_id = models.CharField(max_length=200)
     error_bars = models.NullBooleanField()
+    results = models.TextField(default="{}")
     visualisation_title = models.CharField(max_length=200, null=True, blank=True) #Will be used for the sample name
     config_json = models.TextField(default="{}")
     html = models.TextField(default="")
