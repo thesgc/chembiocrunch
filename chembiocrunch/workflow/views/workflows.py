@@ -246,25 +246,19 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
         '''This view will always add a new graph, graph updates are handled by ajax'''
         self.object = self.get_object()
 
-        workflow_revision = self.object.get_latest_workflow_revision()
-        print "Workflow revision:" 
-        
+        workflow_revision = self.object.get_latest_workflow_revision()        
 
         steps_json = json.loads(workflow_revision.steps_json)
-        #print steps_json
 
 
         form = HeatmapForm(request.POST, uploaded_data=self.object.get_data(), steps_json=steps_json)
-        #get the request containing the json
         if form.is_valid():
-            print "cleaned data"
             #print form.cleaned_data
             steps_json = json.loads(workflow_revision.steps_json)
             #form.cleaned_data()
             #loop through the stored json and for each pair, set the value to that in the form data
             #heatmap_json = context["steps_json"]
             for key, value in steps_json.iteritems():
-                print key
                 steps_json[key] = form.cleaned_data[key]
             workflow_revision.steps_json = steps_json
             workflow_revision.save()
