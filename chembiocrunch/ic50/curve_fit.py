@@ -27,7 +27,7 @@ class IC50CurveFit(object):
     xpoints = []
     ypoints = []
     result = None
-
+    svg=None
     def __init__(self,xpoints, ypoints):
         self.xpoints = xpoints.tolist()
         self.ypoints = ypoints.tolist()
@@ -51,12 +51,12 @@ class IC50CurveFit(object):
         ynew = [(result.values["bottom"] + (result.values["top"] - result.values["bottom"])/(1 + np.exp((result.values["logIC50"] - xdatum)*result.values["hill"]))) for xdatum in xnew]
    
         smooted_best_fit_line = spline(xnew,ynew,xnew)
-        f = figure(figsize=(6,6))
+        f = figure(figsize=(6,4))
         plt.plot(self.x, self.data, 'k+')
         plt.plot(xnew,smooted_best_fit_line, 'b')
-        svg = get_svg(f)
+        self.svg = get_svg(f)
         plt.close(f)
-        return svg
+        self.results = result
 
 
 def get_svg(fig):

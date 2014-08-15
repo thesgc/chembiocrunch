@@ -224,9 +224,11 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
     template_name = "workflows/workflow_ic50_heatmap.html"
 
     def get_success_url(self):
-        # return reverse('workflow_ic50_builder_view', kwargs={
-        #         'pk': self.object.pk,
-        #         })
+        return reverse('ic50_update_view', kwargs={
+                'pk': self.object.pk,
+                'workflow_revision_id' : self.object.get_latest_workflow_revision().id,
+                'visualisation_id' : -1,
+                })
         return "success"
     
     def get_context_data(self, **kwargs):
@@ -517,7 +519,7 @@ class VisualisationView(DetailView,):
 
 
 
-class Ic50UpdateView(WorkflowDetailView):
+class Ic50UpdateView(IC50WorkflowDetailView):
 
     workflow_revision_id = None
     visualisation_id = None
@@ -531,25 +533,28 @@ class Ic50UpdateView(WorkflowDetailView):
         context = super(Ic50UpdateView, self).get_context_data(**kwargs)
         context["workflow_revision"] = get_object_or_404(get_model("workflow", "IC50WorkflowRevision"), pk=self.workflow_revision_id)
 
-        if not self.visualisation_id:
+        if self.visualisation_id == -1:
             #This will return the first of the IC50 curves but also generate the others
-            self.visualisation_id = context["workflow_revision"].create_ic50_curves()
+            context["workflow_revision"].create_ic50_curves()
+            self.visualisation_id = context["workflow_revision"].visualisations.all()[0].id
+            
 
 
         context["visualisation_id"] = self.visualisation_id
-        context["visualisation_list"] = get_model("workflow", "visualisation").objects.by_workflow(self.object)
+        context["visualisation_list"] = context["workflow_revision"].visualisations.all()
         context["visualisation"] = context["visualisation_list"].get(pk=self.visualisation_id)
 
         context['revisions'][1][1] = "done"
         context['revisions'][2][1] = "done"
         context['revisions'][0][1] = "done"
         context['revisions'][3][1] = "in-progress"
+        context["isic50"] = True
 
-        if not visualisation_form:
-            column_data = context["visualisation"].get_column_form_data()
-            context["visualisation_form"] = VisualisationForm(column_data=column_data, prefix="")
-        else:
-            context["visualisation_form"] = visualisation_form
+        # if not visualisation_form:
+        #     column_data = context["visualisation"].get_column_form_data()
+        #     context["visualisation_form"] = VisualisationForm(column_data=column_data, prefix="")
+        # else:
+        #     context["visualisation_form"] = visualisation_form
         return context
 
 
@@ -569,8 +574,8 @@ class Ic50UpdateView(WorkflowDetailView):
         self.visualisation_id = kwargs.pop("visualisation_id")
 
         self.object = self.get_object()
-        workflow_revision = get_object_or_404(get_model("workflow", "WorkflowDataMappingRevision"), pk=self.workflow_revision_id)
-        visualisation_list = get_model("workflow", "visualisation").objects.by_workflow_revision(workflow_revision)
+        workflow_revision = get_object_or_404(get_model("workflow", "IC50Visualisation"), pk=self.workflow_revision_id)
+        visualisation_list = get_model("workflow", "IC50Visualisation").objects.by_workflow_revision(workflow_revision)
         visualisation = visualisation_list.get(pk=self.visualisation_id)
         if request.POST.get("delete", False) == "delete":
             visualisation.delete()

@@ -6,7 +6,7 @@
     <div class='row'>
     {% for visualisation_item in visualisation_list %}
         
-        <div class ="btn col-lg-2 col-md-2 col-sd-4 col-xs-6 "><a id="carousel-selector-{{ visualisation_item.id }}" href="{% url 'visualisation_update_view' pk=object.id workflow_revision_id=workflow_revision.id visualisation_id=visualisation_item.id %}#options"><div class="well col-sd-8 col-sd-offset-2 {% ifequal visualisation_item.id visualisation.id %} activeitem {% endifequal %}">
+        <div class ="btn col-lg-2 col-md-2 col-sd-4 col-xs-6 "><a id="carousel-selector-{{ visualisation_item.id }}" href="{% url request.resolver_match.url_name pk=object.id workflow_revision_id=workflow_revision.id visualisation_id=visualisation_item.id %}#options"><div class="well col-sd-8 col-sd-offset-2 {% ifequal visualisation_item.id visualisation.id %} activeitem {% endifequal %}">
             <div class="row">
             <span class="workflow-title">{% if visualisation_item.visualisation_title %}{{ visualisation_item.visualisation_title|title }}{% else %} no title yet{% endif %}</span></div><div class="row"><span class="workflow-date">{{ visualisation_item.created }}</span>
             </div><div class="vis-thumb ">{{ visualisation_item.html|add_responsive_tags|safe }}</div>

@@ -14,6 +14,9 @@ urlpatterns = [
     url(r'^create/success/$', TemplateView.as_view(template_name="workflows/workflow_create_success.html"), name='workflow_create_success'),
    # url(r'^(?P<pk>[0-9]+)/visualisation_export/$', workflows.VisualisationExportView.as_view(), name='visualisation_export'),
     url(r'^(?P<pk>[0-9]+)/visualisation_builder/(?P<workflow_revision_id>[0-9]+)/$', workflows.VisualisationBuilderView.as_view(), name='visualisation_builder'),
-    url(r'^(?P<pk>[0-9]+)/visualisation_builder/(?P<workflow_revision_id>[0-9]+)/(?P<visualisation_id>[0-9]+)/$', workflows.VisualisationUpdateView.as_view(), name='visualisation_update_view')
+    url(r'^(?P<pk>[0-9]+)/visualisation_builder/(?P<workflow_revision_id>[0-9]+)/(?P<visualisation_id>[0-9]+)/$', workflows.VisualisationUpdateView.as_view(), name='visualisation_update_view'),
+
+
+    url(r'^(?P<pk>[0-9]+)/ic50_builder/(?P<workflow_revision_id>[0-9]+)/(?P<visualisation_id>[0-9]+)/$', workflows.Ic50UpdateView.as_view(), name='ic50_update_view')
 
 ]
