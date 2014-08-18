@@ -224,21 +224,25 @@ class IC50WorkflowRevision(TimeStampedModel):
                 group_controls = controls[controls["full_ref"].isin(group_full_refs)]
                 group_max = group_controls["figure"].mean()
                 group_df["percent_inhib"] =  100*(group_max - group_df["figure"] )/(group_max - minimum)
+                group_df.sort(["percent_inhib","concentration"], inplace=True)
                 self.plot_ic50(group_df,ic50_group)
     
     def plot_ic50(self, group_df, ic50_group):
         curve_fitter = IC50CurveFit(group_df["concentration"],
                                     group_df["percent_inhib"],
-                                    )
-        for constrained in (True, False):
+                                    group_df["full_ref"],
+                                  )
+        for constrained in (True,):
             if constrained:
-                title = "%s (constrained)" % ic50_group
-            else:                
-                title = "%s (unconstrained)" % ic50_group
+                title = "%s" % ic50_group
+            #else:                
+             #   title = "%s (unconstrained)" % ic50_group
+
             fit = curve_fitter.get_fit(constrained=constrained)
+
             vis = IC50Visualisation(data_mapping_revision=self,
                                 compound_id=ic50_group,
-                                results=json.dumps({"values": curve_fitter.results.values}), 
+                                results=json.dumps({"values": curve_fitter.results}), 
                                 constrained=constrained,
                                 visualisation_title=title,
                                 html=curve_fitter.svg)      
