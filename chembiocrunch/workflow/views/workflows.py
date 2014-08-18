@@ -235,6 +235,8 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
         steps_json = json.loads(workflow_revision.steps_json)
         
         context["heatmap_form"] = HeatmapForm(uploaded_data=self.object.get_data(), steps_json=steps_json)
+        context['revisions'][0][1] = "done"
+        context['revisions'][1][1] = "in-progress"
         context.update(kwargs)
         return context
 
