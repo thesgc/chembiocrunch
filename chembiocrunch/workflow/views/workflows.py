@@ -113,7 +113,7 @@ class WorkflowCreateView(WorkflowView, CreateView ):
 
 class IC50WorkflowCreateView(IC50WorkflowView, CreateView ):
     '''creates a single workflow'''
-    fields = ['title', 'uploaded_data_file','uploaded_config_file']
+    fields = ['title', 'uploaded_data_file','uploaded_config_file', 'uploaded_meta_file']
     template_name = "workflows/workflow_ic50_create.html"
     #form_class = LabcyteEchoIC50UploadForm
     form_class = IC50UploadForm
@@ -235,6 +235,8 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
         steps_json = json.loads(workflow_revision.steps_json)
         
         context["heatmap_form"] = HeatmapForm(uploaded_data=self.object.get_data(), steps_json=steps_json)
+        context['revisions'][0][1] = "done"
+        context['revisions'][1][1] = "in-progress"
         context.update(kwargs)
         return context
 

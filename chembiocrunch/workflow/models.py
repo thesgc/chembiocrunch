@@ -109,14 +109,15 @@ class IC50WorkflowManager(models.Manager):
 class IC50Workflow(TimeStampedModel):
     title = models.CharField(max_length=100)
     uploaded_config_file = models.FileField(max_length=1024)
-    uploaded_data_file = models.FileField(max_length=1024)    
+    uploaded_data_file = models.FileField(max_length=1024)  
+    uploaded_meta_file = models.FileField(max_length=1024)
     created_by = models.ForeignKey('auth.User')
     objects = IC50WorkflowManager()
 
     #def get_latest_data_revision(self):
     #    return get_model("workflow", "Ic50Workflow").objects.get_latest_workflow_revision(self.id)
 
-    def create_first_data_revision(self, data, included_plate_wells, configdata):
+    def create_first_data_revision(self, data, included_plate_wells, configdata, metadata):
         
         #dcf = dataframe_handler.get_data_frame(self.uploaded_config_file.file)
         #ddf = dataframe_handler.get_data_frame(self.uploaded_data_file.file)
@@ -125,6 +126,7 @@ class IC50Workflow(TimeStampedModel):
 
         data.to_hdf(self.get_store_filename("data"), self.get_store_key(), mode='w')
         configdata.to_hdf(self.get_store_filename("configdata"), self.get_store_key(), mode='w')
+        metadata.to_hdf(self.get_store_filename("metadata"), self.get_store_key(), mode='w')
 
 
     def get_latest_workflow_revision(self):
@@ -156,6 +158,12 @@ class IC50Workflow(TimeStampedModel):
         else:
             return read_hdf(self.get_store_filename("configdata"),self.get_store_key(),where=where)
 
+    def get_meta_data(self, where=None):
+        if not where:
+            filename=self.get_store_filename("metadata")
+            return read_hdf(filename,self.get_store_key(),)
+        else:
+            return read_hdf(self.get_store_filename("metadata"),self.get_store_key(),where=where)
 
 
 
