@@ -21,6 +21,11 @@ margin-left:50px;
     padding: 10px 16px;
 }
 
+
+
+.form-control {
+    height: auto;
+}
 .dropdown-toggle {
 	
 z-index:10000;

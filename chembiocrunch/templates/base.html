@@ -78,7 +78,7 @@
           <a class="navbar-brand" href="/">ChemBio Crunch</a>
         </div>
         <div class="collapse navbar-collapse">
-          <p class="navbar-text navbar-right text-capitalize"><button type="button" class="btn btn-default"><span class="glyphicon glyphicon-user"></span> {{request.user}}</button>
+          <p class="navbar-text navbar-right text-capitalize"><button type="button" class="btn btn-default"><span class="glyphicon glyphicon-user"></span>{% if request.user.name %}{{ request.user.name }}{% else %} {{request.user}}{% endif %}</button>
             <a href="{% url "logout" %}"><button type="button" class="btn btn-primary">Log Out</button></a></p>
         </div><!--/.nav-collapse -->
       </div>

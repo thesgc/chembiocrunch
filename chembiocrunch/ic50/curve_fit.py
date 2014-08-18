@@ -52,7 +52,7 @@ class IC50CurveFit(object):
    
         smooted_best_fit_line = spline(xnew,ynew,xnew)
         f = figure(figsize=(6,4))
-        plt.plot(self.x, self.data, 'k+')
+        plt.plot(self.x, self.data, 'o')
         plt.plot(xnew,smooted_best_fit_line, 'b')
         self.svg = get_svg(f)
         plt.close(f)
