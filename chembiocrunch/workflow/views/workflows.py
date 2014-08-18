@@ -113,7 +113,7 @@ class WorkflowCreateView(WorkflowView, CreateView ):
 
 class IC50WorkflowCreateView(IC50WorkflowView, CreateView ):
     '''creates a single workflow'''
-    fields = ['title', 'uploaded_data_file','uploaded_config_file']
+    fields = ['title', 'uploaded_data_file','uploaded_config_file', 'uploaded_meta_file']
     template_name = "workflows/workflow_ic50_create.html"
     #form_class = LabcyteEchoIC50UploadForm
     form_class = IC50UploadForm

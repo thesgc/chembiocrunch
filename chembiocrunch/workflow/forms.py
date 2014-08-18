@@ -130,10 +130,12 @@ class IC50UploadForm(forms.ModelForm):
     title = forms.CharField(max_length=50)
     uploaded_data_file = forms.FileField()
     uploaded_config_file = forms.FileField()
+    uploaded_data_file = forms.FileField()
     #also needa field which holds the "type", obtained from the URL
     form_type = None
     uploaded_config = None
     uploaded_data = None
+    uploaded_meta = None
     included_plate_wells = None
 
 
@@ -190,7 +192,31 @@ class IC50UploadForm(forms.ModelForm):
                 raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
         else:
             raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
-        return self.cleaned_data['uploaded_config_file']           
+        return self.cleaned_data['uploaded_config_file']      
+
+    def clean_uploaded_meta_file(self):
+        uploaded_meta_file = self.files['uploaded_meta_file']
+        mime = magic.from_buffer(self.files["uploaded_meta_file"].read(), mime=True)
+        print mime
+        if 'text/' in mime:
+            try:
+                self.uploaded_meta = get_data_frame(uploaded_meta_file.temporary_file_path(), skiprows=8, header=0)
+            except AttributeError:
+                raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
+            except Exception:
+                    raise forms.ValidationError("Error processing config CSV File")
+        elif "application/" in mime:
+            try:
+                try:
+                    self.uploaded_meta = get_excel_data_frame(uploaded_meta_file.temporary_file_path(), skiprows=8, header=0)
+                    print self.uploaded_meta.dtypes.keys()
+                except Exception:
+                    raise forms.ValidationError("Error processing config Excel File")
+            except AttributeError:
+                raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
+        else:
+            raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
+        return self.cleaned_data['uploaded_meta_file']      
 
 
 
@@ -221,7 +247,7 @@ class IC50UploadForm(forms.ModelForm):
     def save(self, force_insert=False, force_update=False, commit=True):
         model = super(IC50UploadForm, self).save()
         # do custom stuff
-        model.create_first_data_revision(self.uploaded_data, self.included_plate_wells, self.uploaded_config)
+        model.create_first_data_revision(self.uploaded_data, self.included_plate_wells, self.uploaded_config, self.uploaded_meta)
         model.save()
         return model
 
@@ -234,68 +260,11 @@ class IC50UploadForm(forms.ModelForm):
         self.helper.layout = Layout(
             Fieldset( '',
                 'title', 'uploaded_data_file', 
-                'uploaded_config_file','save',
+                'uploaded_config_file', 'uploaded_meta_file' 'save',
          )
         )
         self.request = kwargs.pop('request', None)
         return super(IC50UploadForm, self).__init__(*args, **kwargs)
-
-
-
-
-# class CreateIcFiftyWorkflowForm(forms.ModelForm):
-#     title = forms.CharField(max_length=50)
-#     uploaded_data_file = forms.FileField()
-#     uploaded_config_file = forms.FileField()
-
-#     def clean_uploaded_data_file(self):
-#         error_flag = ""
-#         uploaded_data_file = self.cleaned_data['uploaded_data_file']
-#         uploaded_config_file = self.cleaned_data['uploaded_config_file']
-#         #mime = magic.from_buffer(uploaded_data_fileget_plate_wells_with_sample_ids.read(), mime=True)
-#         #if 'text/' not in mime:
-#         #    error_flag += 'Data file must be a CSV document'
-#         #mime = magic.from_buffer(uploaded_config_file.read(), mime=True)
-#         #if 'text/' not in mime:
-#         #    error_flag += '\nConfig file must be a CSV document'
-
-#         #if error_flag: 
-#         #    raise forms.ValidationError(error_flag)
-#         return uploaded_data_file
-
-
-#     def clean_uploaded_config_file(self):
-#         error_flag = ""
-#         uploaded_config_file = self.cleaned_data['uploaded_config_file']
-#         #mime = magic.from_buffer(uploaded_data_file.read(), mime=True)
-#         #if 'text/' not in mime:
-#         #    error_flag += 'Data file must be a CSV document'
-#         #mime = magic.from_buffer(uploaded_config_file.read(), mime=True)
-#         #if 'text/' not in mime:
-#         #    error_flag += '\nConfig file must be a CSV document'
-
-#         #if error_flag: 
-#         #    raise forms.ValidationError(error_flag)
-#         return uploaded_config_file
-
-#     class Meta:
-#         model = get_model("workflow", "icfiftyworkflow")
-#         exclude = ('created_by',)
-
-#     def __init__(self, *args, **kwargs):
-#         self.helper = FormHelper()
-#         self.helper.form_tag = False
-#         self.helper.form_class = 'form-horizontal'
-#         self.helper.add_input(Submit('save', 'Next'))
-#         self.helper.layout = Layout(
-#             Fieldset( '',
-#                 'title', 'uploaded_data_file', 
-#                 'uploaded_config_file','save',
-#          )
-#         )
-        
-#         self.request = kwargs.pop('request', None)
-#         return super(CreateIcFiftyWorkflowForm, self).__init__(*args, **kwargs)
 
 
 DATA_TYPE_CHOICES = (
