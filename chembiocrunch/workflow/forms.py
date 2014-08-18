@@ -492,7 +492,7 @@ class HeatmapForm(forms.Form):
                     if not initial:
                         cond_class += " unchecked"
 
-                    self.fields[well_str] = forms.BooleanField(initial=initial, required=False, label=int(row['figure']))
+                    self.fields[well_str] = forms.BooleanField(initial=initial, required=False, label=int(row['figure']), widget=forms.CheckboxInput(attrs={'disabled':'disabled'}))
                     loophelper.layout.fields.extend([
                         HTML('<td data_row="' + row['well_letter'] + '" data_column="' + str(row['well_number']) + '" class="hide-checkbox hmp' + cond_class + '">'),
                         well_str,
