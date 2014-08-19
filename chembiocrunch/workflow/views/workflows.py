@@ -258,30 +258,19 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
             #heatmap_json = context["steps_json"]
             for key, value in steps_json.iteritems():
                 steps_json[key] = form.cleaned_data[key]
-            workflow_revision.steps_json = steps_json
+
+            workflow_revision.steps_json = json.dumps(steps_json)
             workflow_revision.save()
-
-
-
-
             workflow_revision.create_ic50_data()
             visualisation_id = workflow_revision.visualisations.all()[0].id
 
             return HttpResponseRedirect(
                     reverse('ic50_update_view', kwargs={
-                'pk': self.object.pk,
-                'workflow_revision_id' : self.object.get_latest_workflow_revision().id,
-                "visualisation_id" : visualisation_id
-                })
+                    'pk': self.object.pk,
+                    'workflow_revision_id' : self.object.get_latest_workflow_revision().id,
+                    "visualisation_id" : visualisation_id
+                    })
                 )
-
-
-
-
-
-
-
-
 
 class VisualisationBuilderView(WorkflowDetailView):
     '''Creates a new visualisation for a given workflow revision'''

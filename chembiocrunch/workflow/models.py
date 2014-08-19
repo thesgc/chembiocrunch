@@ -126,7 +126,8 @@ class IC50Workflow(TimeStampedModel):
 
         data.to_hdf(self.get_store_filename("data"), self.get_store_key(), mode='w')
         configdata.to_hdf(self.get_store_filename("configdata"), self.get_store_key(), mode='w')
-        metadata.to_hdf(self.get_store_filename("metadata"), self.get_store_key(), mode='w')
+        if metadata:
+            metadata.to_hdf(self.get_store_filename("metadata"), self.get_store_key(), mode='w')
 
 
     def get_latest_workflow_revision(self):
@@ -145,11 +146,9 @@ class IC50Workflow(TimeStampedModel):
 
 
     def get_data(self, where=None):
-        if not where:
-            filename=self.get_store_filename("data")
-            return read_hdf(filename,self.get_store_key(),)
-        else:
-            return read_hdf(self.get_store_filename("data"),self.get_store_key(),where=where)
+        filename=self.get_store_filename("data")
+        df = read_hdf(filename,self.get_store_key(),)
+        return df
 
     def get_config_data(self, where=None):
         if not where:
@@ -211,7 +210,13 @@ class IC50WorkflowRevision(TimeStampedModel):
         config = self.workflow.get_config_data()
         sample_codes = config.groupby(["fullname"])
         data = self.workflow.get_data()
-        config_columns = data.apply(get_config_columns,args=(sample_codes,), axis=1)
+        excl = json.loads(self.steps_json)
+        print excl
+        config_columns = data.apply(
+            get_config_columns,
+            args=(sample_codes,excl), 
+            axis=1
+        )
         config_columns[["figure"]] = config_columns[["figure"]].astype(float)
         minimum = min(config_columns["figure"])
         config_columns["percent_inhib"] = config_columns["figure"] * 0
@@ -236,10 +241,7 @@ class IC50WorkflowRevision(TimeStampedModel):
                 self.plot_ic50(group_df,ic50_group)
     
     def plot_ic50(self, group_df, ic50_group):
-        curve_fitter = IC50CurveFit(group_df["concentration"],
-                                    group_df["percent_inhib"],
-                                    group_df["full_ref"],
-                                  )
+        curve_fitter = IC50CurveFit(group_df)
         for constrained in (True,):
             if constrained:
                 title = "%s" % ic50_group

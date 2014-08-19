@@ -195,28 +195,30 @@ class IC50UploadForm(forms.ModelForm):
         return self.cleaned_data['uploaded_config_file']      
 
     def clean_uploaded_meta_file(self):
-        uploaded_meta_file = self.files['uploaded_meta_file']
-        mime = magic.from_buffer(self.files["uploaded_meta_file"].read(), mime=True)
-        print mime
-        if 'text/' in mime:
-            try:
-                self.uploaded_meta = get_data_frame(uploaded_meta_file.temporary_file_path(), skiprows=8, header=0)
-            except AttributeError:
-                raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
-            except Exception:
-                    raise forms.ValidationError("Error processing config CSV File")
-        elif "application/" in mime:
-            try:
+        uploaded_meta_file = self.files.get('uploaded_meta_file', False)
+        if uploaded_meta_file:
+            mime = magic.from_buffer(uploaded_meta_file.read(), mime=True)
+            print mime
+            if 'text/' in mime:
                 try:
-                    self.uploaded_meta = get_excel_data_frame(uploaded_meta_file.temporary_file_path(), skiprows=8, header=0)
-                    print self.uploaded_meta.dtypes.keys()
+                    self.uploaded_meta = get_data_frame(uploaded_meta_file.temporary_file_path(), skiprows=8, header=0)
+                except AttributeError:
+                    raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
                 except Exception:
-                    raise forms.ValidationError("Error processing config Excel File")
-            except AttributeError:
-                raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
-        else:
-            raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
-        return self.cleaned_data['uploaded_meta_file']      
+                        raise forms.ValidationError("Error processing config CSV File")
+            elif "application/" in mime:
+                try:
+                    try:
+                        self.uploaded_meta = get_excel_data_frame(uploaded_meta_file.temporary_file_path(), skiprows=8, header=0)
+                        print self.uploaded_meta.dtypes.keys()
+                    except Exception:
+                        raise forms.ValidationError("Error processing config Excel File")
+                except AttributeError:
+                    raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
+            else:
+                raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
+            return self.cleaned_data['uploaded_meta_file']   
+        return None   
 
 
 

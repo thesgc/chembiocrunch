@@ -83,7 +83,7 @@ def get_plate_wells_with_sample_ids(series):
 
 
 
-def get_config_columns(series, sample_codes):
+def get_config_columns(series, sample_codes, excludes_json):
     group = str(series["fullname"])
     if group in sample_codes.groups:
         conf = sample_codes.get_group(group)
@@ -96,9 +96,17 @@ def get_config_columns(series, sample_codes):
                     series["concentration"] = float(s[1]["Destination Concentration"]) * float(1000000)
                     series["global_compound_id"] = s[1]["Sample ID"]
                     series["plate_type"]  = s[1]["Destination Plate Type"]
+                    
         if not found:
             series["concentration"] = -1
             series["global_compound_id"] = "NONE"
             series["plate_type"]  = "NONE"
+        if excludes_json.get(series["full_ref"], None):
+            series["status"] = "active"
+        else:
+            series["status"] = "inactive"
+    else:
+        series["status"] = "inactive"
+
     return series
 
