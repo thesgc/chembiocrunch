@@ -102,6 +102,7 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'javascript_settings.finders.JavascriptSettingsFinder',
 )
 ########## END STATIC FILE CONFIGURATION
 
@@ -198,6 +199,7 @@ DJANGO_APPS = (
     #'pptx'
     'django_select2',
     'ic50',
+    'javascript_settings',
 )
 
 # Apps specific for this project go here.
