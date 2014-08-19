@@ -1,7 +1,6 @@
 from django.db import models
 from pandas.io.pytables import get_store
 from django_extensions.db.models import TimeStampedModel
-from backends import dataframe_handler
 from pandas import DataFrame, read_hdf
 from django.db.models import get_model
 from django.template.defaultfilters import slugify
@@ -20,8 +19,9 @@ from StringIO import StringIO
 from seaborn import plotting_context, set_context
 import mpld3
 from workflow.basic_units import BasicUnit
-from backends.dataframe_handler import get_config_columns
-from ic50.curve_fit import IC50CurveFit
+from cbc_common.dataframe_handler import get_config_columns, zero_pad_object_id
+from cbc_common import dataframe_handler
+
 
 def get_labels(vis, df):
     return sorted([k for k,v in df[vis.x_axis].value_counts().iterkv()])
@@ -43,10 +43,6 @@ GRAPH_MAPPINGS = {
 
 
 
-
-def zero_pad_object_id(id):
-    '''used to ensure data files appear in order of ID'''
-    return ('%d' % id).zfill(11)
 
 
 
@@ -96,175 +92,6 @@ class Workflow(TimeStampedModel):
         return extra_data
 
 
-
-# PB - new Workflow for IC50 project.
-class IC50WorkflowManager(models.Manager):
-    def get_user_records(self, user):
-        return self.filter(created_by__id=user.id)
-
-    def get_latest_workflow_revision(self, workflow_id):
-        return get_model("workflow", "IC50WorkflowRevision").objects.filter(workflow_id=workflow_id).order_by("-created")[0]
-
-
-class IC50Workflow(TimeStampedModel):
-    title = models.CharField(max_length=100)
-    uploaded_config_file = models.FileField(max_length=1024)
-    uploaded_data_file = models.FileField(max_length=1024)  
-    uploaded_meta_file = models.FileField(max_length=1024)
-    created_by = models.ForeignKey('auth.User')
-    objects = IC50WorkflowManager()
-
-    #def get_latest_data_revision(self):
-    #    return get_model("workflow", "Ic50Workflow").objects.get_latest_workflow_revision(self.id)
-
-    def create_first_data_revision(self, data, included_plate_wells, configdata, metadata):
-        
-        #dcf = dataframe_handler.get_data_frame(self.uploaded_config_file.file)
-        #ddf = dataframe_handler.get_data_frame(self.uploaded_data_file.file)
-        
-        new_workflow_revision = get_model("workflow", "IC50WorkflowRevision").objects.create(workflow=self, revision_type=UPLOAD, steps_json=json.dumps(included_plate_wells))
-
-        data.to_hdf(self.get_store_filename("data"), self.get_store_key(), mode='w')
-        configdata.to_hdf(self.get_store_filename("configdata"), self.get_store_key(), mode='w')
-        if metadata:
-            metadata.to_hdf(self.get_store_filename("metadata"), self.get_store_key(), mode='w')
-
-
-    def get_latest_workflow_revision(self):
-        return get_model("workflow", "IC50WorkflowRevision").objects.filter(workflow_id=self.id).order_by("-created")[0]
-        
- 
-    def get_store(self):
-        return get_store('workflows.%s' % (zero_pad_object_id(self.id),))
-
-    
-    def get_store_filename(self,dtype ):
-        return 'ic50_workflows%s.%s' % (dtype, zero_pad_object_id(self.id))
-
-    def get_store_key(self):
-        return "ic50_wfdr_%s" % (  zero_pad_object_id(self.id),)
-
-
-    def get_data(self, where=None):
-        filename=self.get_store_filename("data")
-        df = read_hdf(filename,self.get_store_key(),)
-        return df
-
-    def get_config_data(self, where=None):
-        if not where:
-            filename=self.get_store_filename("configdata")
-            return read_hdf(filename,self.get_store_key(),)
-        else:
-            return read_hdf(self.get_store_filename("configdata"),self.get_store_key(),where=where)
-
-    def get_meta_data(self, where=None):
-        if not where:
-            filename=self.get_store_filename("metadata")
-            return read_hdf(filename,self.get_store_key(),)
-        else:
-            return read_hdf(self.get_store_filename("metadata"),self.get_store_key(),where=where)
-
-
-
-
-    
-
-
-
-    
-
-
-        #this is where auto-munging of data can take place
-        #i.e. any ipython workflows applied here
-
-        #df becomes the result of data munging? Do that elsewhere?
-
-        #df = dataframe_handler.get_data_frame(self.uploaded_file.file)
-        #new_workflow_revision = get_model("workflow", "IcFiftyWorkflowDataMappingRevision").objects.create(workflow=self, revision_type=UPLOAD, steps_json=json.dumps({"count" : int(ddf.count()[0]) }))
-        
-        # types_frame = DataFrame([[str(dtype) for dtype in df.dtypes],], columns=df.dtypes.keys())
-
-        #dcf.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w', format="table")
-        #ddf.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w', format="table")
-        # types_frame.to_hdf(new_workflow_revision.get_store_filename("dtypes"), new_workflow_revision.get_store_key(), mode='w', format="table")
-
-
-
-
-
-class IC50WorkflowRevision(TimeStampedModel):
-
-    '''
-    Revision for IC50 workflows
-    '''
-
-    workflow = models.ForeignKey('IC50Workflow', related_name='workflow_ic50_revisions')
-    steps_json = models.TextField(default="[]")
-    revision_type = models.CharField(max_length=5)
-    #     x_axis = models.CharField(max_length=100)
-    #     y_axis = models.CharField(max_length=100)
-    #heatmap_json = models.TextField(default="{}")
-
-
-    def create_ic50_data(self):
-        config = self.workflow.get_config_data()
-        sample_codes = config.groupby(["fullname"])
-        data = self.workflow.get_data()
-        excl = json.loads(self.steps_json)
-        print excl
-        config_columns = data.apply(
-            get_config_columns,
-            args=(sample_codes,excl), 
-            axis=1
-        )
-        config_columns[["figure"]] = config_columns[["figure"]].astype(float)
-        minimum = min(config_columns["figure"])
-        config_columns["percent_inhib"] = config_columns["figure"] * 0
-        #
-        ic50_groups = config_columns.groupby("global_compound_id")
-        controls = ic50_groups.get_group("NONE")
-
-        for ic50_group in ic50_groups.groups:
-            if ic50_group != "NONE":
-                
-                group_df = ic50_groups.get_group(ic50_group)
-                group_well_letters = [k for k,v in group_df["well_letter"].value_counts().iterkv()]
-                if group_df['well_number'].max() > 12:
-                    column = 24
-                else:
-                    column = 12
-                group_full_refs = ["%s%d" % (letter , column) for letter in group_well_letters]
-                group_controls = controls[controls["full_ref"].isin(group_full_refs)]
-                group_max = group_controls["figure"].mean()
-                group_df["percent_inhib"] =  100*(group_max - group_df["figure"] )/(group_max - minimum)
-                group_df.sort(["percent_inhib","concentration"], inplace=True)
-                self.plot_ic50(group_df,ic50_group)
-    
-    def plot_ic50(self, group_df, ic50_group):
-        curve_fitter = IC50CurveFit(group_df)
-        for constrained in (True,):
-            if constrained:
-                title = "%s" % ic50_group
-            #else:                
-             #   title = "%s (unconstrained)" % ic50_group
-
-            fit = curve_fitter.get_fit(constrained=constrained)
-
-            vis = IC50Visualisation(data_mapping_revision=self,
-                                compound_id=ic50_group,
-                                results=json.dumps({"values": curve_fitter.results}), 
-                                constrained=constrained,
-                                visualisation_title=title,
-                                html=curve_fitter.svg)      
-            vis.save()
-        
-
-
-
-    # @classmethod
-    # def primary_input_file_fields(cls):
-    #     #for later when we get forms working
-    #     return ["testing1", "testing2"]
 
 class WorkflowDataMappingRevisionManager(models.Manager):
     def get_mapping_revisions_for_workflow(self, workflow):
@@ -502,41 +329,6 @@ class Visualisation(TimeStampedModel):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-class IC50Visualisation(TimeStampedModel):
-    '''
-    Holder object for an IC50 visualisation - there will be a set of these for each
-    IC50 workflow revision
-    l'''
-    data_mapping_revision = models.ForeignKey('IC50WorkflowRevision', related_name="visualisations")
-    x_axis = models.CharField(max_length=200, default="Destination Concentration")
-    y_axis = models.CharField(max_length=200, default='Percent inhibition')
-    compound_id = models.CharField(max_length=200)
-    error_bars = models.NullBooleanField()
-    results = models.TextField(default="{}")
-    visualisation_title = models.CharField(max_length=200, null=True, blank=True) #Will be used for the sample name
-    config_json = models.TextField(default="{}")
-    html = models.TextField(default="")
-    constrained = models.NullBooleanField()
-    objects = VisualisationManager()
-
-
-    def get_svg(self):
-        imgdata = StringIO()
-        fig = self.get_fig_for_dataframe()
-        fig.savefig(imgdata, format='svg')
-        imgdata.seek(0)
-        return imgdata.buf
 
 
 

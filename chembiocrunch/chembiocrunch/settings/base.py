@@ -190,6 +190,7 @@ DJANGO_APPS = (
     # Admin panel and documentation:
     'django.contrib.admin',
     # 'django.contrib.admindocs',
+    'cbc_common',
     'workflow',
     'crispy_forms',
     'floppyforms',
@@ -198,6 +199,7 @@ DJANGO_APPS = (
     #'pptx'
     'django_select2',
     'ic50',
+
 )
 
 # Apps specific for this project go here.

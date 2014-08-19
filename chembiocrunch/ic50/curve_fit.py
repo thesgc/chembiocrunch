@@ -30,12 +30,12 @@ class IC50CurveFit(object):
     ypoints = []
     result = None
     svg=None
-    def __init__(self,xpoints, ypoints, labels):
-        self.xpoints = xpoints.tolist()
-        self.ypoints = ypoints.tolist()
-        self.x = np.array(xpoints)
-        self.data = np.array(ypoints)
-        self.labels = labels.tolist()
+    def __init__(self,group_df):
+        self.xpoints = group_df["concentration"].tolist()
+        self.ypoints = group_df["percent_inhib"].tolist()
+        self.x = np.array(self.xpoints)
+        self.data = np.array(self.ypoints)
+        self.labels = group_df["full_ref"].tolist()
 
     def get_fit(self, constrained=None):
         # do fit, here with leastsq model
