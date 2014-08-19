@@ -30,12 +30,26 @@ class IC50CurveFit(object):
     ypoints = []
     result = None
     svg=None
-    def __init__(self,group_df):
+    def __init__(self,main_group_df):
+        grouped_group = main_group_df.groupby('status')
+        group_df = grouped_group.get_group('active')
+
         self.xpoints = group_df["concentration"].tolist()
         self.ypoints = group_df["percent_inhib"].tolist()
         self.x = np.array(self.xpoints)
         self.data = np.array(self.ypoints)
         self.labels = group_df["full_ref"].tolist()
+        self.inactivex = []
+        self.inactivey = []
+        self.inactivelabels = []
+        if "inactive" in grouped_group.groups:
+            inactive = grouped_group.get_group('inactive')
+            self.inactivex = inactive["concentration"].tolist()
+            self.inactivey = inactive["percent_inhib"].tolist()
+            self.inactivelabels = inactive["full_ref"].tolist()
+
+
+
 
     def get_fit(self, constrained=None):
         # do fit, here with leastsq model
@@ -71,7 +85,8 @@ class IC50CurveFit(object):
    
         smooted_best_fit_line = spline(xnew,ynew,xnew)
         f = figure(figsize=(6,4))
-        plt.plot(self.x, self.data, 'o', )
+        #plt.plot(self.x, self.data, 'o', )
+        plt.plot(self.inactivex, self.inactivey, 'o', color='0.75' )
         plt.xlim(0,max(self.x)*1.1)
         plt.ylim(-10,110)
         plt.plot(xnew,smooted_best_fit_line, 'b')
