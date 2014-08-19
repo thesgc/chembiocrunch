@@ -79,7 +79,7 @@
         </div>
         <div class="collapse navbar-collapse">
           <p class="navbar-text navbar-right text-capitalize"><button type="button" class="btn btn-default"><span class="glyphicon glyphicon-user"></span>{% if request.user.name %}{{ request.user.name }}{% else %} {{request.user}}{% endif %}</button>
-            <a href="{% url "logout" %}"><button type="button" class="btn btn-primary">Log Out</button></a></p>
+            <a href="{% url "logout" %}" role="button" class="btn btn-primary">Log Out</a></p>
         </div><!--/.nav-collapse -->
       </div>
     </nav>
@@ -155,7 +155,7 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    
+    <script src="{% static 'javascript-settings.js' %}"></script>
 
     <script src="{% static 'js/bootstrap.min.js' %}"></script>
     <!-- <script src="{% static 'js/bootstrap-tab.js' %}"></script> --> <!-- We don't need a separate tab import - all the bootstrap plugins are included in min -->
@@ -165,6 +165,8 @@
 
     <!-- place autocomplete dropdown specific Javascript in this file -->
     <script src="{% static 'js/select2.js' %}"></script>
+
+    
 
     {% block extra_js %}{% endblock extra_js %}
   </body>

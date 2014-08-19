@@ -69,9 +69,18 @@ Visualisation Builder
 
 
 {% block extra_js %}
+<script>
 
+$(document).ready(function() {
 
+  $(".well").each(function(index){
+     message = $(this).attr("message");
 
+  });
+
+});
+
+</script>
 
 
 {% endblock extra_js %}

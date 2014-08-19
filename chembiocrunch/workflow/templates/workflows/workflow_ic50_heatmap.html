@@ -36,8 +36,14 @@ To get started upload your data and config files
 {% crispy heatmap_form %}
 
 
-</div>
 
+
+
+</div>
+<div class="btn-row">
+<button type="button" class="btn btn-primary pull-left">Prev</button>
+<button type="button" class="btn btn-primary pull-right">Next</button>
+</div>
 </form>
 
 {% endblock content %}
@@ -48,7 +54,6 @@ To get started upload your data and config files
 $(document).ready(function() {
   //monitor the heatmap well checkboxes
   $('.checkboxinput').each(function(){
-
 
     $(this).change(function(e){
       //get parent table cell
@@ -76,7 +81,6 @@ $(document).ready(function() {
   });
 
   //monitor the column row checkboxes
-  
   $('.hmp_row_header .checkbox').change(function(e) {
       trigger = $(this);
       cell = $(this).closest('th');
@@ -91,6 +95,7 @@ $(document).ready(function() {
       });
     
   });
+
 
 });
 

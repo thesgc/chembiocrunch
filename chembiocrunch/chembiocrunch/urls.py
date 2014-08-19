@@ -5,9 +5,11 @@ from django.conf.urls.static import static
 from django.conf import settings
 from django.views.generic import TemplateView, RedirectView
 from workflow import urls as workflowurls
+
+
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
-from workflow.views import login
+from workflow import views
 
 admin.autodiscover()
 
@@ -26,9 +28,9 @@ urlpatterns = patterns('',
 
     url(r'^my_workflows/', include(workflowurls)),
 
-    url(r'^accounts/login/', login.Login.as_view(), name="login" ),
-    url(r'^accounts/logout/', login.Logout.as_view(), name="logout" ),
-    url(r'^logged_out/', login.Login.as_view(logout=True), name="loggedout" ),
+    url(r'^accounts/login/', views.Login.as_view(), name="login" ),
+    url(r'^accounts/logout/', views.Logout.as_view(), name="logout" ),
+    url(r'^logged_out/', views.Login.as_view(logout=True), name="loggedout" ),
 
 
 )
@@ -46,3 +48,9 @@ if "django_webauth" in settings.INSTALLED_APPS:
     urlpatterns += patterns('',
                             url(r'^webauth/', include('django_webauth.urls', 'webauth')),
                             )
+
+if "ic50" in settings.INSTALLED_APPS:
+    from ic50 import urls as ic50urls
+    urlpatterns += patterns('',
+        url(r'^ic50_builder/', include(ic50urls) ),
+    )

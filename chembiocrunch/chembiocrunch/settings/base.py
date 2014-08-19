@@ -191,6 +191,7 @@ DJANGO_APPS = (
     # Admin panel and documentation:
     'django.contrib.admin',
     # 'django.contrib.admindocs',
+    'cbc_common',
     'workflow',
     'crispy_forms',
     'floppyforms',
