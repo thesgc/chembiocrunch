@@ -85,32 +85,44 @@ class IC50CurveFit(object):
    
         smooted_best_fit_line = spline(xnew,ynew,xnew)
         f = figure(figsize=(6,4))
-        #plt.plot(self.x, self.data, 'o', )
-        plt.plot(self.inactivex, self.inactivey, 'o', color='0.75' )
+        plt.plot(self.inactivex, self.inactivey, "D", color='0.55' )
+        plt.plot(self.x, self.data, 'o', )
         plt.xlim(0,max(self.x)*1.1)
         plt.ylim(-10,110)
         plt.plot(xnew,smooted_best_fit_line, 'b')
-        el = Ellipse((2, -1), 0.5, 0.5)
-        stuff = 8
+
+        self.add_labels()
+        self.add_labels(inactivelabels=True)
+        self.svg = get_svg(f)
+        plt.close(f)
         
 
-
-        for  label, x, y in zip(self.labels, self.x, self.data):
+    def add_labels(self, inactivelabels=False):
+        '''Add grey labels if we are labelling inactive data'''
+        el = Ellipse((2, -1), 0.5, 0.5)
+        stuff = 8
+        if not inactivelabels:
+            labeldata = zip(self.labels, self.x, self.data)
+            fc = (1.0, 0.7, 0.7)
+        else:
+            labeldata = zip(self.inactivelabels, self.inactivex, self.inactivey, )
+            fc = "0.55"
+        for  label, x, y in labeldata:
 
             plt.annotate(
-            "%s" % label , 
-            xy = (x, y), 
+            "%s" % label ,
+            xy = (x, y),
             gid="%d" % (x + y),
             url = "/blarrrr",
             size=8,
-            xytext=(stuff, -1*stuff), 
+            xytext=(stuff, -1*stuff),
             textcoords='offset points',
             va="center",
-            bbox=dict(boxstyle="round", 
-            fc=(1.0, 0.7, 0.7), 
+            bbox=dict(boxstyle="round",
+            fc=fc,
             ec="none"),
             arrowprops=dict(arrowstyle="wedge,tail_width=1.",
-                                fc=(1.0, 0.7, 0.7), ec="none",
+                                fc=fc, ec="none",
                                 patchA=None,
                                 patchB=el,
                                 relpos=(0.2, 0.5),
@@ -120,9 +132,7 @@ class IC50CurveFit(object):
                 stuff = -12
             else:
                 stuff = 8
-        self.svg = get_svg(f)
-        plt.close(f)
-        
+
 
 
 def get_svg(fig):
