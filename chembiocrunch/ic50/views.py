@@ -214,7 +214,7 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
         '''This view will always add a new graph, graph updates are handled by ajax'''
         self.object = self.get_object()
         self.workflow_revision_id = kwargs.pop("workflow_revision_id")
-        self.workflow_revision = self.object.workflow_ic50_revisions.get(pk=self.workflow_revision_id).prefetch_related("workflow")
+        self.workflow_revision = self.object.workflow_ic50_revisions.get(pk=self.workflow_revision_id)
         steps_json = json.loads(self.workflow_revision.steps_json)
         form = HeatmapForm(request.POST, uploaded_data=self.workflow_revision.get_data(), steps_json=steps_json)
         if form.is_valid():
