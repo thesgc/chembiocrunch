@@ -40,9 +40,11 @@ To get started upload your data and config files
 
 
 </div>
-<div class="btn-row">
-<button type="button" class="btn btn-primary pull-left">Prev</button>
-<button type="button" class="btn btn-primary pull-right">Next</button>
+<div class="container col-lg-12 col-md-12 col-sm-12 col-xs-12">
+
+<a href="{{ prev_link }}" role="button" class="btn btn-primary pull-left {{ no_prev }}" ><span class="glyphicon glyphicon-chevron-left"></span>Prev</a>
+<a href="{{ next_link }}" role="button" class="btn btn-primary pull-right {{ no_next }}" >Next<span class="glyphicon glyphicon-chevron-right"></span></a>
+
 </div>
 </form>
 
