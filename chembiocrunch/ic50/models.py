@@ -104,6 +104,7 @@ class IC50WorkflowRevision(TimeStampedModel):
     '''
 
     workflow = models.ForeignKey('IC50Workflow', related_name='workflow_ic50_revisions')
+    plate_name = models.CharField(max_length=30)
     steps_json = models.TextField(default="[]")
     revision_type = models.CharField(max_length=5)
 

@@ -18,3 +18,4 @@ hiredis
 django-redis
 django-select2
 xlrd
+lmfit

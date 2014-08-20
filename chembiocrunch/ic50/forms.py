@@ -48,9 +48,9 @@ class IC50UploadForm(forms.ModelForm):
     in the settings
     '''
     title = forms.CharField(max_length=50)
-    uploaded_data_file = forms.FileField()
-    uploaded_config_file = forms.FileField()
-    uploaded_meta_file = forms.FileField(required=False)
+    uploaded_data_file = forms.FileField(label="BMG output file")
+    uploaded_config_file = forms.FileField(label="ESXX transfer file")
+    #uploaded_meta_file = forms.FileField(required=False)
     #also needa field which holds the "type", obtained from the URL
     form_type = None
     uploaded_config = None
@@ -113,31 +113,31 @@ class IC50UploadForm(forms.ModelForm):
             raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
         return self.cleaned_data['uploaded_config_file']
 
-    def clean_uploaded_meta_file(self):
-        uploaded_meta_file = self.files.get('uploaded_meta_file', False)
-        if uploaded_meta_file:
-            mime = magic.from_buffer(uploaded_meta_file.read(), mime=True)
-            print mime
-            if 'text/' in mime:
-                try:
-                    self.uploaded_meta = get_data_frame(uploaded_meta_file.temporary_file_path(), skiprows=8, header=0)
-                except AttributeError:
-                    raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
-                except Exception:
-                        raise forms.ValidationError("Error processing config CSV File")
-            elif "application/" in mime:
-                try:
-                    try:
-                        self.uploaded_meta = get_excel_data_frame(uploaded_meta_file.temporary_file_path(), skiprows=8, header=0)
-                        print self.uploaded_meta.dtypes.keys()
-                    except Exception:
-                        raise forms.ValidationError("Error processing config Excel File")
-                except AttributeError:
-                    raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
-            else:
-                raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
-            return self.cleaned_data['uploaded_meta_file']
-        return None
+    # def clean_uploaded_meta_file(self):
+    #     uploaded_meta_file = self.files.get('uploaded_meta_file', False)
+    #     if uploaded_meta_file:
+    #         mime = magic.from_buffer(uploaded_meta_file.read(), mime=True)
+    #         print mime
+    #         if 'text/' in mime:
+    #             try:
+    #                 self.uploaded_meta = get_data_frame(uploaded_meta_file.temporary_file_path(), skiprows=8, header=0)
+    #             except AttributeError:
+    #                 raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
+    #             except Exception:
+    #                     raise forms.ValidationError("Error processing config CSV File")
+    #         elif "application/" in mime:
+    #             try:
+    #                 try:
+    #                     self.uploaded_meta = get_excel_data_frame(uploaded_meta_file.temporary_file_path(), skiprows=8, header=0)
+    #                     print self.uploaded_meta.dtypes.keys()
+    #                 except Exception:
+    #                     raise forms.ValidationError("Error processing config Excel File")
+    #             except AttributeError:
+    #                 raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
+    #         else:
+    #             raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
+    #         return self.cleaned_data['uploaded_meta_file']
+    #     return None
 
 
 
@@ -146,7 +146,6 @@ class IC50UploadForm(forms.ModelForm):
         #indexed_config = indexed_config.set_index('fullname')
         data_with_index_refs = self.uploaded_data.apply(get_ic50_data_columns, axis=1)
         #fully_indexed = data_with_index_refs.set_index('fullname')
-        #join both dataframes along fullname axis.
         #Assumed that datafile contains only one plate worth of data
         self.uploaded_data = data_with_index_refs
         self.uploaded_config = indexed_config
@@ -180,7 +179,7 @@ class IC50UploadForm(forms.ModelForm):
         self.helper.layout = Layout(
             Fieldset( '',
                 'title', 'uploaded_data_file',
-                'uploaded_config_file', 'uploaded_meta_file', 'save',
+                'uploaded_config_file', 'save',
          )
         )
         self.request = kwargs.pop('request', None)
@@ -191,8 +190,9 @@ class IC50UploadForm(forms.ModelForm):
 
 
 class HeatmapFormHelper(FormHelper):
-        form_show_labels = True
-        form_tag = False
+    form_show_labels = True
+    form_tag = False
+
 
 class HeatmapForm(forms.Form):
 
