@@ -187,6 +187,7 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
 
         hm_next = self.workflow_revision.next()
         hm_prev = self.workflow_revision.previous()
+        workflow_id = self.workflow_revision.workflow.id
         #for testing only
         #context['no_next'] = 'disabled'
         #context['no_prev'] = 'disabled'
@@ -194,8 +195,8 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
         context['no_next'] = 'disabled' if hm_next == None else ''
         context['no_prev'] = 'disabled' if hm_prev == None else ''
 
-        next_link = '#'
-        prev_link = '#'
+        next_link = '/ic50_builder/' + str(workflow_id) + '/' + str(hm_next) + '/heatmap'
+        prev_link = '/ic50_builder/' + str(workflow_id) + '/' + str(hm_prev) + '/heatmap'
 
         context['next_link'] = next_link
         context['prev_link'] = prev_link
