@@ -11,10 +11,4 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='ic50workflowrevision',
-            name='plate_name',
-            field=models.CharField(default='', max_length=30),
-            preserve_default=False,
-        ),
     ]
