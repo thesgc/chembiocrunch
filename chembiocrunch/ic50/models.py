@@ -108,7 +108,7 @@ class IC50WorkflowRevision(TimeStampedModel):
     steps_json = models.TextField(default="[]")
     revision_type = models.CharField(max_length=5)
 
-    def previous():
+    def previous(self):
         '''Get the previous item belongin to this workflow'''
         qs = self.workflow.workflow_ic50_revisions.filter(pk__lt=self.id).order_by("-pk")
         if qs.count() == 0:
@@ -116,7 +116,7 @@ class IC50WorkflowRevision(TimeStampedModel):
         else:
             return qs[0]
 
-    def next():
+    def next(self):
         '''Get the next item belonging to this workflow'''
         qs = self.workflow.workflow_ic50_revisions.filter(pk__gt=self.id).order_by("pk")
         if qs.count() == 0:

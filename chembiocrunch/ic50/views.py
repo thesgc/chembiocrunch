@@ -184,12 +184,15 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
         context["heatmap_form"] = HeatmapForm(uploaded_data=self.workflow_revision.get_data(), steps_json=steps_json)
         context['revisions'][0][1] = "done"
         context['revisions'][1][1] = "in-progress"
+
+        hm_next = self.workflow_revision.next()
+        hm_prev = self.workflow_revision.previous()
         #for testing only
-        context['no_next'] = 'disabled'
-        context['no_prev'] = 'disabled'
+        #context['no_next'] = 'disabled'
+        #context['no_prev'] = 'disabled'
         #these are the real ones
-        #context['no_next'] = 'disabled' if workflow_revision.next() == None else ''
-        #context['no_prev'] = 'disabled' if workflow_revision.previous() == None else ''
+        context['no_next'] = 'disabled' if hm_next == None else ''
+        context['no_prev'] = 'disabled' if hm_prev == None else ''
 
         next_link = '#'
         prev_link = '#'
