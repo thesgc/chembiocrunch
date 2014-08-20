@@ -103,9 +103,8 @@ class IC50UploadForm(forms.ModelForm):
             try:
                 try:
                     self.uploaded_config = get_excel_data_frame(uploaded_config_file.temporary_file_path(), skiprows=8, header=0)
-                    print self.uploaded_config.dtypes.keys()
                     #self.uploaded_config["full_ref"] = self.uploaded_config["Destination Well"]
-                    self.uploaded_config = self.uploaded_config[self.uploaded_config["Source Plate Name"]=="Intermediate Sample Plate[1]"]
+                    #self.uploaded_config = self.uploaded_config[self.uploaded_config["Source Plate Name"]=="Intermediate Sample Plate[1]"]
                 except Exception:
                     raise forms.ValidationError("Error processing config Excel File")
             except AttributeError:
@@ -153,8 +152,7 @@ class IC50UploadForm(forms.ModelForm):
         self.uploaded_config = indexed_config
 
         wells = [str(row) for row in indexed_config["Destination Well"]]
-        print "wellllls"
-        print wells
+
         included_plate_wells = set(wells)
         inc_plates = {}
         for item in data_with_index_refs["full_ref"]:

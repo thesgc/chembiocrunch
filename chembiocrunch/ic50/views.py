@@ -53,13 +53,12 @@ class IC50WorkflowCreateView(IC50WorkflowView, CreateView ):
     template_name = "workflows/workflow_ic50_create.html"
     #form_class = LabcyteEchoIC50UploadForm
     form_class = IC50UploadForm
-    success_url = 'success'
-
     model = get_model("ic50", "IC50Workflow")
 
     def get_success_url(self):
         return reverse('workflow_ic50_heatmap', kwargs={
                 'pk': self.object.pk,
+                'workflow_revision_id' : self.object.get_latest_workflow_revision().id,
                 })
 
     def form_valid(self, form):
@@ -163,19 +162,26 @@ class Ic50UpdateView(IC50WorkflowDetailView):
 class WorkflowHeatmapView(IC50WorkflowDetailView):
 
     template_name = "workflows/workflow_ic50_heatmap.html"
+    workflow_revision_id = None
+    workflow_revision = None
 
-
-
+    def get(self, request, *args, **kwargs):
+        '''Borrowed from django base detail view'''
+        self.object = self.get_object()
+        self.workflow_revision_id = kwargs.pop("workflow_revision_id")
+        self.workflow_revision = self.object.workflow_ic50_revisions.get(pk=self.workflow_revision_id)
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
 
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
         context = super(WorkflowHeatmapView, self).get_context_data(**kwargs)
         form_class = HeatmapForm
         #steps_json = json.loads(self.object.get_latest_workflow_revision().steps_json)
-        workflow_revision = self.object.get_latest_workflow_revision()
-        steps_json = json.loads(workflow_revision.steps_json)
+        
+        steps_json = json.loads(self.workflow_revision.steps_json)
 
-        context["heatmap_form"] = HeatmapForm(uploaded_data=self.object.get_data(), steps_json=steps_json)
+        context["heatmap_form"] = HeatmapForm(uploaded_data=self.workflow_revision.get_data(), steps_json=steps_json)
         context['revisions'][0][1] = "done"
         context['revisions'][1][1] = "in-progress"
         context.update(kwargs)
@@ -184,31 +190,28 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
     def post(self, request, *args, **kwargs):
         '''This view will always add a new graph, graph updates are handled by ajax'''
         self.object = self.get_object()
-
-        workflow_revision = self.object.get_latest_workflow_revision()
-
-        steps_json = json.loads(workflow_revision.steps_json)
-
-
-        form = HeatmapForm(request.POST, uploaded_data=self.object.get_data(), steps_json=steps_json)
+        self.workflow_revision_id = kwargs.pop("workflow_revision_id")
+        self.workflow_revision = self.object.workflow_ic50_revisions.get(pk=self.workflow_revision_id)
+        steps_json = json.loads(self.workflow_revision.steps_json)
+        form = HeatmapForm(request.POST, uploaded_data=self.workflow_revision.get_data(), steps_json=steps_json)
         if form.is_valid():
             #print form.cleaned_data
-            steps_json = json.loads(workflow_revision.steps_json)
+            steps_json = json.loads(self.workflow_revision.steps_json)
             #form.cleaned_data()
             #loop through the stored json and for each pair, set the value to that in the form data
             #heatmap_json = context["steps_json"]
             for key, value in steps_json.iteritems():
                 steps_json[key] = form.cleaned_data[key]
 
-            workflow_revision.steps_json = json.dumps(steps_json)
-            workflow_revision.save()
-            workflow_revision.create_ic50_data()
-            visualisation_id = workflow_revision.visualisations.all()[0].id
+            self.workflow_revision.steps_json = json.dumps(steps_json)
+            self.workflow_revision.save()
+            self.workflow_revision.create_ic50_data()
+            visualisation_id = self.workflow_revision.visualisations.all()[0].id
 
             return HttpResponseRedirect(
                     reverse('ic50_update_view', kwargs={
                     'pk': self.object.pk,
-                    'workflow_revision_id' : self.object.get_latest_workflow_revision().id,
+                    'workflow_revision_id' : self.workflow_revision.id,
                     "visualisation_id" : visualisation_id
                     })
                 )
