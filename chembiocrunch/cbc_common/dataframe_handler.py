@@ -47,12 +47,14 @@ def get_ic50_data_columns(series):
     '''
     Split up plate well reference using regex
     '''
-    full_ref = (series[0].split(':')[1]).strip()
+    refs = series[0].split(':')
+    full_ref = refs[1].strip()
+    plate_ref = refs[1].strip()
     match = re.match(r"([a-z]+)([0-9]+)", full_ref, re.I)
     if match:
         items = match.groups()
         row_number = get_row_number(items[0])
-        return Series(np.array([ series[0],full_ref, series[1]] + list(items) + [row_number,]), index=[ 'fullname', 'full_ref', 'figure', 'well_letter', 'well_number', "row_number"])
+        return Series(np.array([ series[0],full_ref, plate_ref, series[1],] + list(items) + [row_number,]), index=[ 'fullname', 'full_ref','plate_ref', 'figure', 'well_letter', 'well_number', "row_number",])
     return None
 
 #['fullname', 'figure', 'full_ref', 'well_letter', 'well_number']
@@ -65,6 +67,7 @@ def get_ic50_config_columns(series):
     '''
     series["fullname"] = "%s: %s" % (series["Destination Plate Name"], series["Destination Well"])
     series["full_ref"] = series["Destination Well"]
+    series["plate_ref"] = series["Destination Plate Name"]
     return series
 
 

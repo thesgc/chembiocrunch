@@ -42,6 +42,7 @@ include
 local
 share
 bin
+.idea
 .vagrant
 package.box
 chembiocrunch/media

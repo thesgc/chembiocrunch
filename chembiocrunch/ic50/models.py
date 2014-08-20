@@ -40,7 +40,7 @@ class IC50WorkflowManager(models.Manager):
         return self.filter(created_by__id=user.id)
 
     def get_latest_workflow_revision(self, workflow_id):
-        return get_model("ic50", "IC50WorkflowRevision").objects.filter(workflow_id=workflow_id).order_by("-created")[0]
+        return get_model("ic50", "IC50WorkflowRevision").objects.filter(workflow_id=workflow_id).order_by("created")[0]
 
 
 class IC50Workflow(TimeStampedModel):
@@ -61,46 +61,14 @@ class IC50Workflow(TimeStampedModel):
 
         new_workflow_revision = get_model("ic50", "IC50WorkflowRevision").objects.create(workflow=self, revision_type=UPLOAD, steps_json=json.dumps(included_plate_wells))
 
-        data.to_hdf(self.get_store_filename("data"), self.get_store_key(), mode='w')
-        configdata.to_hdf(self.get_store_filename("configdata"), self.get_store_key(), mode='w')
+        data.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w')
+        configdata.to_hdf(new_workflow_revision.get_store_filename("configdata"),"configdata", mode='w')
         if metadata:
-            metadata.to_hdf(self.get_store_filename("metadata"), self.get_store_key(), mode='w')
+            metadata.to_hdf(new_workflow_revision.get_store_filename("metadata"), "metadata", mode='w')
 
 
     def get_latest_workflow_revision(self):
         return get_model("ic50", "IC50WorkflowRevision").objects.filter(workflow_id=self.id).order_by("-created")[0]
-
-
-    def get_store(self):
-        return get_store('workflows.%s' % (zero_pad_object_id(self.id),))
-
-
-    def get_store_filename(self,dtype ):
-        return 'ic50_workflows%s.%s' % (dtype, zero_pad_object_id(self.id))
-
-    def get_store_key(self):
-        return "ic50_wfdr_%s" % (  zero_pad_object_id(self.id),)
-
-
-    def get_data(self, where=None):
-        filename=self.get_store_filename("data")
-        df = read_hdf(filename,self.get_store_key(),)
-        return df
-
-    def get_config_data(self, where=None):
-        if not where:
-            filename=self.get_store_filename("configdata")
-            return read_hdf(filename,self.get_store_key(),)
-        else:
-            return read_hdf(self.get_store_filename("configdata"),self.get_store_key(),where=where)
-
-    def get_meta_data(self, where=None):
-        if not where:
-            filename=self.get_store_filename("metadata")
-            return read_hdf(filename,self.get_store_key(),)
-        else:
-            return read_hdf(self.get_store_filename("metadata"),self.get_store_key(),where=where)
-
 
 
 
@@ -138,15 +106,28 @@ class IC50WorkflowRevision(TimeStampedModel):
     workflow = models.ForeignKey('IC50Workflow', related_name='workflow_ic50_revisions')
     steps_json = models.TextField(default="[]")
     revision_type = models.CharField(max_length=5)
-    #     x_axis = models.CharField(max_length=100)
-    #     y_axis = models.CharField(max_length=100)
-    #heatmap_json = models.TextField(default="{}")
+
+    def previous():
+        '''Get the previous item belongin to this workflow'''
+        qs = self.workflow.workflow_ic50_revisions.filter(pk__lt=self.id).order_by("-pk")
+        if qs.count() == 0:
+            return None
+        else:
+            return qs[0]
+
+    def next():
+        '''Get the next item belonging to this workflow'''
+        qs = self.workflow.workflow_ic50_revisions.filter(pk__gt=self.id).order_by("pk")
+        if qs.count() == 0:
+            return None
+        else:
+            return qs[0]
 
 
     def create_ic50_data(self):
-        config = self.workflow.get_config_data()
+        config = self.get_config_data()
         sample_codes = config.groupby(["fullname"])
-        data = self.workflow.get_data()
+        data = self.get_data()
         excl = json.loads(self.steps_json)
         print excl
         config_columns = data.apply(
@@ -194,6 +175,46 @@ class IC50WorkflowRevision(TimeStampedModel):
                                 visualisation_title=title,
                                 html=curve_fitter.svg)
             vis.save()
+
+
+
+
+
+    def get_store(self):
+        return get_store('workflows.%s' % (zero_pad_object_id(self.id),))
+
+
+    def get_store_filename(self,dtype ):
+        return 'ic50_workflows%s.%s' % (dtype, zero_pad_object_id(self.workflow_id))
+
+    def get_store_key(self):
+        return "ic50_wfdr_%s" % (  zero_pad_object_id(self.id),)
+
+
+    def get_data(self):
+        '''one dataset per workflow revision'''
+        filename=self.get_store_filename("data")
+        df = read_hdf(filename,self.get_store_key(),)
+        return df
+
+    def get_config_data(self):
+        filename=self.get_store_filename("configdata")
+        return read_hdf(filename,"configdata",)
+
+    def get_meta_data(self):
+        filename=self.get_store_filename("metadata")
+        return read_hdf(filename,"metadata",)
+
+
+
+
+
+
+
+
+
+
+
 
 
 
