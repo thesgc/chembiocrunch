@@ -50,7 +50,7 @@ class IC50UploadForm(forms.ModelForm):
     title = forms.CharField(max_length=50)
     uploaded_data_file = forms.FileField(label="BMG output file")
     uploaded_config_file = forms.FileField(label="ESXX transfer file")
-    #uploaded_meta_file = forms.FileField(required=False)
+    uploaded_meta_file = forms.FileField(required=False)
     #also needa field which holds the "type", obtained from the URL
     form_type = None
     uploaded_config = None
@@ -179,7 +179,7 @@ class IC50UploadForm(forms.ModelForm):
         self.helper.layout = Layout(
             Fieldset( '',
                 'title', 'uploaded_data_file',
-                'uploaded_config_file', 'save',
+                'uploaded_config_file', 'uploaded_meta_file', 'save',
          )
         )
         self.request = kwargs.pop('request', None)
