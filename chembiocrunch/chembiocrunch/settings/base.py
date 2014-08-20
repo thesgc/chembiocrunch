@@ -81,6 +81,9 @@ USE_TZ = True
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#media-root
 MEDIA_ROOT = normpath(join(SITE_ROOT, 'media'))
 
+
+HDF5_ROOT = normpath(join(MEDIA_ROOT, 'hdf5'))
+
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#media-url
 MEDIA_URL = '/media/'
 ########## END MEDIA CONFIGURATION
