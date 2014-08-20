@@ -6,7 +6,7 @@ from pandas import DataFrame, read_hdf
 from django.db.models import get_model
 from django.template.defaultfilters import slugify
 import json
-
+from django.conf import settings
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -43,6 +43,7 @@ class IC50WorkflowManager(models.Manager):
         return get_model("ic50", "IC50WorkflowRevision").objects.filter(workflow_id=workflow_id).order_by("created")[0]
 
 
+
 class IC50Workflow(TimeStampedModel):
     title = models.CharField(max_length=100)
     uploaded_config_file = models.FileField(max_length=1024)
@@ -57,7 +58,7 @@ class IC50Workflow(TimeStampedModel):
 
 
     def get_latest_workflow_revision(self):
-        return get_model("ic50", "IC50WorkflowRevision").objects.filter(workflow_id=self.id).order_by("-created")[0]
+        return get_model("ic50", "IC50WorkflowRevision").objects.filter(workflow_id=self.id).order_by("pk")[0]
 
 
 
@@ -96,6 +97,7 @@ class IC50WorkflowRevision(TimeStampedModel):
     plate_name = models.CharField(max_length=30, default="")
     steps_json = models.TextField(default="[]")
 
+    @property
     def previous(self):
         '''Get the previous item belongin to this workflow'''
         qs = self.workflow.workflow_ic50_revisions.filter(pk__lt=self.id).order_by("-pk")
@@ -104,6 +106,7 @@ class IC50WorkflowRevision(TimeStampedModel):
         else:
             return qs[0]
 
+    @property
     def next(self):
         '''Get the next item belonging to this workflow'''
         qs = self.workflow.workflow_ic50_revisions.filter(pk__gt=self.id).order_by("pk")
@@ -174,7 +177,7 @@ class IC50WorkflowRevision(TimeStampedModel):
 
 
     def get_store_filename(self,dtype ):
-        return 'ic50_workflows%s.%s' % (dtype, zero_pad_object_id(self.workflow_id))
+        return '%sic50_workflows%s.%s.%s' % (settings.HDF5_ROOT, dtype, zero_pad_object_id(self.workflow_id),  zero_pad_object_id(self.id))
 
     def get_store_key(self):
         return "ic50_wfdr_%s" % (  zero_pad_object_id(self.id),)

@@ -31,9 +31,9 @@ class IC50WorkflowView(LoginRequiredMixin):
 
     model = get_model("ic50", "IC50Workflow")
 
-    def get_queryset(self):
-        '''Make sure that all of the views cannot see the object unless they own it!'''
-        return self.model.objects.get_user_records(self.request.user)
+    # def get_queryset(self):
+    #     '''Make sure that all of the views cannot see the object unless they own it!'''
+    #     return self.model.objects.get_user_records(self.request.user)
 
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
@@ -185,21 +185,26 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
         context['revisions'][0][1] = "done"
         context['revisions'][1][1] = "in-progress"
 
-        hm_next = self.workflow_revision.next()
-        hm_prev = self.workflow_revision.previous()
+         
+        next_qs = self.object.workflow_ic50_revisions.filter(pk__gt=self.workflow_revision.id).order_by("pk")
+        if next_qs.count() > 0:
+            hm_next = next_qs[0]
+            print "found"
+        else:
+            hm_next = None
+
+        prev_qs = self.object.workflow_ic50_revisions.filter(pk__lt=self.workflow_revision.id).order_by("pk")
+        if prev_qs.count() > 0:
+            hm_prev = prev_qs[0]
+            print "found"
+        else:
+            hm_prev = None
+
         workflow_id = self.workflow_revision.workflow.id
-        #for testing only
-        #context['no_next'] = 'disabled'
-        #context['no_prev'] = 'disabled'
-        #these are the real ones
-        context['no_next'] = 'disabled' if hm_next == None else ''
-        context['no_prev'] = 'disabled' if hm_prev == None else ''
 
-        next_link = '/ic50_builder/' + str(workflow_id) + '/' + str(hm_next) + '/heatmap'
-        prev_link = '/ic50_builder/' + str(workflow_id) + '/' + str(hm_prev) + '/heatmap'
 
-        context['next_link'] = next_link
-        context['prev_link'] = prev_link
+        context['next'] =  hm_next
+        context['prev'] =  hm_prev
         
         
         context.update(kwargs)
@@ -209,7 +214,7 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
         '''This view will always add a new graph, graph updates are handled by ajax'''
         self.object = self.get_object()
         self.workflow_revision_id = kwargs.pop("workflow_revision_id")
-        self.workflow_revision = self.object.workflow_ic50_revisions.get(pk=self.workflow_revision_id)
+        self.workflow_revision = self.object.workflow_ic50_revisions.get(pk=self.workflow_revision_id).prefetch_related("workflow")
         steps_json = json.loads(self.workflow_revision.steps_json)
         form = HeatmapForm(request.POST, uploaded_data=self.workflow_revision.get_data(), steps_json=steps_json)
         if form.is_valid():
@@ -225,6 +230,10 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
             self.workflow_revision.save()
             self.workflow_revision.create_ic50_data()
             visualisation_id = self.workflow_revision.visualisations.all()[0].id
+
+
+            if request.is_ajax():
+                self.template_name =""
 
             return HttpResponseRedirect(
                     reverse('ic50_update_view', kwargs={

@@ -143,28 +143,31 @@ class IC50UploadForm(forms.ModelForm):
 
 
     def clean(self):
-        indexed_config = self.uploaded_config.apply(get_ic50_config_columns, axis=1)
-        indexed_config_groups = indexed_config.groupby("plate_ref")
-        #indexed_config = indexed_config.set_index('fullname')
-        data_with_index_refs = self.uploaded_data.apply(get_ic50_data_columns, axis=1)
-        #fully_indexed = data_with_index_refs.set_index('fullname')
-        #Assumed that datafile contains only one plate worth of data
-        data_groups = data_with_index_refs.groupby("plate_ref")
-        for name, grouped in data_groups:
-            #Iterate the names and groups in the dataset
-            config = indexed_config_groups.get_group(name)
-            config.to_csv("/tmp/test.csv")
+        try:
+            indexed_config = self.uploaded_config.apply(get_ic50_config_columns, axis=1)
+            indexed_config_groups = indexed_config.groupby("plate_ref")
+            #indexed_config = indexed_config.set_index('fullname')
+            data_with_index_refs = self.uploaded_data.apply(get_ic50_data_columns, axis=1)
+            #fully_indexed = data_with_index_refs.set_index('fullname')
+            #Assumed that datafile contains only one plate worth of data
+            data_groups = data_with_index_refs.groupby("plate_ref")
+            for name, grouped in data_groups:
+                #Iterate the names and groups in the dataset
+                config = indexed_config_groups.get_group(name)
+                config.to_csv("/tmp/test.csv")
 
 
-            wells = [str(row) for row in config["full_ref"] ]
-            included_plate_wells = set(wells)
-            inc_wells = {}
-            for item in grouped["full_ref"]:
-                if item in included_plate_wells:
-                    inc_wells[str(item)] = True
-                else:
-                    inc_wells[str(item)] = None
-            self.plates.append({"plate_name": name, "data" : grouped, "config" : config, "steps_json": inc_wells} )
+                wells = [str(row) for row in config["full_ref"] ]
+                included_plate_wells = set(wells)
+                inc_wells = {}
+                for item in grouped["full_ref"]:
+                    if item in included_plate_wells:
+                        inc_wells[str(item)] = True
+                    else:
+                        inc_wells[str(item)] = None
+                self.plates.append({"plate_name": name, "data" : grouped, "config" : config, "steps_json": inc_wells} )
+        except Exception:
+            raise forms.ValidationError("Possible invalid file formats")
 
 
 
@@ -181,6 +184,7 @@ class IC50UploadForm(forms.ModelForm):
         new_workflow_revision = get_model("ic50", "IC50WorkflowRevision").objects.create(workflow=model, 
                                                                                         steps_json=json.dumps(plate["steps_json"]),
                                                                                         plate_name=plate["plate_name"])
+        print new_workflow_revision.id
         plate["data"].to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w')
         plate["config"].to_hdf(new_workflow_revision.get_store_filename("configdata"),new_workflow_revision.get_store_key(), mode='w')
 
