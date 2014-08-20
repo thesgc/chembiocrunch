@@ -56,6 +56,7 @@ class IC50UploadForm(forms.ModelForm):
     uploaded_config = None
     uploaded_data = None
     uploaded_meta = None
+    plates = []
     included_plate_wells = None
 
 
@@ -143,32 +144,46 @@ class IC50UploadForm(forms.ModelForm):
 
     def clean(self):
         indexed_config = self.uploaded_config.apply(get_ic50_config_columns, axis=1)
+        indexed_config_groups = indexed_config.groupby("plate_ref")
         #indexed_config = indexed_config.set_index('fullname')
         data_with_index_refs = self.uploaded_data.apply(get_ic50_data_columns, axis=1)
         #fully_indexed = data_with_index_refs.set_index('fullname')
         #Assumed that datafile contains only one plate worth of data
-        self.uploaded_data = data_with_index_refs
-        self.uploaded_config = indexed_config
+        data_groups = data_with_index_refs.groupby("plate_ref")
+        for name, grouped in data_groups:
+            #Iterate the names and groups in the dataset
+            config = indexed_config_groups.get_group(name)
+            config.to_csv("/tmp/test.csv")
 
-        wells = [str(row) for row in indexed_config["Destination Well"]]
 
-        included_plate_wells = set(wells)
-        inc_plates = {}
-        for item in data_with_index_refs["full_ref"]:
-            if item in included_plate_wells:
-                inc_plates[str(item)] = True
-            else:
-                inc_plates[str(item)] = None
-        self.included_plate_wells = inc_plates
+            wells = [str(row) for row in config["full_ref"] ]
+            included_plate_wells = set(wells)
+            inc_wells = {}
+            for item in grouped["full_ref"]:
+                if item in included_plate_wells:
+                    inc_wells[str(item)] = True
+                else:
+                    inc_wells[str(item)] = None
+            self.plates.append({"plate_name": name, "data" : grouped, "config" : config, "steps_json": inc_wells} )
 
 
 
     def save(self, force_insert=False, force_update=False, commit=True):
         model = super(IC50UploadForm, self).save()
         # do custom stuff
-        model.create_first_data_revision(self.uploaded_data, self.included_plate_wells, self.uploaded_config, self.uploaded_meta)
-        model.save()
+        for plate in self.plates:
+            self.save_plate(model, plate)
         return model
+
+
+
+    def save_plate(self,model, plate):  
+        new_workflow_revision = get_model("ic50", "IC50WorkflowRevision").objects.create(workflow=model, 
+                                                                                        steps_json=json.dumps(plate["steps_json"]),
+                                                                                        plate_name=plate["plate_name"])
+        plate["data"].to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w')
+        plate["config"].to_hdf(new_workflow_revision.get_store_filename("configdata"),new_workflow_revision.get_store_key(), mode='w')
+
 
 
     def __init__(self, *args, **kwargs):

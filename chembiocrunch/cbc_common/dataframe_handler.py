@@ -49,7 +49,7 @@ def get_ic50_data_columns(series):
     '''
     refs = series[0].split(':')
     full_ref = refs[1].strip()
-    plate_ref = refs[1].strip()
+    plate_ref = get_plate_ref(refs[0].strip())
     match = re.match(r"([a-z]+)([0-9]+)", full_ref, re.I)
     if match:
         items = match.groups()
@@ -67,8 +67,17 @@ def get_ic50_config_columns(series):
     '''
     series["fullname"] = "%s: %s" % (series["Destination Plate Name"], series["Destination Well"])
     series["full_ref"] = series["Destination Well"]
-    series["plate_ref"] = series["Destination Plate Name"]
+    series["plate_ref"] = get_plate_ref(series["Destination Plate Name"])
     return series
+
+def get_plate_ref(string):
+    '''split out the square backets to give the plate reference'''
+    split = str(string).split("[")
+    if len(split) == 2:
+        return split[1].split("]")[0]
+    else:
+        return ""
+
 
 
 

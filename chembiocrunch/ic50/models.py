@@ -54,17 +54,6 @@ class IC50Workflow(TimeStampedModel):
     #def get_latest_data_revision(self):
     #    return get_model("workflow", "Ic50Workflow").objects.get_latest_workflow_revision(self.id)
 
-    def create_first_data_revision(self, data, included_plate_wells, configdata, metadata):
-
-        #dcf = dataframe_handler.get_data_frame(self.uploaded_config_file.file)
-        #ddf = dataframe_handler.get_data_frame(self.uploaded_data_file.file)
-
-        new_workflow_revision = get_model("ic50", "IC50WorkflowRevision").objects.create(workflow=self, revision_type=UPLOAD, steps_json=json.dumps(included_plate_wells))
-
-        data.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w')
-        configdata.to_hdf(new_workflow_revision.get_store_filename("configdata"),"configdata", mode='w')
-        if metadata:
-            metadata.to_hdf(new_workflow_revision.get_store_filename("metadata"), "metadata", mode='w')
 
 
     def get_latest_workflow_revision(self):
@@ -104,9 +93,8 @@ class IC50WorkflowRevision(TimeStampedModel):
     '''
 
     workflow = models.ForeignKey('IC50Workflow', related_name='workflow_ic50_revisions')
-    plate_name = models.CharField(max_length=30)
+    plate_name = models.CharField(max_length=30, default="")
     steps_json = models.TextField(default="[]")
-    revision_type = models.CharField(max_length=5)
 
     def previous():
         '''Get the previous item belongin to this workflow'''
@@ -200,11 +188,11 @@ class IC50WorkflowRevision(TimeStampedModel):
 
     def get_config_data(self):
         filename=self.get_store_filename("configdata")
-        return read_hdf(filename,"configdata",)
+        return read_hdf(filename,self.get_store_key(),)
 
     def get_meta_data(self):
         filename=self.get_store_filename("metadata")
-        return read_hdf(filename,"metadata",)
+        return read_hdf(filename,self.get_store_key(),)
 
 
 
