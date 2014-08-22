@@ -10,7 +10,7 @@ from django.db.models import get_model
 from .forms import  IC50UploadForm, HeatmapForm
 from django.core.urlresolvers import reverse
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, Fieldset, Reset
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 
 import matplotlib
 
@@ -73,15 +73,16 @@ class IC50WorkflowCreateView(IC50WorkflowView, CreateView ):
         context = super(IC50WorkflowCreateView, self).get_context_data(**kwargs)
         context['revisions'][0][1] = "in-progress"
         return context
-
-
+  
 
 
 class Ic50UpdateView(IC50WorkflowDetailView):
 
+    pk = None
     workflow_revision_id = None
     visualisation_id = None
     template_name = "visualise/visualisation_builder.html"
+    base_html = ""
 
     def get_context_data(self,  **kwargs):
         # visualisation_form = None
@@ -97,7 +98,7 @@ class Ic50UpdateView(IC50WorkflowDetailView):
             visualisation_id = context["workflow_revision"].visualisations.all()[0].id
 
 
-
+        context["base_html"] = self.base_html
         context["visualisation_id"] = visualisation_id
         context["visualisation_list"] = context["workflow_revision"].visualisations.all()
         context["visualisation"] = context["visualisation_list"].get(pk=visualisation_id)
@@ -202,9 +203,9 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
 
         workflow_id = self.workflow_revision.workflow.id
 
-
         context['next'] =  hm_next
         context['prev'] =  hm_prev
+        context['current'] = self.workflow_revision_id
         
         
         context.update(kwargs)
@@ -218,11 +219,8 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
         steps_json = json.loads(self.workflow_revision.steps_json)
         form = HeatmapForm(request.POST, uploaded_data=self.workflow_revision.get_data(), steps_json=steps_json)
         if form.is_valid():
-            #print form.cleaned_data
             steps_json = json.loads(self.workflow_revision.steps_json)
-            #form.cleaned_data()
-            #loop through the stored json and for each pair, set the value to that in the form data
-            #heatmap_json = context["steps_json"]
+            
             for key, value in steps_json.iteritems():
                 steps_json[key] = form.cleaned_data[key]
 
@@ -230,15 +228,64 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
             self.workflow_revision.save()
             self.workflow_revision.create_ic50_data()
             visualisation_id = self.workflow_revision.visualisations.all()[0].id
+            print visualisation_id
 
-
+            #for the ajax graph loading, we can't redirect and we (I) can't send back a rendered view 
+            #send back necessary config data to generate graphs
             if request.is_ajax():
-                self.template_name =""
+                return JsonResponse({'pk': self.object.pk, 'workflow_revision_id' : self.workflow_revision.id, "visualisation_id" : visualisation_id, })
 
+            #this needs to render to response rather than redirect
             return HttpResponseRedirect(
                     reverse('ic50_update_view', kwargs={
                     'pk': self.object.pk,
                     'workflow_revision_id' : self.workflow_revision.id,
-                    "visualisation_id" : visualisation_id
+                    "visualisation_id" : visualisation_id,
+                    "base_html" : "workflow_base.html"
                     })
                 )
+            
+
+class Ic50AjaxGraphs(IC50WorkflowDetailView):
+    '''Class to fetch ic50 curves via ajax for the existing sideloading heatmap page'''
+    workflow_revision_id = None
+    visualisation_id = None
+    template_name= "visualise/visualisation_list_ajax.html"
+
+    def get(self, request, **kwargs):
+        self.workflow_revision_id = kwargs.pop("workflow_revision_id")
+        #self.visualisation_id = kwargs.pop("visualisation_id")
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+
+    def get_context_data(self,  **kwargs):
+        # visualisation_form = None
+        # if "visualisation_form" in kwargs:
+        #     visualisation_form = kwargs.pop("visualisation_form")
+
+        context = super(Ic50AjaxGraphs, self).get_context_data(**kwargs)
+        context["workflow_revision"] = get_object_or_404(get_model("ic50", "IC50WorkflowRevision"), pk=self.workflow_revision_id)
+        visualisation_id = self.visualisation_id
+        if visualisation_id == 0:
+            #This will return the first of the IC50 curves but also generate the others
+            context["workflow_revision"].create_ic50_curves()
+            visualisation_id = context["workflow_revision"].visualisations.all()[0].id
+
+
+        #context["visualisation_id"] = visualisation_id
+        context["visualisation_list"] = context["workflow_revision"].visualisations.all()
+        #context["visualisation"] = context["visualisation_list"].get(pk=visualisation_id)
+
+        context['revisions'][1][1] = "done"
+        context['revisions'][2][1] = "done"
+        context['revisions'][0][1] = "done"
+        context['revisions'][3][1] = "in-progress"
+        context["isic50"] = True
+
+        # if not visualisation_form:
+        #     column_data = context["visualisation"].get_column_form_data()
+        #     context["visualisation_form"] = VisualisationForm(column_data=column_data, prefix="")
+        # else:
+        #     context["visualisation_form"] = visualisation_form
+        return context

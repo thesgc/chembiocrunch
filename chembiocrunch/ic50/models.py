@@ -23,6 +23,8 @@ from workflow.basic_units import BasicUnit
 from cbc_common.dataframe_handler import get_config_columns, zero_pad_object_id
 from ic50.curve_fit import IC50CurveFit
 
+from workflow.models import Visualisation, my_slug
+
 # Create your models here.
 UPLOAD ="up"
 VALIDATE_COLUMNS ="vc"
@@ -59,32 +61,6 @@ class IC50Workflow(TimeStampedModel):
 
     def get_latest_workflow_revision(self):
         return get_model("ic50", "IC50WorkflowRevision").objects.filter(workflow_id=self.id).order_by("pk")[0]
-
-
-
-
-
-
-
-
-
-
-        #this is where auto-munging of data can take place
-        #i.e. any ipython workflows applied here
-
-        #df becomes the result of data munging? Do that elsewhere?
-
-        #df = dataframe_handler.get_data_frame(self.uploaded_file.file)
-        #new_workflow_revision = get_model("workflow", "IcFiftyWorkflowDataMappingRevision").objects.create(workflow=self, revision_type=UPLOAD, steps_json=json.dumps({"count" : int(ddf.count()[0]) }))
-
-        # types_frame = DataFrame([[str(dtype) for dtype in df.dtypes],], columns=df.dtypes.keys())
-
-        #dcf.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w', format="table")
-        #ddf.to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w', format="table")
-        # types_frame.to_hdf(new_workflow_revision.get_store_filename("dtypes"), new_workflow_revision.get_store_key(), mode='w', format="table")
-
-
-
 
 
 class IC50WorkflowRevision(TimeStampedModel):
@@ -198,28 +174,6 @@ class IC50WorkflowRevision(TimeStampedModel):
         return read_hdf(filename,self.get_store_key(),)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # @classmethod
-    # def primary_input_file_fields(cls):
-    #     #for later when we get forms working
-    #     return ["testing1", "testing2"]
-
-
-
-
-
 class IC50VisualisationManager(models.Manager):
     '''Retrieves visible lists of workflows using the revision id'''
     def by_workflow(self, workflow):
@@ -229,9 +183,8 @@ class IC50VisualisationManager(models.Manager):
         return self.filter(data_mapping_revision_id=workflow_revision.id).order_by("-created")
 
 
-
-
 class IC50Visualisation(TimeStampedModel):
+#class IC50Visualisation(Visualisation):
     '''
     Holder object for an IC50 visualisation - there will be a set of these for each
     IC50 workflow revision
@@ -248,12 +201,9 @@ class IC50Visualisation(TimeStampedModel):
     constrained = models.NullBooleanField()
     objects = IC50VisualisationManager()
 
-
     def get_svg(self):
         imgdata = StringIO()
         fig = self.get_fig_for_dataframe()
         fig.savefig(imgdata, format='svg')
         imgdata.seek(0)
         return imgdata.buf
-
-

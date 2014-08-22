@@ -20,15 +20,7 @@ To get started upload your data and config files
 </ul>
 {% endblock help_text %}
 {% block content %}
-<form action="" class="crispy form-horizontal" method="post">
-
-<!-- Build heatmap content here
-  Div containing a table
-  Each table cell corresponds to a plate well 
-  Each well contains the data value and a styled/hidden checkbox
-  Clicking the cell toggles the checkbox
-  deactivated cells go grey, then recolour when activated 
--->
+<form action="" class="crispy form-horizontal" method="post" id="hmp-to-ic50">
 
 <div class="heatmap-container">
 
@@ -36,16 +28,26 @@ To get started upload your data and config files
 {% crispy heatmap_form %}
 
 
-
+<div id="graph-loading-area" class="hidden">
+    <div class="bubblingG">
+    <span id="bubblingG_1">
+    </span>
+    <span id="bubblingG_2">
+    </span>
+    <span id="bubblingG_3">
+    </span>
+    </div>
+</div>
 
 
 </div>
-<div class="container col-lg-12 col-md-12 col-sm-12 col-xs-12">
+<div class="container">
 
-<a href="{% if prev %}{% url "workflow_ic50_heatmap" pk=object.id workflow_revision_id=prev.id %}" class="{% else %}/" class="disabled {% endif %} btn btn-primary pull-left"      role="button"  ><span class="glyphicon glyphicon-chevron-left"></span>Prev</a>
+<a href="{% if prev %}{% url "workflow_ic50_heatmap" pk=object.id workflow_revision_id=prev.id %}" class="{% else %}/" class="disabled {% endif %} btn btn-primary pull-left"  role="button"  ><span class="glyphicon glyphicon-chevron-left"></span>Prev</a>
 <a href="{% if next %}{% url "workflow_ic50_heatmap" pk=object.id workflow_revision_id=next.id %}" class="{% else %}/" class="disabled {% endif %} btn btn-primary pull-right"  role="button"  >Next<span class="glyphicon glyphicon-chevron-right"></span></a>
 
 </div>
+
 </form>
 
 {% endblock content %}
@@ -98,8 +100,52 @@ $(document).ready(function() {
     
   });
 
+  $('#submit-id-save').click(function(e) {
+    e.preventDefault();
+    $('#graph-loading-area').removeClass('hidden');
+    $.ajax(
+    {
+        url : "{% url "workflow_ic50_heatmap" pk=object.id workflow_revision_id=current %}",
+        type: "POST",
+        data : $('#hmp-to-ic50').serialize(),
+        success:function(data, textStatus, jqXHR) 
+        {
+            //console.log(data)
+            $('#graph-loading-area').addClass('hidden');
+            fetchGraphs();
+
+
+        },
+        error: function(jqXHR, textStatus, errorThrown) 
+        {
+            //if fails      
+        }
+    });
+  });
+
+
 
 });
+
+function fetchGraphs() {
+  $.ajax({
+    url : "{% url "ic50_ajax_graphs" pk=object.id workflow_revision_id=current %}",
+    type: "GET",
+    success:function(data, textStatus, jqXHR) 
+    {
+        //console.log(data)
+        $('#graph-loading-area').removeClass('hidden');
+        $('#graph-loading-area').html(data);
+
+
+    },
+    error: function(jqXHR, textStatus, errorThrown) 
+    {
+        console.log("fetchGraphs ajaxfail");
+    }
+
+  });
+}
 
 </script>
 
