@@ -33,6 +33,9 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.generic import FormView, View
 from workflow.forms import UserLoginForm
 
+from ic50.views import IC50WorkflowView
+from itertools import chain
+
 class Login(FormView):
     form_class = UserLoginForm
     template_name = "login.html"
@@ -76,10 +79,13 @@ class Logout(View):
 class WorkflowView(LoginRequiredMixin):
 
     model = get_model("workflow", "Workflow")
+    ic50_model = get_model("ic50", "IC50Workflow")
 
     def get_queryset(self):
         '''Make sure that all of the views cannot see the object unless they own it!'''
-        return self.model.objects.get_user_records(self.request.user)
+        #need to also pass ic50 models
+
+        return chain(self.model.objects.get_user_records(self.request.user), self.ic50_model.objects.get_user_records(self.request.user))
 
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context

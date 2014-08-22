@@ -226,6 +226,7 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
 
             self.workflow_revision.steps_json = json.dumps(steps_json)
             self.workflow_revision.save()
+            #TODO we should check first that there are graphs to generate? Or should the generate process replace existing graphs?
             self.workflow_revision.create_ic50_data()
             visualisation_id = self.workflow_revision.visualisations.all()[0].id
             print visualisation_id
