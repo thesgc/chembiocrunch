@@ -273,9 +273,23 @@ class Ic50AjaxGraphs(IC50WorkflowDetailView):
             context["workflow_revision"].create_ic50_curves()
             visualisation_id = context["workflow_revision"].visualisations.all()[0].id
 
+        # vis_groupings = []
+        # counter = 0
+        # vis_group = []
+        # #group visualisations into groups of 4 for carousel
+        # for vis in context["workflow_revision"].visualisations.all():
+        #     if counter == 4:
+        #         counter = 0
+        #         vis_groupings.append(vis_group)
+        #         vis_group = []
+        #     vis_group.append(vis)
+        #     counter+1
 
         #context["visualisation_id"] = visualisation_id
+        
         context["visualisation_list"] = context["workflow_revision"].visualisations.all()
+        #context["visualisation_list"] = vis_groupings
+
         #context["visualisation"] = context["visualisation_list"].get(pk=visualisation_id)
 
         context['revisions'][1][1] = "done"

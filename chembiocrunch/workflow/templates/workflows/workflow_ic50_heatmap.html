@@ -38,8 +38,9 @@ To get started upload your data and config files
     <span id="bubblingG_3">
     </span>
     </div>
-    <div id="loading-status"></div>
+    
 </div>
+<div id="loading-status"></div>
 
 
 </div>
@@ -138,8 +139,13 @@ function fetchGraphs() {
     success:function(data, textStatus, jqXHR) 
     {
         //console.log(data)
-        $('#graph-loading-area').removeClass('hidden');
+        //$('#graph-loading-area').removeClass('hidden');
         $('#graph-loading-area').html(data);
+        $('#loading-status').html("");
+        //buildCarousel();
+        $(".carousel").carousel();
+        $('#graph-loading-area').removeClass('hidden');
+
 
 
     },
