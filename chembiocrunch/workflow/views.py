@@ -79,6 +79,7 @@ class Logout(View):
 class WorkflowView(LoginRequiredMixin):
 
     model = get_model("workflow", "Workflow")
+    #the args here are the app where the model is located and the model class name
     ic50_model = get_model("ic50", "IC50Workflow")
 
     def get_queryset(self):

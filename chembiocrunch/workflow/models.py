@@ -72,6 +72,7 @@ class Workflow(TimeStampedModel):
     uploaded_file = models.FileField(max_length=1024)
     created_by = models.ForeignKey('auth.User')
     objects = WorkflowManager()
+    workflow_type = "workflow"
 
     def get_latest_data_revision(self):
         return get_model("workflow", "Workflow").objects.get_latest_workflow_revision(self.id)

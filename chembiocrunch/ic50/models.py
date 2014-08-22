@@ -52,6 +52,7 @@ class IC50Workflow(TimeStampedModel):
     uploaded_data_file = models.FileField(max_length=1024)
     uploaded_meta_file = models.FileField(max_length=1024)
     created_by = models.ForeignKey('auth.User')
+    workflow_type = "ic50workflow"
     objects = IC50WorkflowManager()
 
     #def get_latest_data_revision(self):

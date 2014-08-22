@@ -309,8 +309,13 @@ filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=1);
 transform: rotate(90deg);
 
 }
+/* List view colo(u)rs */
+.ic50workflow, .btn.ic50workflow {
+	background-color: lightcyan;
+}
 
 
+/* Spinner */
 .bubblingG {
 text-align: center;
 width:80px;
