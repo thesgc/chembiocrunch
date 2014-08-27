@@ -4,9 +4,12 @@ ChembioCrunch
 
 Chembiocrunch is a work in progress project to create a data analysis tool for scientists.
 Sub modules will be focussed on bioassays to cover functions such as:
-*Data visualisation from any CSV format
-*IC50 curves
-*Data import from different machines
+
+* Data visualisation from any CSV format
+
+* IC50 curves
+
+* Data import from different machines
 
 
 Technologies
