@@ -204,6 +204,7 @@ DJANGO_APPS = (
     'django_select2',
     'ic50',
     'javascript_settings',
+    'cairosvg',
 )
 
 # Apps specific for this project go here.

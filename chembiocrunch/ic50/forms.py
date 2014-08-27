@@ -227,7 +227,7 @@ class HeatmapForm(forms.Form):
         well_letters = ud['well_letter'].unique()
 
         self.helper.layout=Layout(
-            HTML('<div class="table-responsive"><table class="heatmap">')
+            HTML('<table class="heatmap">')
         )
         #set up a column header helper containing checkboxes to deselct every well in a column
         column_helper = HeatmapFormHelper()
@@ -291,9 +291,11 @@ class HeatmapForm(forms.Form):
         stop_helper = HeatmapFormHelper()
 
         stop_helper.layout=Layout(
-            HTML('</table></div>'),
-            "save"
+            HTML('</table>')
+            #Submit('save', 'Save')
         )
+        
         self.helper.layout.append(stop_helper)
-        self.helper.add_input(Submit('save', 'Save'))
-        self.helper.layout.append("save")
+        # self.helper.add_input(Submit('save', 'Save'))
+        # self.helper.layout.append('save')
+        

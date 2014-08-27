@@ -94,6 +94,7 @@ class IC50WorkflowRevision(TimeStampedModel):
 
 
     def create_ic50_data(self):
+        #this should replace existing visualisations rather than just generate more
         config = self.get_config_data()
         sample_codes = config.groupby(["fullname"])
         data = self.get_data()
@@ -185,11 +186,10 @@ class IC50VisualisationManager(models.Manager):
 
 
 class IC50Visualisation(TimeStampedModel):
-#class IC50Visualisation(Visualisation):
     '''
     Holder object for an IC50 visualisation - there will be a set of these for each
     IC50 workflow revision
-    l'''
+    '''
     data_mapping_revision = models.ForeignKey('IC50WorkflowRevision', related_name="visualisations")
     x_axis = models.CharField(max_length=200, default="Destination Concentration")
     y_axis = models.CharField(max_length=200, default='Percent inhibition')
@@ -208,3 +208,11 @@ class IC50Visualisation(TimeStampedModel):
         fig.savefig(imgdata, format='svg')
         imgdata.seek(0)
         return imgdata.buf
+
+    #def get_png(self):
+        # imgdata = StringIO()
+        # fig = self.get_fig_for_dataframe()
+        # fc = FigureCanvasAgg(fig)
+        # fc.print_png(imgdata, transparent=True)
+        # imgdata.seek(0)
+        # return imgdata.buf

@@ -16,7 +16,6 @@
   <div class="carousel-inner" id="main-carousel">
   	<!-- move the list items here, 4 at a time inside a div class="carousel-item" -->
     {% for visualisation_item in visualisation_list %}
-
         {% if forloop.first %}
         <div class="item active">
         {% endif %}
@@ -34,9 +33,10 @@
       {% endif %}
       {% if forloop.last %}
         </div>
+        
       {% endif %}
-    {% endfor %}
 
+    {% endfor %}
   </div>
 
   <!-- Controls -->
@@ -53,7 +53,7 @@
 
 
 
-
+{% include "visualise/visualisation_dropdowns_ajax.html" with pk=object.id workflow_revision_id=workflow_revision.id %}
     
 <!-- end vis holder -->
 {% endif %}
