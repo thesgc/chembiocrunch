@@ -128,7 +128,7 @@ class IC50WorkflowRevision(TimeStampedModel):
                 self.plot_ic50(group_df,ic50_group)
 
     def plot_ic50(self, group_df, ic50_group):
-        curve_fitter = IC50CurveFit(group_df)
+        curve_fitter = IC50CurveFit(main_group_df=group_df)
         for constrained in (True,):
             if constrained:
                 title = "%s" % ic50_group
@@ -136,7 +136,7 @@ class IC50WorkflowRevision(TimeStampedModel):
              #   title = "%s (unconstrained)" % ic50_group
 
             fit = curve_fitter.get_fit(constrained=constrained)
-
+            curve_fitter.get_fig()
             vis = IC50Visualisation(data_mapping_revision=self,
                                 compound_id=ic50_group,
                                 results=json.dumps({"values": curve_fitter.results}),

@@ -26,6 +26,7 @@ import pandas as pd
 from django.forms import Form
 from pptx import Presentation
 from pptx.util import Inches, Px
+import time
 # Create your views here.
 class IC50WorkflowView(LoginRequiredMixin):
 
@@ -59,7 +60,7 @@ class IC50WorkflowCreateView(IC50WorkflowView, CreateView ):
         return reverse('workflow_ic50_heatmap', kwargs={
                 'pk': self.object.pk,
                 'workflow_revision_id' : self.object.get_latest_workflow_revision().id,
-                })
+                }) 
 
     def form_valid(self, form):
         user = self.request.user
@@ -147,7 +148,6 @@ class Ic50UpdateView(IC50WorkflowDetailView):
         if vis_update_form.is_valid():
             new_object = vis_update_form.save(workflow_revision, visualisation=visualisation)
             context = self.get_context_data(object=self.object, visualisation_form=vis_update_form)
-            print request.POST
             if request.POST.get("new", False) == "new":
                 return HttpResponseRedirect(reverse("visualisation_builder",kwargs={
                 'pk': self.object.id,
@@ -155,7 +155,8 @@ class Ic50UpdateView(IC50WorkflowDetailView):
                 }))
             return self.render_to_response(context)
         else:
-            print vis_update_form.errors
+            pass
+            #print vis_update_form.errors
 
 
 
@@ -190,14 +191,12 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
         next_qs = self.object.workflow_ic50_revisions.filter(pk__gt=self.workflow_revision.id).order_by("pk")
         if next_qs.count() > 0:
             hm_next = next_qs[0]
-            print "found"
         else:
             hm_next = None
 
         prev_qs = self.object.workflow_ic50_revisions.filter(pk__lt=self.workflow_revision.id).order_by("pk")
         if prev_qs.count() > 0:
             hm_prev = prev_qs[0]
-            print "found"
         else:
             hm_prev = None
 
@@ -229,7 +228,6 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
             #TODO we should check first that there are graphs to generate? Or should the generate process replace existing graphs?
             self.workflow_revision.create_ic50_data()
             visualisation_id = self.workflow_revision.visualisations.all()[0].id
-            print visualisation_id
 
             #for the ajax graph loading, we can't redirect and we (I) can't send back a rendered view 
             #send back necessary config data to generate graphs

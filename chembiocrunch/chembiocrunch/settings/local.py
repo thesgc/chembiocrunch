@@ -52,6 +52,7 @@ CACHES = {
 INSTALLED_APPS += (
     'debug_toolbar',
     'django_shell_ipynb',
+
 )
 
 MIDDLEWARE_CLASSES += (

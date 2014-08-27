@@ -34,9 +34,9 @@ import pandas as pd
 from cbc_common.dataframe_handler import get_ic50_data_columns, get_ic50_config_columns
 
 
+import time
 
-
-
+import re
 
 
 
@@ -69,7 +69,6 @@ class IC50UploadForm(forms.ModelForm):
         #TODO validate datafile tocheck only one plate present
         uploaded_data_file = self.files['uploaded_data_file']
         mime = magic.from_buffer(self.files["uploaded_data_file"].read(), mime=True)
-        print mime
         if 'text/' in mime:
             try:
                 self.uploaded_data = get_data_frame(uploaded_data_file.temporary_file_path())
@@ -89,10 +88,10 @@ class IC50UploadForm(forms.ModelForm):
         return self.cleaned_data['uploaded_data_file']
 
 
+
     def clean_uploaded_config_file(self):
         uploaded_config_file = self.files['uploaded_config_file']
         mime = magic.from_buffer(self.files["uploaded_config_file"].read(), mime=True)
-        print mime
         if 'text/' in mime:
             try:
                 self.uploaded_config = get_data_frame(uploaded_config_file.temporary_file_path(), skiprows=8, header=0)
@@ -114,49 +113,54 @@ class IC50UploadForm(forms.ModelForm):
             raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
         return self.cleaned_data['uploaded_config_file']
 
-    # def clean_uploaded_meta_file(self):
-    #     uploaded_meta_file = self.files.get('uploaded_meta_file', False)
-    #     if uploaded_meta_file:
-    #         mime = magic.from_buffer(uploaded_meta_file.read(), mime=True)
-    #         print mime
-    #         if 'text/' in mime:
-    #             try:
-    #                 self.uploaded_meta = get_data_frame(uploaded_meta_file.temporary_file_path(), skiprows=8, header=0)
-    #             except AttributeError:
-    #                 raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
-    #             except Exception:
-    #                     raise forms.ValidationError("Error processing config CSV File")
-    #         elif "application/" in mime:
-    #             try:
-    #                 try:
-    #                     self.uploaded_meta = get_excel_data_frame(uploaded_meta_file.temporary_file_path(), skiprows=8, header=0)
-    #                     print self.uploaded_meta.dtypes.keys()
-    #                 except Exception:
-    #                     raise forms.ValidationError("Error processing config Excel File")
-    #             except AttributeError:
-    #                 raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
-    #         else:
-    #             raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
-    #         return self.cleaned_data['uploaded_meta_file']
-    #     return None
+    def clean_uploaded_meta_file(self):
+        uploaded_meta_file = self.files.get('uploaded_meta_file', False)
+        if uploaded_meta_file:
+            mime = magic.from_buffer(uploaded_meta_file.read(), mime=True)
+            if 'text/' in mime:
+                try:
+                    self.uploaded_meta = get_data_frame(uploaded_meta_file.temporary_file_path(), skiprows=8, header=0)
+                except AttributeError:
+                    raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
+                except Exception:
+                        raise forms.ValidationError("Error processing config CSV File")
+            elif "application/" in mime:
+                try:
+                    try:
+                        self.uploaded_meta = get_excel_data_frame(uploaded_meta_file.temporary_file_path(), skiprows=8, header=0)
+                    except Exception:
+                        raise forms.ValidationError("Error processing config Excel File")
+                except AttributeError:
+                    raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
+            else:
+                raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
+            return self.cleaned_data['uploaded_meta_file']
+        return None
 
 
 
     def clean(self):
         try:
-            indexed_config = self.uploaded_config.apply(get_ic50_config_columns, axis=1)
+            self.uploaded_config["fullname"] = self.uploaded_config["Destination Plate Name"] + ": " + self.uploaded_config["Destination Well"]
+            self.uploaded_config["full_ref"] = self.uploaded_config["Destination Well"]
+            self.uploaded_config["plate_ref"] = get_plate_ref(self.uploaded_config["Destination Plate Name"])
+            indexed_config = self.uploaded_config
             indexed_config_groups = indexed_config.groupby("plate_ref")
             #indexed_config = indexed_config.set_index('fullname')
-            data_with_index_refs = self.uploaded_data.apply(get_ic50_data_columns, axis=1)
+            self.uploaded_data.columns = ["fullname","figure",]
+            refs = self.uploaded_data["fullname"].str.split(':')
+            self.uploaded_data["full_ref"] = refs.str.get(1).str.strip()
+            self.uploaded_data["plate_ref"] = get_plate_ref(self.uploaded_data["fullname"])
+            matches = self.uploaded_data["full_ref"].str.findall(r"([A-Z]+)([0-9]+)")
+            self.uploaded_data["well_letter"] = matches.str.get(0).str.get(0)
+            self.uploaded_data["well_number"] = matches.str.get(0).str.get(1)
+            self.uploaded_data.to_csv("/tmp/csv")
             #fully_indexed = data_with_index_refs.set_index('fullname')
             #Assumed that datafile contains only one plate worth of data
-            data_groups = data_with_index_refs.groupby("plate_ref")
+            data_groups = self.uploaded_data.groupby("plate_ref")
             for name, grouped in data_groups:
                 #Iterate the names and groups in the dataset
                 config = indexed_config_groups.get_group(name)
-                config.to_csv("/tmp/test.csv")
-
-
                 wells = [str(row) for row in config["full_ref"] ]
                 included_plate_wells = set(wells)
                 inc_wells = {}
@@ -184,7 +188,6 @@ class IC50UploadForm(forms.ModelForm):
         new_workflow_revision = get_model("ic50", "IC50WorkflowRevision").objects.create(workflow=model, 
                                                                                         steps_json=json.dumps(plate["steps_json"]),
                                                                                         plate_name=plate["plate_name"])
-        print new_workflow_revision.id
         plate["data"].to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w')
         plate["config"].to_hdf(new_workflow_revision.get_store_filename("configdata"),new_workflow_revision.get_store_key(), mode='w')
 
@@ -205,6 +208,10 @@ class IC50UploadForm(forms.ModelForm):
         return super(IC50UploadForm, self).__init__(*args, **kwargs)
 
 
+def get_plate_ref(dfseries):
+    '''split out the square backets to give the plate reference'''
+    split = dfseries.str.findall(r"\[(\d)\]").str.get(0)
+    return split
 
 
 
@@ -279,7 +286,6 @@ class HeatmapForm(forms.Form):
                                 'header_' + str(row['well_number']),
                                 HTML('</th>')
                             ])
-                    #print cond_class
                     cond_class = ""
                 except KeyError:
                     #value already popped
