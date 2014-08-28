@@ -33,11 +33,11 @@ To get started upload your data and config files
     <div class="row">
       <div class="col-xs-12">
         <div class="heatmap-container ">
-
+          <table class="heatmap">
   
           {% crispy heatmap_form %}
   
-
+          </table>
       </div>
     </div>
   </div>
@@ -168,8 +168,23 @@ function fetchGraphs() {
         $('#graph-loading-area').html(data);
         $('#loading-status').html("");
         //buildCarousel();
-        $(".carousel").carousel();
+        //$(".carousel").carousel();
         $('#graph-loading-area').removeClass('hidden');
+        //add listeners to the expand buttons on each graph
+        $('span.expand').click(function(e){
+          $(this).toggleClass('glyphicon-resize-full');
+          $(this).toggleClass('glyphicon-resize-small');
+          vis = $(this).closest('div.vis');
+          //toggle for med & large responsive classes
+          vis.toggleClass('col-md-2');
+          vis.toggleClass('col-md-6');
+          //toggle for small classes
+          vis.toggleClass('col-sm-4');
+          vis.toggleClass('col-sm-8');
+          //toggle for xtra small classes
+          vis.toggleClass('col-xs-6');
+          vis.toggleClass('col-xs-12');
+        });
 
 
 

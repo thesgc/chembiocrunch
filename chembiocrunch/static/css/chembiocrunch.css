@@ -321,6 +321,16 @@ transform: rotate(90deg);
 }
 
 
+/* IC50 Graph items CSS */
+.expand {
+    position: absolute;
+    top:20px;
+    right:25px;
+}
+
+
+
+
 /* Spinner */
 .bubblingG {
 text-align: center;
