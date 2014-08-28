@@ -321,6 +321,24 @@ transform: rotate(90deg);
 }
 
 
+/* IC50 Graph items CSS */
+.expand {
+    position: absolute;
+    top:20px;
+    right:25px;
+}
+.ic50-error-1 div {
+	background-color: tomato;
+}
+.ic50-error-2 div {
+	background-color: lemonchiffon;
+}
+.ic50-error-3 div {
+	background-color: darkorange;
+}
+
+
+
 /* Spinner */
 .bubblingG {
 text-align: center;

@@ -16,7 +16,7 @@ from matplotlib.patches import Ellipse
 
 sns.set_style("whitegrid")
 def ic50min(params, x, data):
-    """ model ic50 data"""
+    """ model for ic50 curves - this function contains the equation used for fitting the data"""
     bottom = params['bottom'].value
     top = params['top'].value
     logIC50 = params['logIC50'].value
@@ -26,6 +26,9 @@ def ic50min(params, x, data):
 
 
 class IC50CurveFit(object):
+    '''Holder class for IC50 plotting functions
+    Can be initialised with either a dataframe for that section of the data or with a
+    results dictionary which contains ready-processed data '''
     xpoints = []
     ypoints = []
     result = None
@@ -65,7 +68,9 @@ class IC50CurveFit(object):
 
 
     def get_fit(self, constrained=None):
-        # do fit, here with leastsq model
+        '''This fuction runs the curve fitting using the lmfit module
+        - assumes that the class has been initialised with 
+        a dataframe'''
         vary = True
         if constrained:
             vary = False
@@ -124,7 +129,8 @@ class IC50CurveFit(object):
         
 
     def add_labels(self, inactivelabels=False):
-        '''Add grey labels if we are labelling inactive data'''
+        '''Add labels to the graph for the points to show the well code, including
+        grey labels if we are labelling inactive data'''
         el = Ellipse((2, -1), 0.5, 0.5)
         stuff = 8
         if not inactivelabels:
@@ -162,6 +168,7 @@ class IC50CurveFit(object):
 
 
 def get_svg(fig):
+    '''Return an svg for a matplotlib fig'''
     imgdata = StringIO()
     fig.savefig(imgdata, format='svg')
     imgdata.seek(0)

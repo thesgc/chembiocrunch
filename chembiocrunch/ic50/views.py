@@ -33,7 +33,7 @@ from StringIO import StringIO
 from datetime import datetime
 # Create your views here.
 class IC50WorkflowView(LoginRequiredMixin):
-
+    '''Base class for all views in IC50, will eventually handle permissions'''
     model = get_model("ic50", "IC50Workflow")
 
     # def get_queryset(self):
@@ -41,7 +41,8 @@ class IC50WorkflowView(LoginRequiredMixin):
     #     return self.model.objects.get_user_records(self.request.user)
 
     def get_context_data(self, **kwargs):
-        # Call the base implementation first to get a context
+        '''Adds a status object called revisions to the page context
+        which is used to manage breadcrumbs'''
         context = super(IC50WorkflowView, self).get_context_data(**kwargs)
         context['revisions'] = [["upload" ,"not-done"],
                                 ["validate" ,"not-done"],
@@ -53,7 +54,9 @@ class IC50WorkflowDetailView(IC50WorkflowView, DetailView, ):
     pass
 
 class IC50WorkflowCreateView(IC50WorkflowView, CreateView ):
-    '''creates a single workflow'''
+    '''creates a single IC50 workflow, saving logic is in forms
+    and includes creating a set of revision objects that represent the plates in the 
+    IC50 calculation'''
     fields = ['title', 'uploaded_data_file','uploaded_config_file', 'uploaded_meta_file']
     template_name = "workflows/workflow_ic50_create.html"
     #form_class = LabcyteEchoIC50UploadForm
@@ -85,7 +88,8 @@ class IC50WorkflowCreateView(IC50WorkflowView, CreateView ):
 
 
 class Ic50UpdateView(IC50WorkflowDetailView):
-
+    '''This view requires refactoring but is used in the 
+    ic50 visualisations and updates of ic50 visualisations'''
     pk = None
     workflow_revision_id = None
     visualisation_id = None
@@ -169,7 +173,8 @@ class Ic50UpdateView(IC50WorkflowDetailView):
 
 
 class WorkflowHeatmapView(IC50WorkflowDetailView):
-
+    '''Renders a heatmap form for the removal of specific wells from the dataset
+    Once the user is happy with a particular dataset they can render it by saving the heatmap'''
     template_name = "workflows/workflow_ic50_heatmap.html"
     workflow_revision_id = None
     workflow_revision = None
