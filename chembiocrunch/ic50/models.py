@@ -231,13 +231,7 @@ class IC50Visualisation(TimeStampedModel):
         elif error_msg == "Error, no good line fit found":
             return 'ic50-error-3'
         else:
-            return ''
-
-    @property
-    def test_prop(self):
-        res = json.loads(self.results)
-        return res['values']['message']
-        
+            return ''        
 
 
     #def get_png(self):
