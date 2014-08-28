@@ -26,6 +26,9 @@ def ic50min(params, x, data):
 
 
 class IC50CurveFit(object):
+    '''Holder class for IC50 plotting functions
+    Can be initialised with either a dataframe for that section of the data or with a
+    results dictionary which contains ready-processed data '''
     xpoints = []
     ypoints = []
     result = None
