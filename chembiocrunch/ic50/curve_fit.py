@@ -60,7 +60,7 @@ class IC50CurveFit(object):
             self.inactivey = self.results["inactivey"]
             self.xpoints = self.results["xpoints"]
             self.ypoints = self.results["ypoints"]
-        self.x = np.array(self.xpoints)
+        self.x = np.log10(np.array(self.xpoints))
         self.data = np.array(self.ypoints)
 
 
@@ -71,7 +71,7 @@ class IC50CurveFit(object):
             vary = False
         params = Parameters()
         params.add('bottom',   value= 0, vary=vary)
-        params.add('top', value=100, vary=False)
+        params.add('top', value=100, vary=vary)
         params.add('logIC50', value= 1)
         params.add('hill', value= 2)
         result = minimize(ic50min, params, args=( self.x, self.data))
@@ -103,10 +103,15 @@ class IC50CurveFit(object):
         xcurve = np.linspace(self.x.min(),self.x.max(),300)
         ycurve = [(self.results["bottom"] + (self.results["top"] - self.results["bottom"])/(1 + np.exp((self.results["logIC50"] - xdatum)*self.results["hill"]))) for xdatum in xcurve]
         smooted_best_fit_line = spline(xcurve,ycurve,xcurve)
+        xmin = min(self.x)
+        if xmin > 0 :
+            xmin = 0
+        else:
+            xmin = xmin * 1.1
         f = figure(figsize=(6,4))
         plt.plot(self.inactivex, self.inactivey, "D", color='0.55' )
         plt.plot(self.x, self.data, 'o', )
-        plt.xlim(0,max(self.x)*1.1)
+        plt.xlim(xmin,max(self.x)*1.1)
         plt.ylim(-10,110)
         plt.plot(xcurve,smooted_best_fit_line, 'b')
         self.add_labels()

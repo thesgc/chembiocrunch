@@ -1,0 +1,27 @@
+
+<div class="dropdown pull-right">
+  <button class="btn btn-primary btn-lg dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown">
+    Export
+    <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+
+    
+    <li role="presentation"> <a href="{% url "ic50_export_graphs" pk=pk workflow_revision_id=workflow_revision_id format="ppt" %}" role="menuitem" tabindex="-1"  type="link"  id="submit-id3-submit"  class=" btn btn-default input-block-level">As powerpoint</a>
+    </li>
+
+    <li role="presentation"><a href="{% url "ic50_export_graphs" pk=pk workflow_revision_id=workflow_revision_id format="png" %}" class="btn btn-default input-block-level" type="link" value="new" name="new" role="menuitem" tabindex="-1" href="#">As png image</a>
+    </li>
+
+
+    <li role="presentation"><a href="{% url "ic50_export_graphs" pk=pk workflow_revision_id=workflow_revision_id format="svg" %}" role="menuitem" tabindex="-1" type="link" id="submit-id3-submit" value="delete" name="delete" class="btn btn-default input-block-level "></span>As SVG for CorelDraw/Illustrator</a>
+    </li>
+  </ul>
+</div>
+
+ 
+<script>
+window.onload = function(){
+  $('.dropdown-toggle').dropdown();
+}
+</script>

@@ -2,23 +2,15 @@
 ChembioCrunch
 ========================
 
-Chembiocrunch is a work in progress project to create a data analysis tool for bioassays.
-The first release is not yet working
+Chembiocrunch is a work in progress project to create a data analysis tool for scientists.
+Sub modules will be focussed on bioassays to cover functions such as:
 
-Use Cases
-========================
+* Data visualisation from any CSV format
 
-A user might have a CSV file with a set of rows produced by each plate well in a 96 well plate, 
-these need to be averaged just as you might if using Excel pivot tables
+* IC50 curves
 
-They may then need to select out and transform some of the rows to be used in a calculation with the other rows
-This would be done using vlookup in Excel
+* Data import from different machines
 
-The idea is to store each of these operations in a workflow that can be applied to other data files.
-
-The system will then support graphing and curve fitting so that a publication-quality visualisation can be produced
-
-Contact the team if you would like to know more. We will potentially create an online demo.
 
 Technologies
 =======================

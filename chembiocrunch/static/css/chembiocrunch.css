@@ -212,7 +212,13 @@ table.heatmap {
 	}
 }
 
+th.hmp_row_header {
+	min-width: 10px;
+}
 
+th.hmp_header {
+	text-align: center;
+}
 
 
 .heatmap td.hide-checkbox label {
@@ -448,4 +454,9 @@ background-color:#FFFFFF;
 transform: translateY(-21px);
 }
 
+}
+
+.table-responsive
+{
+    overflow-x: auto;
 }

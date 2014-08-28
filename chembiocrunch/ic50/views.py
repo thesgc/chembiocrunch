@@ -27,6 +27,10 @@ from django.forms import Form
 from pptx import Presentation
 from pptx.util import Inches, Px
 import time
+from cairosvg import svg2png
+from lxml import etree, objectify
+from StringIO import StringIO
+from datetime import datetime
 # Create your views here.
 class IC50WorkflowView(LoginRequiredMixin):
 
@@ -66,7 +70,7 @@ class IC50WorkflowCreateView(IC50WorkflowView, CreateView ):
         user = self.request.user
         form.instance.created_by = user
         form_valid = super(IC50WorkflowCreateView, self).form_valid(form)
-
+        
         return form_valid
 
     def get_context_data(self, **kwargs):
@@ -74,7 +78,10 @@ class IC50WorkflowCreateView(IC50WorkflowView, CreateView ):
         context = super(IC50WorkflowCreateView, self).get_context_data(**kwargs)
         context['revisions'][0][1] = "in-progress"
         return context
-  
+ 
+
+
+ 
 
 
 class Ic50UpdateView(IC50WorkflowDetailView):
@@ -226,6 +233,8 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
             self.workflow_revision.steps_json = json.dumps(steps_json)
             self.workflow_revision.save()
             #TODO we should check first that there are graphs to generate? Or should the generate process replace existing graphs?
+            #if visualisation_id == 0:
+            #    self.workflow_revision.create_ic50_data()
             self.workflow_revision.create_ic50_data()
             visualisation_id = self.workflow_revision.visualisations.all()[0].id
 
@@ -253,7 +262,7 @@ class Ic50AjaxGraphs(IC50WorkflowDetailView):
 
     def get(self, request, **kwargs):
         self.workflow_revision_id = kwargs.pop("workflow_revision_id")
-        #self.visualisation_id = kwargs.pop("visualisation_id")
+        self.visualisation_id = kwargs.pop("pk")
         self.object = self.get_object()
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
@@ -271,19 +280,7 @@ class Ic50AjaxGraphs(IC50WorkflowDetailView):
             context["workflow_revision"].create_ic50_curves()
             visualisation_id = context["workflow_revision"].visualisations.all()[0].id
 
-        # vis_groupings = []
-        # counter = 0
-        # vis_group = []
-        # #group visualisations into groups of 4 for carousel
-        # for vis in context["workflow_revision"].visualisations.all():
-        #     if counter == 4:
-        #         counter = 0
-        #         vis_groupings.append(vis_group)
-        #         vis_group = []
-        #     vis_group.append(vis)
-        #     counter+1
-
-        #context["visualisation_id"] = visualisation_id
+        context["visualisation_id"] = visualisation_id
         
         context["visualisation_list"] = context["workflow_revision"].visualisations.all()
         #context["visualisation_list"] = vis_groupings
@@ -302,3 +299,54 @@ class Ic50AjaxGraphs(IC50WorkflowDetailView):
         # else:
         #     context["visualisation_form"] = visualisation_form
         return context
+
+class Ic50ExportAllView(IC50WorkflowDetailView):
+    #pull out what sort of visualisation to generate
+    #base on VisualisationView - create a slide/image etc
+    model = get_model("ic50", "ic50visualisation")
+    format = None
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.format = kwargs.pop("format")
+        self.workflow_revision_id = kwargs.pop("workflow_revision_id")
+        context = self.get_context_data(object=self.object)
+        context["workflow_revision"] = get_object_or_404(get_model("ic50", "IC50WorkflowRevision"), pk=self.workflow_revision_id)
+        vis_list = context["workflow_revision"].visualisations.all()
+
+        if self.format == "ppt":
+            #create a ppt file
+            #each slide has one graph
+            pptx_file_path = '/tmp/test.pptx'
+            prs = Presentation()
+            blank_slide_layout = prs.slide_layouts[6]
+            for vis in vis_list:
+                slide = prs.slides.add_slide(blank_slide_layout)
+
+                #parser = etree.XMLParser(recover=True, encoding='utf-8')
+                #xml = etree.parse(vis.html, parser)
+
+                #strxml = objectify.dump(xml)
+
+                # fig = svg2png(vis.html.encode('utf-8'))
+                left = Inches(0)
+                top = Inches(1.5)
+                pic = slide.shapes.add_picture(fig, left, top)
+                
+            prs.save(file_path)
+            fsock = open(file_path,"r")
+            response = HttpResponse(fsock, content_type='application/vnd.openxmlformats-officedocument.presentationml.presentation')
+            response['Content-Disposition'] = 'attachment; filename=TestPpt.pptx'
+            #fc.print_png(response)
+            return response
+
+
+
+
+        # fig = self.object.get_fig_for_dataframe()
+        # self.fc = matplotlib.backends.backend_agg.FigureCanvasAgg(fig)
+        # if self.format=="png":
+        #     return self.get_png()
+        # if self.format=="svg":
+        #     return self.get_svg()
+        # if self.format=="ppt":
+        #     return self.get_ppt()

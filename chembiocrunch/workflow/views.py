@@ -86,7 +86,7 @@ class WorkflowView(LoginRequiredMixin):
         '''Make sure that all of the views cannot see the object unless they own it!'''
         #need to also pass ic50 models
 
-        return chain(self.model.objects.get_user_records(self.request.user), self.ic50_model.objects.get_user_records(self.request.user))
+        return self.model.objects.get_user_records(self.request.user)
 
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
@@ -101,6 +101,13 @@ class WorkflowView(LoginRequiredMixin):
 class WorkflowListView(WorkflowView, ListView):
     '''Lists only the workflows that belong to that user'''
     template_name = "workflows/workflow_list.html"
+
+    def get_queryset(self):
+        '''Make sure that all of the views cannot see the object unless they own it!'''
+        #need to also pass ic50 models
+
+        return chain(self.model.objects.get_user_records(self.request.user), self.ic50_model.objects.get_user_records(self.request.user))
+
 
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context

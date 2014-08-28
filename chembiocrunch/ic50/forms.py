@@ -34,11 +34,9 @@ import pandas as pd
 from cbc_common.dataframe_handler import get_ic50_data_columns, get_ic50_config_columns
 
 
+from datetime import datetime
 import time
-
 import re
-
-
 
 
 class IC50UploadForm(forms.ModelForm):
@@ -90,6 +88,7 @@ class IC50UploadForm(forms.ModelForm):
 
 
     def clean_uploaded_config_file(self):
+
         uploaded_config_file = self.files['uploaded_config_file']
         mime = magic.from_buffer(self.files["uploaded_config_file"].read(), mime=True)
         if 'text/' in mime:
@@ -102,6 +101,7 @@ class IC50UploadForm(forms.ModelForm):
         elif "application/" in mime:
             try:
                 try:
+
                     self.uploaded_config = get_excel_data_frame(uploaded_config_file.temporary_file_path(), skiprows=8, header=0)
                     #self.uploaded_config["full_ref"] = self.uploaded_config["Destination Well"]
                     #self.uploaded_config = self.uploaded_config[self.uploaded_config["Source Plate Name"]=="Intermediate Sample Plate[1]"]
@@ -138,7 +138,7 @@ class IC50UploadForm(forms.ModelForm):
         return None
 
 
-
+    
     def clean(self):
         try:
             self.uploaded_config["fullname"] = self.uploaded_config["Destination Plate Name"] + ": " + self.uploaded_config["Destination Well"]
@@ -154,7 +154,6 @@ class IC50UploadForm(forms.ModelForm):
             matches = self.uploaded_data["full_ref"].str.findall(r"([A-Z]+)([0-9]+)")
             self.uploaded_data["well_letter"] = matches.str.get(0).str.get(0)
             self.uploaded_data["well_number"] = matches.str.get(0).str.get(1)
-            self.uploaded_data.to_csv("/tmp/csv")
             #fully_indexed = data_with_index_refs.set_index('fullname')
             #Assumed that datafile contains only one plate worth of data
             data_groups = self.uploaded_data.groupby("plate_ref")
@@ -194,6 +193,7 @@ class IC50UploadForm(forms.ModelForm):
 
 
     def __init__(self, *args, **kwargs):
+
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.form_class = 'form-horizontal'
@@ -234,7 +234,7 @@ class HeatmapForm(forms.Form):
         well_letters = ud['well_letter'].unique()
 
         self.helper.layout=Layout(
-            HTML('<div class="table-responsive"><table class="heatmap">')
+            HTML('')
         )
         #set up a column header helper containing checkboxes to deselct every well in a column
         column_helper = HeatmapFormHelper()
@@ -297,9 +297,10 @@ class HeatmapForm(forms.Form):
         stop_helper = HeatmapFormHelper()
 
         stop_helper.layout=Layout(
-            HTML('</table></div>'),
-            "save"
+            HTML('')
+            #Submit('save', 'Save')
         )
         self.helper.layout.append(stop_helper)
-        self.helper.add_input(Submit('save', 'Save'))
-        self.helper.layout.append("save")
+        # self.helper.add_input(Submit('save', 'Save'))
+        # self.helper.layout.append('save')
+        

@@ -3,6 +3,14 @@
 {% block action_title %}
 To get started upload your data and config files
 {% endblock action_title %}
+{% block nav %}
+<div class="container" style="padding: 15px;">
+<div class="row">
+<a href="{% if prev %}{% url "workflow_ic50_heatmap" pk=object.id workflow_revision_id=prev.id %}" class="{% else %}/" class="disabled {% endif %} btn btn-primary pull-left"  role="button"  ><span class="glyphicon glyphicon-chevron-left"></span>Prev Plate</a>
+    <a href="{% if next %}{% url "workflow_ic50_heatmap" pk=object.id workflow_revision_id=next.id %}" class="{% else %}/" class="disabled {% endif %} btn btn-primary pull-right"  role="button"  >Next Plate<span class="glyphicon glyphicon-chevron-right"></span></a>
+  </div></div>
+{% endblock nav %}
+
 {% block help_text %}
 <ul>
     <li>
@@ -20,38 +28,49 @@ To get started upload your data and config files
 </ul>
 {% endblock help_text %}
 {% block content %}
-<form action="" class="crispy form-horizontal" method="post" id="hmp-to-ic50">
+<form action="" class="" method="post" id="hmp-to-ic50">
+        <div class="table-responsive heatmap-container ">
 
-<div class="heatmap-container">
+  <table class="heatmap">
+          {% crispy heatmap_form heatmap_form.helper %}
+  
+</table>
+  </div>
 
 
-{% crispy heatmap_form %}
 
+  <div class="row">
+    <div class="col-xs-12">
+  <div id="graph-loading-area" class="hidden">
 
-<div id="graph-loading-area" class="hidden">
-
-    <div class="bubblingG">
-    <span id="bubblingG_1">
-    </span>
-    <span id="bubblingG_2">
-    </span>
-    <span id="bubblingG_3">
-    </span>
+        <div class="bubblingG">
+        <span id="bubblingG_1">
+        </span>
+        <span id="bubblingG_2">
+        </span>
+        <span id="bubblingG_3">
+        </span>
+        </div>
+        
     </div>
+
+    <div id="loading-status"></div>
     
-</div>
-<div id="loading-status"></div>
+  </div>
+  </div>
 
 
-</div>
-<div class="container">
 
-<a href="{% if prev %}{% url "workflow_ic50_heatmap" pk=object.id workflow_revision_id=prev.id %}" class="{% else %}/" class="disabled {% endif %} btn btn-primary pull-left"  role="button"  ><span class="glyphicon glyphicon-chevron-left"></span>Prev</a>
-<a href="{% if next %}{% url "workflow_ic50_heatmap" pk=object.id workflow_revision_id=next.id %}" class="{% else %}/" class="disabled {% endif %} btn btn-primary pull-right"  role="button"  >Next<span class="glyphicon glyphicon-chevron-right"></span></a>
+  <div class="row form-actions">
+    <div class="col-xs-12">
+    <input type="submit" name="save" value="Save" class="btn btn-primary" id="submit-id-save">
+  </div>
+  </div>
 
-</div>
+
 
 </form>
+
 
 {% endblock content %}
 {% block extra_js %}
