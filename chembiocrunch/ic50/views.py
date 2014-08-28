@@ -83,7 +83,8 @@ class IC50WorkflowCreateView(IC50WorkflowView, CreateView ):
 
 
 class Ic50UpdateView(IC50WorkflowDetailView):
-
+    '''This view requires refactoring but is used in the 
+    ic50 visualisations and updates of ic50 visualisations'''
     pk = None
     workflow_revision_id = None
     visualisation_id = None
@@ -167,7 +168,8 @@ class Ic50UpdateView(IC50WorkflowDetailView):
 
 
 class WorkflowHeatmapView(IC50WorkflowDetailView):
-
+    '''Renders a heatmap form for the removal of specific wells from the dataset
+    Once the user is happy with a particular dataset they can render it by saving the heatmap'''
     template_name = "workflows/workflow_ic50_heatmap.html"
     workflow_revision_id = None
     workflow_revision = None
