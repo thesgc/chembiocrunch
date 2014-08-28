@@ -47,6 +47,7 @@ class IC50WorkflowManager(models.Manager):
 
 
 class IC50Workflow(TimeStampedModel):
+    '''Object to hold the data files for a specific IC50 workflow'''
     title = models.CharField(max_length=100)
     uploaded_config_file = models.FileField(max_length=1024)
     uploaded_data_file = models.FileField(max_length=1024)
@@ -67,7 +68,10 @@ class IC50Workflow(TimeStampedModel):
 class IC50WorkflowRevision(TimeStampedModel):
 
     '''
-    Revision for IC50 workflows
+    Name is historical - this object holds reference to a specific plate in the 
+    assay data results including reference to the dataset for that plate
+    the datasets are split out into separate dataframes at the point of
+    saving the intial data files (the IC50 workflow)
     '''
 
     workflow = models.ForeignKey('IC50Workflow', related_name='workflow_ic50_revisions')
@@ -94,6 +98,9 @@ class IC50WorkflowRevision(TimeStampedModel):
 
 
     def create_ic50_data(self):
+        '''Function to be called on save of the workflow revision which 
+        generates a set of IC50 visualisation objects related to this plate 
+        and runs the data capture in the process'''
         #this should replace existing visualisations rather than just generate more
         config = self.get_config_data()
         sample_codes = config.groupby(["fullname"])
