@@ -216,6 +216,30 @@ class IC50Visualisation(TimeStampedModel):
         imgdata.seek(0)
         return imgdata.buf
 
+    @property
+    def error_class(self):
+        #get the results
+        #find the error message part
+        #output the appropriate css class for each error
+        results = json.loads(self.results)
+        error_msg = results['values']['message']
+        print error_msg
+        if error_msg == "Low total inhibition, values could be inaccurate":
+            return 'ic50-error-1'
+        elif error_msg == "No low inhibition range - values could be inaccurate":
+            return 'ic50-error-2'
+        elif error_msg == "Error, no good line fit found":
+            return 'ic50-error-3'
+        else:
+            return ''
+
+    @property
+    def test_prop(self):
+        res = json.loads(self.results)
+        return res['values']['message']
+        
+
+
     #def get_png(self):
         # imgdata = StringIO()
         # fig = self.get_fig_for_dataframe()
