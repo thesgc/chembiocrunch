@@ -319,24 +319,24 @@ class Ic50VisualisationView(VisualisationView):
     def get_fig(self):
         curve_fitter = self.object.get_curve_fitter()
 
-        curve_fitter.get_fig(labels=False)
-        self.fig = curve_fitter.fig
-        fc = matplotlib.backends.backend_agg.FigureCanvasAgg(self.fig)
-        path = (self.object.get_upload_to(""))
-        if not os.path.exists(path):
-            os.makedirs(path)
-        filename = path + "large.png"
-        fc.print_png(filename)
-        self.object.png = filename
+        # curve_fitter.get_fig(labels=False)
+        # self.fig = curve_fitter.fig
+        # fc = matplotlib.backends.backend_agg.FigureCanvasAgg(self.fig)
+        # path = (self.object.get_upload_to(""))
+        # if not os.path.exists(path):
+        #     os.makedirs(path)
+        # filename = path + "large.png"
+        # fc.print_png(filename)
+        # self.object.png = filename
         curve_fitter.get_fig(labels=True)
 
         self.object.html = curve_fitter.svg
         self.object.results = json.dumps({"values": curve_fitter.results})
-        curve_fitter.get_fig(labels=False, figsize=(2,1.33), titles=False)
-        fc = matplotlib.backends.backend_agg.FigureCanvasAgg(curve_fitter.fig)
-        filename = path + "small.png"
-        fc.print_png(filename )
-        self.object.png = filename
+        # curve_fitter.get_fig(labels=False, figsize=(2,1.33), titles=False)
+        # fc = matplotlib.backends.backend_agg.FigureCanvasAgg(curve_fitter.fig)
+        # filename = path + "small.png"
+        # fc.print_png(filename )
+        # self.object.png = filename
         self.object.save()
 
 
