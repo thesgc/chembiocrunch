@@ -473,3 +473,8 @@ transform: translateY(-21px);
 }
 
 }
+
+.table-responsive
+{
+    overflow-x: auto;
+}

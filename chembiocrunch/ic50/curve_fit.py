@@ -33,25 +33,38 @@ class IC50CurveFit(object):
     ypoints = []
     result = None
     svg=None
-    def __init__(self,main_group_df):
-        grouped_group = main_group_df.groupby('status')
-        group_df = grouped_group.get_group('active')
+    def __init__(self,*args, **kwargs):
+        
+        if "main_group_df"  in kwargs:
+            main_group_df = kwargs.get("main_group_df", "None")
+            grouped_group = main_group_df.groupby('status')
+            group_df = grouped_group.get_group('active')
 
-        self.xpoints = group_df["concentration"].tolist()
-        self.ypoints = group_df["percent_inhib"].tolist()
-        self.x = np.array(self.xpoints)
+            self.xpoints = group_df["concentration"].tolist()
+            self.ypoints = group_df["percent_inhib"].tolist()
+           
+            self.labels = group_df["full_ref"].tolist()
+            self.inactivex = []
+            self.inactivey = []
+            self.inactivelabels = []
+            self.xcurve = None
+            self.ycurve = None
+            self.fig = None
+            if "inactive" in grouped_group.groups:
+                inactive = grouped_group.get_group('inactive')
+                self.inactivex = inactive["concentration"].tolist()
+                self.inactivey = inactive["percent_inhib"].tolist()
+                self.inactivelabels = inactive["full_ref"].tolist()
+        results = kwargs.get("results", None)
+        if results:
+            self.results = results
+            self.inactivex = self.results["inactivex"] 
+            self.labels = self.results["labels"]
+            self.inactivey = self.results["inactivey"]
+            self.xpoints = self.results["xpoints"]
+            self.ypoints = self.results["ypoints"]
+        self.x = np.log10(np.array(self.xpoints))
         self.data = np.array(self.ypoints)
-        self.labels = group_df["full_ref"].tolist()
-        self.inactivex = []
-        self.inactivey = []
-        self.inactivelabels = []
-        if "inactive" in grouped_group.groups:
-            inactive = grouped_group.get_group('inactive')
-            self.inactivex = inactive["concentration"].tolist()
-            self.inactivey = inactive["percent_inhib"].tolist()
-            self.inactivelabels = inactive["full_ref"].tolist()
-
-
 
 
     def get_fit(self, constrained=None):
@@ -67,9 +80,9 @@ class IC50CurveFit(object):
         params.add('logIC50', value= 1)
         params.add('hill', value= 2)
         result = minimize(ic50min, params, args=( self.x, self.data))
-
-        report_fit(params)
         self.results = result.values
+        self.results["xpoints"] = self.xpoints
+        self.results["ypoints"] = self.ypoints
         self.results["logIC50error"] = result.params["logIC50"].stderr
         self.results["hillerror"] = result.params["hill"].stderr
         #Calculate an average % error across the hill and IC50 if greater than 30% we can scrap the result
@@ -84,22 +97,35 @@ class IC50CurveFit(object):
             self.results["message"] = "No low inhibition range - values could be inaccurate"
         if self.results["errorpercent"] > 20 or self.results["errorpercent"] < -20:
             self.results["message"] = "Error, no good line fit found"
+        self.results["inactivex"] = self.inactivex
+        self.results["labels"] = self.labels
+        self.results["inactivey"] = self.inactivey
 
-        xnew = np.linspace(self.x.min(),self.x.max(),300)
-        ynew = [(result.values["bottom"] + (result.values["top"] - result.values["bottom"])/(1 + np.exp((result.values["logIC50"] - xdatum)*result.values["hill"]))) for xdatum in xnew]
-   
-        smooted_best_fit_line = spline(xnew,ynew,xnew)
+
+
+
+    def get_fig(self):
+        xcurve = np.linspace(self.x.min(),self.x.max(),300)
+        ycurve = [(self.results["bottom"] + (self.results["top"] - self.results["bottom"])/(1 + np.exp((self.results["logIC50"] - xdatum)*self.results["hill"]))) for xdatum in xcurve]
+        smooted_best_fit_line = spline(xcurve,ycurve,xcurve)
+        xmin = min(self.x)
+        if xmin > 0 :
+            xmin = 0
+        else:
+            xmin = xmin * 1.1
         f = figure(figsize=(6,4))
         plt.plot(self.inactivex, self.inactivey, "D", color='0.55' )
         plt.plot(self.x, self.data, 'o', )
-        plt.xlim(0,max(self.x)*1.1)
+        plt.xlim(xmin,max(self.x)*1.1)
         plt.ylim(-10,110)
-        plt.plot(xnew,smooted_best_fit_line, 'b')
-
+        plt.plot(xcurve,smooted_best_fit_line, 'b')
         self.add_labels()
         self.add_labels(inactivelabels=True)
+        self.fig = f
         self.svg = get_svg(f)
         plt.close(f)
+
+
         
 
     def add_labels(self, inactivelabels=False):

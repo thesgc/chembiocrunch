@@ -26,9 +26,11 @@ import pandas as pd
 from django.forms import Form
 from pptx import Presentation
 from pptx.util import Inches, Px
+import time
 from cairosvg import svg2png
 from lxml import etree, objectify
 from StringIO import StringIO
+from datetime import datetime
 # Create your views here.
 class IC50WorkflowView(LoginRequiredMixin):
     '''Base class for all views in IC50, will eventually handle permissions'''
@@ -65,13 +67,13 @@ class IC50WorkflowCreateView(IC50WorkflowView, CreateView ):
         return reverse('workflow_ic50_heatmap', kwargs={
                 'pk': self.object.pk,
                 'workflow_revision_id' : self.object.get_latest_workflow_revision().id,
-                })
+                }) 
 
     def form_valid(self, form):
         user = self.request.user
         form.instance.created_by = user
         form_valid = super(IC50WorkflowCreateView, self).form_valid(form)
-
+        
         return form_valid
 
     def get_context_data(self, **kwargs):
@@ -79,7 +81,10 @@ class IC50WorkflowCreateView(IC50WorkflowView, CreateView ):
         context = super(IC50WorkflowCreateView, self).get_context_data(**kwargs)
         context['revisions'][0][1] = "in-progress"
         return context
-  
+ 
+
+
+ 
 
 
 class Ic50UpdateView(IC50WorkflowDetailView):
@@ -154,7 +159,6 @@ class Ic50UpdateView(IC50WorkflowDetailView):
         if vis_update_form.is_valid():
             new_object = vis_update_form.save(workflow_revision, visualisation=visualisation)
             context = self.get_context_data(object=self.object, visualisation_form=vis_update_form)
-            print request.POST
             if request.POST.get("new", False) == "new":
                 return HttpResponseRedirect(reverse("visualisation_builder",kwargs={
                 'pk': self.object.id,
@@ -162,7 +166,8 @@ class Ic50UpdateView(IC50WorkflowDetailView):
                 }))
             return self.render_to_response(context)
         else:
-            print vis_update_form.errors
+            pass
+            #print vis_update_form.errors
 
 
 
@@ -198,14 +203,12 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
         next_qs = self.object.workflow_ic50_revisions.filter(pk__gt=self.workflow_revision.id).order_by("pk")
         if next_qs.count() > 0:
             hm_next = next_qs[0]
-            print "found"
         else:
             hm_next = None
 
         prev_qs = self.object.workflow_ic50_revisions.filter(pk__lt=self.workflow_revision.id).order_by("pk")
         if prev_qs.count() > 0:
             hm_prev = prev_qs[0]
-            print "found"
         else:
             hm_prev = None
 
@@ -329,7 +332,7 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
 
                 #strxml = objectify.dump(xml)
 
-                fig = svg2png(vis.html.encode('utf-8'))
+                # fig = svg2png(vis.html.encode('utf-8'))
                 left = Inches(0)
                 top = Inches(1.5)
                 pic = slide.shapes.add_picture(fig, left, top)

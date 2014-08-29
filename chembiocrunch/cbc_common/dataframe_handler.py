@@ -1,6 +1,7 @@
 
 import csv
 from pandas import DataFrame, ExcelFile, Series
+from pandas.io.parsers import read_csv as rc
 import re
 import numpy as np
 DATA_TYPE_TYPES = {
@@ -11,9 +12,8 @@ DATA_TYPE_TYPES = {
 
 
 def get_data_frame(read_csv, skiprows=0, header=0):
-    '''Returns a dataframe from a csv buffer'''
-    pd = DataFrame()
-    pd = pd.from_csv(read_csv, infer_datetime_format=True,index_col=None, skiprows=skiprows, header=header)
+    '''Returns a dataframe from a csv buffer'''  
+    pd = rc(read_csv, infer_datetime_format=True,index_col=None, header=header, skiprows=skiprows,)
     return pd
 
 def get_excel_data_frame(read_excel, skiprows=0, header=None):

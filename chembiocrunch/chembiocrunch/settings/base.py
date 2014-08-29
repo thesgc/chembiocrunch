@@ -205,6 +205,8 @@ DJANGO_APPS = (
     'ic50',
     'javascript_settings',
     'cairosvg',
+        'devserver',
+
 )
 
 # Apps specific for this project go here.

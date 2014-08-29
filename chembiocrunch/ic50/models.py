@@ -24,7 +24,8 @@ from cbc_common.dataframe_handler import get_config_columns, zero_pad_object_id
 from ic50.curve_fit import IC50CurveFit
 
 from workflow.models import Visualisation, my_slug
-
+from multiprocessing import Lock, Process, Queue, current_process
+from datetime import datetime
 # Create your models here.
 UPLOAD ="up"
 VALIDATE_COLUMNS ="vc"
@@ -103,55 +104,62 @@ class IC50WorkflowRevision(TimeStampedModel):
         and runs the data capture in the process'''
         #this should replace existing visualisations rather than just generate more
         config = self.get_config_data()
-        sample_codes = config.groupby(["fullname"])
+        config = config[config['Sample ID'].notnull()]
+        #sample_codes = config.groupby(["fullname"])
         data = self.get_data()
+        controls_records = data[data["well_number"].isin(["12","24"])]
+        maximum = controls_records["figure"].mean()
         excl = json.loads(self.steps_json)
-        print excl
-        config_columns = data.apply(
-            get_config_columns,
-            args=(sample_codes,excl),
-            axis=1
-        )
+
+        # config_columns = data.apply(
+        #     get_config_columns,
+        #     args=(sample_codes,excl),
+        #     axis=1
+        # )
+
+        config_columns = config.merge(data)
+        config_columns["status"] = "active"
         config_columns[["figure"]] = config_columns[["figure"]].astype(float)
-        minimum = min(config_columns["figure"])
-        config_columns["percent_inhib"] = config_columns["figure"] * 0
+        minimum = 0 # Add min controls here
+        config_columns["concentration"] = config_columns["Destination Concentration"] * float(1000000)
+        config_columns["global_compound_id"] = config_columns["Sample ID"]
+        config_columns["plate_type"]  = config_columns["Destination Plate Type"]
         #
         ic50_groups = config_columns.groupby("global_compound_id")
-        controls = ic50_groups.get_group("NONE")
+
+        config_columns["percent_inhib"] = 100*(maximum - config_columns["figure"] )/(maximum - minimum)
+
 
         for ic50_group in ic50_groups.groups:
             if ic50_group != "NONE":
 
-                group_df = ic50_groups.get_group(ic50_group)
-                group_well_letters = [k for k,v in group_df["well_letter"].value_counts().iterkv()]
-                if group_df['well_number'].max() > 12:
-                    column = 24
-                else:
-                    column = 12
-                group_full_refs = ["%s%d" % (letter , column) for letter in group_well_letters]
-                group_controls = controls[controls["full_ref"].isin(group_full_refs)]
-                group_max = group_controls["figure"].mean()
-                group_df["percent_inhib"] =  100*(group_max - group_df["figure"] )/(group_max - minimum)
-                group_df.sort(["percent_inhib","concentration"], inplace=True)
-                self.plot_ic50(group_df,ic50_group)
+                # group_df = ic50_groups.get_group(ic50_group)
+                # group_df.sort(["percent_inhib","concentration"], inplace=True)
+                # curve_fitter = self.plot_ic50(group_df,ic50_group,)
+
+                vis = IC50Visualisation(data_mapping_revision=self,
+                            compound_id=ic50_group,
+                            #results=json.dumps({"values": curve_fitter.results}),
+                            constrained=True,
+                            visualisation_title=ic50_group,
+                            html="test")
+                vis.save()
+
+
+
+
+
 
     def plot_ic50(self, group_df, ic50_group):
-        curve_fitter = IC50CurveFit(group_df)
-        for constrained in (True,):
-            if constrained:
-                title = "%s" % ic50_group
-            #else:
-             #   title = "%s (unconstrained)" % ic50_group
+        print "start"
+        print str(datetime.now())
+        curve_fitter = IC50CurveFit(main_group_df=group_df)
+        title = "%s" % ic50_group
 
-            fit = curve_fitter.get_fit(constrained=constrained)
-
-            vis = IC50Visualisation(data_mapping_revision=self,
-                                compound_id=ic50_group,
-                                results=json.dumps({"values": curve_fitter.results}),
-                                constrained=constrained,
-                                visualisation_title=title,
-                                html=curve_fitter.svg)
-            vis.save()
+        fit = curve_fitter.get_fit(constrained=True)
+        curve_fitter.get_fig()
+        print str(datetime.now())
+        return curve_fitter
 
 
 
