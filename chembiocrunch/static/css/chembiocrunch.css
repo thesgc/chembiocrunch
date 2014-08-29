@@ -324,8 +324,9 @@ transform: rotate(90deg);
 /* IC50 Graph items CSS */
 .expand {
     position: absolute;
-    top:20px;
-    right:25px;
+	top: 10px;
+	right: 20px;
+	font-size: 0.7em;
 }
 .ic50-error-1 div {
 	background-color: tomato;
@@ -336,8 +337,21 @@ transform: rotate(90deg);
 .ic50-error-3 div {
 	background-color: darkorange;
 }
-
-
+.no-margin {
+	margin: 0 !important;
+}
+.full-width {
+	width: 100%;
+}
+.well .btn {
+	font-size: 0.9em;
+}
+ul.dropdown-menu {
+	width: inherit;
+}
+div#graph-loading-area {
+	margin-top: 20px;
+}
 
 /* Spinner */
 .bubblingG {
