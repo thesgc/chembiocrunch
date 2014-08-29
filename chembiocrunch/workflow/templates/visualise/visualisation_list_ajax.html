@@ -19,7 +19,7 @@
             {{ visualisation_item.html|add_responsive_tags|safe }}
 
             {% else %}
-            <a href='{% url "ic50_visualisation_view" pk=visualisation_item.id format="html" %}' target='_blank'>link</a>
+            No graph? <a onclick="fetchSvgGraph("{% url "ic50_visualisation_view" pk=visualisation_item.id format="html" %}", {{visualisation_item.id}});" href="#" target='_blank'>Reload</a>
               <div class="bubblingG">
               <span id="bubblingG_1">
               </span>
