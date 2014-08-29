@@ -288,14 +288,5 @@ class HeatmapForm(forms.Form):
             if(letter == 'A'):
                 self.helper.layout.append(column_helper.layout)
             self.helper.layout.append(loophelper.layout)
-        stop_helper = HeatmapFormHelper()
-
-        stop_helper.layout=Layout(
-            #HTML('</table>')
-            #Submit('save', 'Save')
-        )
         
-        self.helper.layout.append(stop_helper)
-        # self.helper.add_input(Submit('save', 'Save'))
-        # self.helper.layout.append('save')
         
