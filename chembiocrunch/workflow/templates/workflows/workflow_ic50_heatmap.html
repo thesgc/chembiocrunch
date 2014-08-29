@@ -5,6 +5,8 @@ To get started upload your data and config files
 {% endblock action_title %}
 {% block nav %}
 <div class="container" style="padding: 15px;">
+  {% include "visualise/visualisation_dropdowns_ajax.html" with pk=object.id workflow_revision_id=workflow_revision.id %}
+
 <div class="row">
 <a href="{% if prev %}{% url "workflow_ic50_heatmap" pk=object.id workflow_revision_id=prev.id %}" class="{% else %}/" class="disabled {% endif %} btn btn-primary pull-left"  role="button"  ><span class="glyphicon glyphicon-chevron-left"></span>Prev Plate</a>
     <a href="{% if next %}{% url "workflow_ic50_heatmap" pk=object.id workflow_revision_id=next.id %}" class="{% else %}/" class="disabled {% endif %} btn btn-primary pull-right"  role="button"  >Next Plate<span class="glyphicon glyphicon-chevron-right"></span></a>

@@ -83,6 +83,8 @@ class IC50CurveFit(object):
         self.results = result.values
         self.results["xpoints"] = self.xpoints
         self.results["ypoints"] = self.ypoints
+        self.results["IC50"] = 10 ** result.params["logIC50"] #reverse the log
+
         self.results["logIC50error"] = result.params["logIC50"].stderr
         self.results["hillerror"] = result.params["hill"].stderr
         #Calculate an average % error across the hill and IC50 if greater than 30% we can scrap the result
@@ -104,8 +106,8 @@ class IC50CurveFit(object):
 
 
 
-    def get_fig(self, labels=True, figsize=(6,4), titles=True):
-        xcurve = np.linspace(self.x.min(),self.x.max(),300)
+    def get_fig(self, labels=True, figsize=(6,4), titles=True,  pngfile=None, thumbfile=None):
+        xcurve = np.linspace(self.x.min(),self.x.max(),200)
         ycurve = [(self.results["bottom"] + (self.results["top"] - self.results["bottom"])/(1 + np.exp((self.results["logIC50"] - xdatum)*self.results["hill"]))) for xdatum in xcurve]
         smooted_best_fit_line = spline(xcurve,ycurve,xcurve)
         xmin = min(self.x)
@@ -120,19 +122,38 @@ class IC50CurveFit(object):
         ax.set_xlim(xmin,max(self.x)*1.1)
         ax.set_ylim(-10,110)
         ax.plot(xcurve,smooted_best_fit_line, 'b')
-        self.fig = f
-        if titles:
-            ax.set_xlabel(u'Log (micromolar concentration)')
-            ax.set_ylabel(u'% Inhibition')
-        else:
-            ax.set_ticks([xmin,max(self.x)])
-            ax.set_ticks([0,100])
+        #self.fig = f
+        
+        ax.set_xlabel(u'Log (micromolar concentration)')
+        ax.set_ylabel(u'% Inhibition')
+
         f.tight_layout()
 
         # if labels:
         #     self.add_labels()
         #     self.add_labels(inactivelabels=True)    
         self.svg = get_svg(f)
+        f.savefig(pngfile , format="png", transparent=True)
+
+
+        plt.close(f)
+        f, ax = plt.subplots()
+        ax.plot(self.inactivex, self.inactivey, "D", color='0.55' )
+        ax.plot(self.x, self.data, 'o', )
+        ax.set_xlim(xmin,max(self.x)*1.1)
+        ax.set_ylim(-10,110)
+        ax.plot(xcurve,smooted_best_fit_line, 'b')
+
+        ax.set_xticks([])
+        ax.set_yticks([])
+        f.tight_layout()
+
+        ax.set_xlabel('')
+        ax.set_ylabel('')
+        
+        f.tight_layout()
+        f.savefig(thumbfile , format="png", dpi=20)
+
         plt.close(f)
 
 
@@ -180,6 +201,6 @@ class IC50CurveFit(object):
 def get_svg(fig):
     '''Return an svg for a matplotlib fig'''
     imgdata = StringIO()
-    fig.savefig(imgdata, format='svg')
+    fig.savefig(imgdata, format='svg', )
     imgdata.seek(0)
     return imgdata.buf

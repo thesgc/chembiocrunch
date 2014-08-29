@@ -50,7 +50,7 @@ class IC50WorkflowManager(models.Manager):
 
 class IC50Workflow(TimeStampedModel):
     '''Object to hold the data files for a specific IC50 workflow'''
-    title = models.CharField(max_length=100)
+    title = models.CharField(max_length=300, unique=True)
     uploaded_config_file = models.FileField(max_length=1024)
     uploaded_data_file = models.FileField(max_length=1024)
     uploaded_meta_file = models.FileField(max_length=1024)
@@ -62,6 +62,10 @@ class IC50Workflow(TimeStampedModel):
     #    return get_model("workflow", "Ic50Workflow").objects.get_latest_workflow_revision(self.id)
 
 
+    def get_upload_to(self, name):
+        return "%s/ic50workflows/%d/%s" % (settings.MEDIA_ROOT, 
+            self.id, 
+            name)
 
     def get_latest_workflow_revision(self):
         return get_model("ic50", "IC50WorkflowRevision").objects.filter(workflow_id=self.id).order_by("pk")[0]
@@ -97,6 +101,7 @@ class IC50WorkflowRevision(TimeStampedModel):
             return None
         else:
             return qs[0]
+
 
 
 

@@ -34,7 +34,8 @@ from datetime import datetime
 import os
 from workflow.views import VisualisationView
 from workflow.templatetags.svg_responsive import add_responsive_tags
-
+import xlsxwriter
+import time
 # Create your views here.
 class IC50WorkflowView(LoginRequiredMixin):
     '''Base class for all views in IC50, will eventually handle permissions'''
@@ -317,27 +318,28 @@ class Ic50AjaxGraphs(IC50WorkflowDetailView):
 class Ic50VisualisationView(VisualisationView):
     model = get_model("ic50", "IC50Visualisation")
 
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.format = kwargs.pop("format")
+        self.get_fig()
+        if self.format=="html":
+            return self.get_html()
+
+
     def get_fig(self):
         curve_fitter = self.object.get_curve_fitter()
+        path = (self.object.get_upload_to(""))
+        if not os.path.exists(path):
+            os.makedirs(path)
+        pngfile = path + "large.png"
+        thumbfile = path + "thumb.png"
+        curve_fitter.get_fig(labels=True, pngfile=str(pngfile), thumbfile=str(thumbfile))
+        self.object.png = pngfile
+        self.object.thumb = thumbfile
 
-        # curve_fitter.get_fig(labels=False)
-        # self.fig = curve_fitter.fig
-        # fc = matplotlib.backends.backend_agg.FigureCanvasAgg(self.fig)
-        # path = (self.object.get_upload_to(""))
-        # if not os.path.exists(path):
-        #     os.makedirs(path)
-        # filename = path + "large.png"
-        # fc.print_png(filename)
-        # self.object.png = filename
-        curve_fitter.get_fig(labels=True)
-        self.fig = curve_fitter.fig
         self.object.html = curve_fitter.svg
         self.object.results = json.dumps({"values": curve_fitter.results})
-        # curve_fitter.get_fig(labels=False, figsize=(2,1.33), titles=False)
-        # fc = matplotlib.backends.backend_agg.FigureCanvasAgg(curve_fitter.fig)
-        # filename = path + "small.png"
-        # fc.print_png(filename )
-        # self.object.png = filename
+
         self.object.save()
 
     def get_html(self):
@@ -356,54 +358,71 @@ class Ic50VisualisationView(VisualisationView):
 
 
 
-
 class Ic50ExportAllView(IC50WorkflowDetailView):
     #pull out what sort of visualisation to generate
     #base on VisualisationView - create a slide/image etc
-    model = get_model("ic50", "ic50visualisation")
     format = None
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         self.format = kwargs.pop("format")
-        self.workflow_revision_id = kwargs.pop("workflow_revision_id")
         context = self.get_context_data(object=self.object)
-        context["workflow_revision"] = get_object_or_404(get_model("ic50", "IC50WorkflowRevision"), pk=self.workflow_revision_id)
-        vis_list = context["workflow_revision"].visualisations.all()
+        vis_list = get_model("ic50", "ic50visualisation").objects.filter(data_mapping_revision__workflow__id=self.object.id)
 
-        if self.format == "ppt":
-            #create a ppt file
-            #each slide has one graph
-            pptx_file_path = '/tmp/test.pptx'
-            prs = Presentation()
-            blank_slide_layout = prs.slide_layouts[6]
-            for vis in vis_list:
-                slide = prs.slides.add_slide(blank_slide_layout)
+        # if self.format == "ppt":
+        #     #create a ppt file
+        #     #each slide has one graph
+        #     pptx_file_path = '/tmp/test.pptx'
+        #     prs = Presentation()
+        #     blank_slide_layout = prs.slide_layouts[6]
+        #     for vis in vis_list:
+        #         slide = prs.slides.add_slide(blank_slide_layout)
 
-                #parser = etree.XMLParser(recover=True, encoding='utf-8')
-                #xml = etree.parse(vis.html, parser)
+        #         #parser = etree.XMLParser(recover=True, encoding='utf-8')
+        #         #xml = etree.parse(vis.html, parser)
 
-                #strxml = objectify.dump(xml)
+        #         #strxml = objectify.dump(xml)
 
-                # fig = svg2png(vis.html.encode('utf-8'))
-                left = Inches(0)
-                top = Inches(1.5)
-                pic = slide.shapes.add_picture(fig, left, top)
+        #         # fig = svg2png(vis.html.encode('utf-8'))
+        #         left = Inches(0)
+        #         top = Inches(1.5)
+        #         pic = slide.shapes.add_picture(fig, left, top)
                 
-            prs.save(file_path)
-            fsock = open(file_path,"r")
-            response = HttpResponse(fsock, content_type='application/vnd.openxmlformats-officedocument.presentationml.presentation')
-            response['Content-Disposition'] = 'attachment; filename=TestPpt.pptx'
+        #     prs.save(file_path)
+        #     fsock = open(file_path,"r")
+        #     response = HttpResponse(fsock, content_type='application/vnd.openxmlformats-officedocument.presentationml.presentation')
+        #     response['Content-Disposition'] = 'attachment; filename=TestPpt.pptx'
+        #     #fc.print_png(response)
+        #     return response
+
+        if self.format == "xlsx":
+            title = self.object.title + "_output.xlsx"
+            path = self.object.get_upload_to("")
+            if not os.path.exists(path):
+                os.makedirs(path)
+            path +="/" +title
+            workbook = xlsxwriter.Workbook(path)
+            worksheet = workbook.add_worksheet()
+            column_names = ["plate", "coupound_id", "logIC50","ic50", "results", "system_comments","user_rejected", "graph"]
+            for i, name in enumerate(column_names):
+                worksheet.write(0,i,name)
+                if name=="graph":
+                    worksheet.set_column(i,i, 140)
+
+            for index, vis in enumerate(vis_list):
+                res = json.loads(vis.results).get("values", {})
+                worksheet.set_row(index+1, 100)
+                worksheet.write(index+1,0,vis.data_mapping_revision.plate_name)
+                worksheet.write(index+1,1,vis.compound_id)
+                worksheet.write(index+1,2,res.get("logIC50"))
+                worksheet.write(index+1,3,res.get("IC50"))
+                worksheet.write(index+1,4,json.dumps(res))
+                worksheet.write(index+1,5,res.get("message"))
+                #worksheet.write(index,6,vis.rejected)
+                if vis.thumb:
+                    worksheet.insert_image(index+1,7,vis.thumb.path)
+            workbook.close()
+            fsock = open(path,"r")
+            response = HttpResponse(fsock, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = 'attachment; filename=%s' % title
             #fc.print_png(response)
             return response
-
-
-
-
-        # fig = self.object.get_fig_for_dataframe()
-        # self.fc = matplotlib.backends.backend_agg.FigureCanvasAgg(fig)
-        # if self.format=="png":
-        #     return self.get_png()
-        # if self.format=="svg":
-        #     return self.get_svg()
-        # if self.format=="ppt":
-        #     return self.get_ppt()
