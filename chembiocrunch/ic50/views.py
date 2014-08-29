@@ -27,7 +27,6 @@ from django.forms import Form
 from pptx import Presentation
 from pptx.util import Inches, Px
 import time
-from cairosvg import svg2png
 from lxml import etree, objectify
 from StringIO import StringIO
 from datetime import datetime
