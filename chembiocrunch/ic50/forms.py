@@ -169,6 +169,9 @@ class IC50UploadForm(forms.ModelForm):
                     else:
                         inc_wells[str(item)] = None
                 self.plates.append({"plate_name": name, "data" : grouped, "config" : config, "steps_json": inc_wells} )
+
+
+
         except Exception:
             raise forms.ValidationError("Possible invalid file formats")
 
@@ -183,12 +186,50 @@ class IC50UploadForm(forms.ModelForm):
 
 
 
+
+
     def save_plate(self,model, plate):  
         new_workflow_revision = get_model("ic50", "IC50WorkflowRevision").objects.create(workflow=model, 
                                                                                         steps_json=json.dumps(plate["steps_json"]),
                                                                                         plate_name=plate["plate_name"])
+        config = plate["config"]
+        data = plate["data"]
+        config = config[config['Sample ID'].notnull()]
+        #sample_codes = config.groupby(["fullname"])
+        controls_records = data[data["well_number"].isin(["12","24"])]
+        maximum = controls_records["figure"].mean()
+        config_columns = config.merge(data)
+        config_columns["status"] = "active"
+        config_columns[["figure"]] = config_columns[["figure"]].astype(float)
+        minimum = 0 # Add min controls here
+        config_columns["concentration"] = config_columns["Destination Concentration"] * float(1000000)
+        config_columns["global_compound_id"] = config_columns["Sample ID"]
+        config_columns["plate_type"]  = config_columns["Destination Plate Type"]
+        config_columns["percent_inhib"] = 100*(maximum - config_columns["figure"] )/(maximum - minimum)
+
+        ic50_groups = config_columns.groupby("global_compound_id")
+
+
+
+        for ic50_group in ic50_groups.groups:
+            if ic50_group != "NONE":
+#              group_df = ic50_groups.get_group(ic50_group)
+                # results = {}
+                # results["inactivex"] = []
+                # results["labels"] = group_df["full_ref"].tolist()
+                # results["inactivey"] = []
+                # results["xpoints"] = group_df["concentration"].tolist()
+                # results["ypoints"] = group_df["figure"].tolist()
+                vis = get_model("ic50", "IC50Visualisation")(data_mapping_revision=new_workflow_revision,
+                            compound_id=ic50_group,
+                            #results=json.dumps({"values": results}),
+                            constrained=True,
+                            visualisation_title=ic50_group,
+                            html="")
+                vis.save()
+
         plate["data"].to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w')
-        plate["config"].to_hdf(new_workflow_revision.get_store_filename("configdata"),new_workflow_revision.get_store_key(), mode='w')
+        config_columns.to_hdf(new_workflow_revision.get_store_filename("configdata"),new_workflow_revision.get_store_key(), mode='w')
 
 
 

@@ -33,7 +33,6 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.generic import FormView, View
 from workflow.forms import UserLoginForm
 
-from ic50.views import IC50WorkflowView
 from itertools import chain
 
 class Login(FormView):
@@ -402,17 +401,25 @@ class VisualisationUpdateView(WorkflowDetailView):
 class VisualisationView(DetailView,):
     model = get_model("workflow", "visualisation")
     format = None
+
+
+    def get_fig(self):
+        self.fig = self.object.get_fig_for_dataframe()
+
+
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         self.format = kwargs.pop("format")
-        fig = self.object.get_fig_for_dataframe()
-        self.fc = matplotlib.backends.backend_agg.FigureCanvasAgg(fig)
+        self.get_fig()
+        self.fc = matplotlib.backends.backend_agg.FigureCanvasAgg(self.fig)
         if self.format=="png":
             return self.get_png()
         if self.format=="svg":
             return self.get_svg()
         if self.format=="ppt":
             return self.get_ppt()
+        if self.format=="html":
+            return self.get_html()
 
     def get_png(self):
         response = HttpResponse(content_type='image/png')
@@ -420,6 +427,9 @@ class VisualisationView(DetailView,):
         response['Content-Disposition'] = 'attachment; filename="filename.png"'
         return response
 
+    def get_html(self):
+        response = HttpResponse(self.object.html)
+        return response
 
 
     def get_svg(self):
