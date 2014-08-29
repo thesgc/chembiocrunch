@@ -19,3 +19,5 @@ django-redis
 django-select2
 xlrd
 lmfit
+xlsxwriter
+django-devserver
