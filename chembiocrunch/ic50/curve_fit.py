@@ -123,6 +123,9 @@ class IC50CurveFit(object):
         if titles:
             plt.xlabel(u'Log (micromolar concentration)')
             plt.ylabel(u'% Inhibition')
+        else:
+            plt.gca().axes.get_xaxis().set_ticks([xmin,max(self.x)])
+            plt.gca().axes.get_yaxis().set_ticks([0,100])
         f.tight_layout()
 
         if labels:
