@@ -42,7 +42,7 @@
               <li role="presentation"><a href="#" class="btn btn-default input-block-level" type="link" value="new" name="new" role="menuitem" tabindex="-1">Mark as poor fit</a>
               </li>
 
-              <li role="presentation"><a href="#" class="btn btn-default input-block-level" type="link" value="new" name="new" role="menuitem" tabindex="-1">Download Image (png)</a>
+              <li role="presentation"><a href="{% url "ic50_visualisation_view" pk=visualisation_item.id format="png" %}" class="btn btn-default input-block-level" type="link" value="new" name="new" role="menuitem" tabindex="-1">Download Image (png)</a>
               </li>
 
             </ul>
