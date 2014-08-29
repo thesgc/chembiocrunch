@@ -8,7 +8,7 @@
   	<!-- move the list items here, 4 at a time inside a div class="carousel-item" -->
   {% for visualisation_item in visualisation_list %}
       
-  <div title="{{visualisation_item.results}}" class ="btn col-md-2 col-sm-4 col-xs-6 vis {{visualisation_item.error_class}}">
+  <div title="{{visualisation_item.results}}" class ="btn col-md-2 col-sm-4 col-xs-6 vis {% if visualisation_item.html %}{{visualisation_item.error_class}}{% endif %}">
     <div class="well col-sd-8 col-sd-offset-2 {% ifequal visualisation_item.id visualisation.id %} activeitem {% endifequal %}">
       <div class="row">
         <span class="workflow-title">{% if visualisation_item.visualisation_title %}{{ visualisation_item.visualisation_title|title }}{% else %} no title yet{% endif %}</span>
@@ -17,7 +17,19 @@
       <div class="row">
         <span class="workflow-date">{{ visualisation_item.created }}</span>
       </div>
-      <div class="vis-thumb ">{{ visualisation_item.html|add_responsive_tags|safe }}</div>
+      <div class="vis-thumb "> {% if visualisation_item.html %}
+            {{ visualisation_item.html|add_responsive_tags|safe }}
+            {% else %}
+            <a href="{% url "ic50_visualisation_view" pk=visualisation_item.id format="html" %}">test</a>
+              <div class="bubblingG">
+              <span id="bubblingG_1">
+              </span>
+              <span id="bubblingG_2">
+              </span>
+              <span id="bubblingG_3">
+              </span>
+              </div>
+        {% endif %}</div>
     </div>
   </div>
 

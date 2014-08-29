@@ -104,7 +104,7 @@ class IC50CurveFit(object):
 
 
 
-    def get_fig(self):
+    def get_fig(self, labels=True):
         xcurve = np.linspace(self.x.min(),self.x.max(),300)
         ycurve = [(self.results["bottom"] + (self.results["top"] - self.results["bottom"])/(1 + np.exp((self.results["logIC50"] - xdatum)*self.results["hill"]))) for xdatum in xcurve]
         smooted_best_fit_line = spline(xcurve,ycurve,xcurve)
@@ -119,9 +119,14 @@ class IC50CurveFit(object):
         plt.xlim(xmin,max(self.x)*1.1)
         plt.ylim(-10,110)
         plt.plot(xcurve,smooted_best_fit_line, 'b')
-        self.add_labels()
-        self.add_labels(inactivelabels=True)
         self.fig = f
+        plt.xlabel(u'Log (micromolar concentration)')
+        plt.ylabel(u'% Inhibition')
+        f.tight_layout()
+
+        if labels:
+            self.add_labels()
+            self.add_labels(inactivelabels=True)    
         self.svg = get_svg(f)
         plt.close(f)
 
@@ -144,8 +149,7 @@ class IC50CurveFit(object):
             plt.annotate(
             "%s" % label ,
             xy = (x, y),
-            gid="%d" % (x + y),
-            url = "/blarrrr",
+            gid="point_label_%s" % label,
             size=8,
             xytext=(stuff, -1*stuff),
             textcoords='offset points',

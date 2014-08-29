@@ -31,6 +31,10 @@ from cairosvg import svg2png
 from lxml import etree, objectify
 from StringIO import StringIO
 from datetime import datetime
+from ic50.curve_fit import IC50CurveFit
+
+from workflow.views import VisualisationView
+
 # Create your views here.
 class IC50WorkflowView(LoginRequiredMixin):
     '''Base class for all views in IC50, will eventually handle permissions'''
@@ -240,7 +244,7 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
             #TODO we should check first that there are graphs to generate? Or should the generate process replace existing graphs?
             #if visualisation_id == 0:
             #    self.workflow_revision.create_ic50_data()
-            self.workflow_revision.create_ic50_data()
+            #self.workflow_revision.create_ic50_data()
             visualisation_id = self.workflow_revision.visualisations.all()[0].id
 
             #for the ajax graph loading, we can't redirect and we (I) can't send back a rendered view 
@@ -304,6 +308,41 @@ class Ic50AjaxGraphs(IC50WorkflowDetailView):
         # else:
         #     context["visualisation_form"] = visualisation_form
         return context
+
+
+
+
+
+
+class Ic50VisualisationView(VisualisationView):
+    model = get_model("ic50", "IC50Visualisation")
+
+    def get_fig(self):
+        ic50_group = self.object.compound_id
+        configdata = self.object.data_mapping_revision.get_config_data()
+        group_df = configdata[configdata["global_compound_id"].isin([ic50_group,])]
+        group_df.sort(["percent_inhib","concentration"], inplace=True)
+        curve_fitter = IC50CurveFit(main_group_df=group_df)
+        title = "%s" % ic50_group
+        fit = curve_fitter.get_fit(constrained=True)
+        curve_fitter.get_fig(labels=False)
+        self.fig = curve_fitter.fig       
+        curve_fitter.get_fig(labels=True)
+        self.object.html = curve_fitter.svg
+        self.object.results = json.dumps(curve_fitter.results)
+        self.object.save()
+
+
+
+
+
+
+
+
+
+
+
+
 
 class Ic50ExportAllView(IC50WorkflowDetailView):
     #pull out what sort of visualisation to generate
