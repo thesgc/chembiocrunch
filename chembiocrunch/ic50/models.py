@@ -50,7 +50,7 @@ class IC50WorkflowManager(models.Manager):
 
 class IC50Workflow(TimeStampedModel):
     '''Object to hold the data files for a specific IC50 workflow'''
-    title = models.CharField(max_length=300, unique=True)
+    title = models.CharField(max_length=300,)
     uploaded_config_file = models.FileField(max_length=1024)
     uploaded_data_file = models.FileField(max_length=1024)
     uploaded_meta_file = models.FileField(max_length=1024)
@@ -166,6 +166,7 @@ class IC50Visualisation(TimeStampedModel):
 
 
 
+
     def get_upload_to(self, name):
         return "%s/plates/%d/compounds/%s/%s" % (settings.MEDIA_ROOT, 
             self.data_mapping_revision_id, 
@@ -175,6 +176,7 @@ class IC50Visualisation(TimeStampedModel):
     def get_curve_fitter(self):
 
         group_df = read_json(self.raw_data)
+
         group_df.sort(["percent_inhib","concentration"], inplace=True)
         curve_fitter = IC50CurveFit(main_group_df=group_df)
         curve_fitter.get_fit(constrained=True)
