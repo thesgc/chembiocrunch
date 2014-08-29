@@ -8,7 +8,7 @@
   	<!-- move the list items here, 4 at a time inside a div class="carousel-item" -->
   {% for visualisation_item in visualisation_list %}
       
-  <div title="{{visualisation_item.results}}" class ="btn col-md-2 col-sm-4 col-xs-6 vis {% if visualisation_item.html %}{{visualisation_item.error_class}}{% endif %}">
+  <div id="vis-{{visualisation_item.id}}" title="{{visualisation_item.results}}" class="btn col-md-2 col-sm-4 col-xs-6 vis {% if visualisation_item.html %}{{visualisation_item.error_class}}{% endif %}">
     <div class="well col-sd-8 col-sd-offset-2 {% ifequal visualisation_item.id visualisation.id %} activeitem {% endifequal %}">
       <div class="row">
         <span class="workflow-title">{% if visualisation_item.visualisation_title %}{{ visualisation_item.visualisation_title|title }}{% else %} no title yet{% endif %}</span>
@@ -20,7 +20,6 @@
       <div class="vis-thumb "> {% if visualisation_item.html %}
             {{ visualisation_item.html|add_responsive_tags|safe }}
             {% else %}
-            <a href="{% url "ic50_visualisation_view" pk=visualisation_item.id format="html" %}">test</a>
               <div class="bubblingG">
               <span id="bubblingG_1">
               </span>
@@ -32,6 +31,29 @@
         {% endif %}</div>
     </div>
   </div>
+  <!-- ajax request specific to this graph -->
+  <script>
+    function(){
+      $.ajax({
+        url : "{% url "ic50_visualisation_view" pk=visualisation_item.id format="html" %}",
+        type: "GET",
+        success:function(data, textStatus, jqXHR) 
+        {
+            //console.log(data)
+            //$('#graph-loading-area').addClass('hidden');
+            var graph_loading = $('#vis-{{visualisation_item.id}}').find('.vis-thumb');
+            graph_loading.html(data.html);
+            $('#vis-{{visualisation_item.id}}').addClass(data.error_class);
+
+
+        },
+        error: function(jqXHR, textStatus, errorThrown) 
+        {
+            console.log('ajax fail for graph {{visualisation_item.id}}');
+        }
+      });
+    }
+  </script>
 
   {% endfor %}
 

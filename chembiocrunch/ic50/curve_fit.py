@@ -104,7 +104,7 @@ class IC50CurveFit(object):
 
 
 
-    def get_fig(self, labels=True):
+    def get_fig(self, labels=True, figsize=(6,4), titles=True):
         xcurve = np.linspace(self.x.min(),self.x.max(),300)
         ycurve = [(self.results["bottom"] + (self.results["top"] - self.results["bottom"])/(1 + np.exp((self.results["logIC50"] - xdatum)*self.results["hill"]))) for xdatum in xcurve]
         smooted_best_fit_line = spline(xcurve,ycurve,xcurve)
@@ -113,15 +113,16 @@ class IC50CurveFit(object):
             xmin = 0
         else:
             xmin = xmin * 1.1
-        f = figure(figsize=(6,4))
+        f = figure(figsize=figsize)
         plt.plot(self.inactivex, self.inactivey, "D", color='0.55' )
         plt.plot(self.x, self.data, 'o', )
         plt.xlim(xmin,max(self.x)*1.1)
         plt.ylim(-10,110)
         plt.plot(xcurve,smooted_best_fit_line, 'b')
         self.fig = f
-        plt.xlabel(u'Log (micromolar concentration)')
-        plt.ylabel(u'% Inhibition')
+        if titles:
+            plt.xlabel(u'Log (micromolar concentration)')
+            plt.ylabel(u'% Inhibition')
         f.tight_layout()
 
         if labels:

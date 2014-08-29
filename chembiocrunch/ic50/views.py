@@ -31,8 +31,7 @@ from cairosvg import svg2png
 from lxml import etree, objectify
 from StringIO import StringIO
 from datetime import datetime
-from ic50.curve_fit import IC50CurveFit
-
+import os
 from workflow.views import VisualisationView
 
 # Create your views here.
@@ -318,18 +317,26 @@ class Ic50VisualisationView(VisualisationView):
     model = get_model("ic50", "IC50Visualisation")
 
     def get_fig(self):
-        ic50_group = self.object.compound_id
-        configdata = self.object.data_mapping_revision.get_config_data()
-        group_df = configdata[configdata["global_compound_id"].isin([ic50_group,])]
-        group_df.sort(["percent_inhib","concentration"], inplace=True)
-        curve_fitter = IC50CurveFit(main_group_df=group_df)
-        title = "%s" % ic50_group
-        fit = curve_fitter.get_fit(constrained=True)
+        curve_fitter = self.object.get_curve_fitter()
+
         curve_fitter.get_fig(labels=False)
-        self.fig = curve_fitter.fig       
+        self.fig = curve_fitter.fig
+        fc = matplotlib.backends.backend_agg.FigureCanvasAgg(self.fig)
+        path = (self.object.get_upload_to(""))
+        if not os.path.exists(path):
+            os.makedirs(path)
+        filename = path + "large.png"
+        fc.print_png(filename)
+        self.object.png = filename
         curve_fitter.get_fig(labels=True)
+
         self.object.html = curve_fitter.svg
         self.object.results = json.dumps({"values": curve_fitter.results})
+        curve_fitter.get_fig(labels=False, figsize=(2,1.33), titles=False)
+        fc = matplotlib.backends.backend_agg.FigureCanvasAgg(curve_fitter.fig)
+        filename = path + "small.png"
+        fc.print_png(filename )
+        self.object.png = filename
         self.object.save()
 
 
