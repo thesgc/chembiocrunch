@@ -336,7 +336,8 @@ class Ic50VisualisationView(VisualisationView):
         self.get_fig()
         if self.format=="html":
             return self.get_html()
-
+        if self.format=="png":
+            return self.get_png()
 
     def get_fig(self):
         curve_fitter = self.object.get_curve_fitter()
@@ -358,7 +359,11 @@ class Ic50VisualisationView(VisualisationView):
         return JsonResponse({ "html" : add_responsive_tags(self.object.html),
                             "results" : self.object.results ,
                             "error_class" : self.object.error_class})
-
+    def get_png(self):
+        fsock = open(self.object.png.path,"r")
+        response = HttpResponse(fsock, content_type='image/png')
+        response['Content-Disposition'] = 'attachment; filename="%s.png"'% self.object.compound_id
+        return response
 
 
 
