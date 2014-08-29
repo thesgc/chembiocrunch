@@ -10,15 +10,18 @@
       
   <div id="vis-{{visualisation_item.id}}" title="{{visualisation_item.results}}" class="btn col-md-2 col-sm-4 col-xs-6 vis {% if visualisation_item.html %}{{visualisation_item.error_class}}{% endif %}">
     <div class="well col-sd-8 col-sd-offset-2 {% ifequal visualisation_item.id visualisation.id %} activeitem {% endifequal %}">
-      <div class="row">
+
+      <div class="row-fluid">
         <span class="workflow-title">{% if visualisation_item.visualisation_title %}{{ visualisation_item.visualisation_title|title }}{% else %} no title yet{% endif %}</span>
         <span class="expand glyphicon glyphicon-resize-full"></span>
       </div>
       <div class="row">
         <span class="workflow-date">{{ visualisation_item.created }}</span>
       </div>
+
       <div class="vis-thumb "> {% if visualisation_item.html %}
             {{ visualisation_item.html|add_responsive_tags|safe }}
+
             {% else %}
             <a href='{% url "ic50_visualisation_view" pk=visualisation_item.id format="html" %}' target='_blank'>link</a>
               <div class="bubblingG">

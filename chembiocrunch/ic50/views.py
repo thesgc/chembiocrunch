@@ -33,6 +33,7 @@ from StringIO import StringIO
 from datetime import datetime
 import os
 from workflow.views import VisualisationView
+from workflow.templatetags.svg_responsive import add_responsive_tags
 
 # Create your views here.
 class IC50WorkflowView(LoginRequiredMixin):
@@ -329,7 +330,7 @@ class Ic50VisualisationView(VisualisationView):
         # fc.print_png(filename)
         # self.object.png = filename
         curve_fitter.get_fig(labels=True)
-
+        self.fig = curve_fitter.fig
         self.object.html = curve_fitter.svg
         self.object.results = json.dumps({"values": curve_fitter.results})
         # curve_fitter.get_fig(labels=False, figsize=(2,1.33), titles=False)
@@ -338,6 +339,11 @@ class Ic50VisualisationView(VisualisationView):
         # fc.print_png(filename )
         # self.object.png = filename
         self.object.save()
+
+    def get_html(self):
+        return JsonResponse({ "html" : add_responsive_tags(self.object.html),
+                            "results" : self.object.results ,
+                            "error_class" : self.object.error_class})
 
 
 

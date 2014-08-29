@@ -213,7 +213,8 @@ class IC50UploadForm(forms.ModelForm):
 
         for ic50_group in ic50_groups.groups:
             if ic50_group != "NONE":
-#              group_df = ic50_groups.get_group(ic50_group)
+                group_df = ic50_groups.get_group(ic50_group)
+                raw_data = group_df.to_json()
                 # results = {}
                 # results["inactivex"] = []
                 # results["labels"] = group_df["full_ref"].tolist()
@@ -223,6 +224,7 @@ class IC50UploadForm(forms.ModelForm):
                 vis = get_model("ic50", "IC50Visualisation")(data_mapping_revision=new_workflow_revision,
                             compound_id=ic50_group,
                             #results=json.dumps({"values": results}),
+                            raw_data=raw_data,
                             constrained=True,
                             visualisation_title=ic50_group,
                             html="")

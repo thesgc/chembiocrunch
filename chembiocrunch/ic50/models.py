@@ -26,7 +26,7 @@ from workflow.models import Visualisation, my_slug
 from multiprocessing import Lock, Process, Queue, current_process
 from datetime import datetime
 from ic50.curve_fit import IC50CurveFit
-
+from pandas.io.json import read_json
 # Create your models here.
 UPLOAD ="up"
 VALIDATE_COLUMNS ="vc"
@@ -157,6 +157,8 @@ class IC50Visualisation(TimeStampedModel):
     thumb = models.FileField(blank=True, null=True, default=None)
     constrained = models.NullBooleanField()
     objects = IC50VisualisationManager()
+    raw_data = models.TextField(default="{}")
+
 
 
     def get_upload_to(self, name):
@@ -166,12 +168,10 @@ class IC50Visualisation(TimeStampedModel):
             name)
 
     def get_curve_fitter(self):
-        ic50_group = self.compound_id
-        configdata = self.data_mapping_revision.get_config_data()
-        group_df = configdata[configdata["global_compound_id"].isin([ic50_group,])]
+
+        group_df = read_json(self.raw_data)
         group_df.sort(["percent_inhib","concentration"], inplace=True)
         curve_fitter = IC50CurveFit(main_group_df=group_df)
-        title = "%s" % ic50_group
         curve_fitter.get_fit(constrained=True)
         return curve_fitter
 

@@ -113,26 +113,28 @@ class IC50CurveFit(object):
             xmin = 0
         else:
             xmin = xmin * 1.1
-        f = figure(figsize=figsize)
-        plt.plot(self.inactivex, self.inactivey, "D", color='0.55' )
-        plt.plot(self.x, self.data, 'o', )
-        plt.xlim(xmin,max(self.x)*1.1)
-        plt.ylim(-10,110)
-        plt.plot(xcurve,smooted_best_fit_line, 'b')
+
+        f, ax = plt.subplots()
+        ax.plot(self.inactivex, self.inactivey, "D", color='0.55' )
+        ax.plot(self.x, self.data, 'o', )
+        ax.set_xlim(xmin,max(self.x)*1.1)
+        ax.set_ylim(-10,110)
+        ax.plot(xcurve,smooted_best_fit_line, 'b')
         self.fig = f
         if titles:
-            plt.xlabel(u'Log (micromolar concentration)')
-            plt.ylabel(u'% Inhibition')
+            ax.set_xlabel(u'Log (micromolar concentration)')
+            ax.set_ylabel(u'% Inhibition')
         else:
-            plt.gca().axes.get_xaxis().set_ticks([xmin,max(self.x)])
-            plt.gca().axes.get_yaxis().set_ticks([0,100])
+            ax.set_ticks([xmin,max(self.x)])
+            ax.set_ticks([0,100])
         f.tight_layout()
 
-        if labels:
-            self.add_labels()
-            self.add_labels(inactivelabels=True)    
+        # if labels:
+        #     self.add_labels()
+        #     self.add_labels(inactivelabels=True)    
         self.svg = get_svg(f)
         plt.close(f)
+
 
 
         
