@@ -236,10 +236,23 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
         form = HeatmapForm(request.POST, uploaded_data=self.workflow_revision.get_data(), steps_json=steps_json)
         if form.is_valid():
             steps_json = json.loads(self.workflow_revision.steps_json)
-            
-            for key, value in steps_json.iteritems():
-                steps_json[key] = form.cleaned_data[key]
+            steps_json.update(form.cleaned_data)
 
+            deactivated = [key for key, value in steps_json.iteritems() if not value]
+            config_columns = self.workflow_revision.get_config_data()
+            inactive = config_columns[config_columns["full_ref"].isin(deactivated)]
+            inactive["status"] = "inactive"
+            config_columns.update(inactive)
+            config_columns.to_hdf(self.workflow_revision.get_store_filename("configdata"),self.workflow_revision.get_store_key(), mode='w')
+            
+            vis_list = get_model("ic50", "ic50visualisation").objects.filter(data_mapping_revision__id=self.workflow_revision.id)
+            ic50_groups = config_columns.groupby("global_compound_id")
+            for vis in vis_list:
+                group_df = ic50_groups.get_group(vis.compound_id)
+                if len(group_df[group_df["status"].isin(["inactive",])]) != 0:
+                    vis.raw_data = group_df.to_json()
+                    vis.html = ""
+                    vis.save()
             self.workflow_revision.steps_json = json.dumps(steps_json)
             self.workflow_revision.save()
             #TODO we should check first that there are graphs to generate? Or should the generate process replace existing graphs?
@@ -378,7 +391,7 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
         #         slide = prs.slides.add_slide(blank_slide_layout)
 
         #         #parser = etree.XMLParser(recover=True, encoding='utf-8')
-        #         #xml = etree.parse(vis.html, parser)
+        #         #xml = etree.parse(vis.html, parser)raw_data
 
         #         #strxml = objectify.dump(xml)
 

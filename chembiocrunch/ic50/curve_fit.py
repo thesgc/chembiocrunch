@@ -52,17 +52,10 @@ class IC50CurveFit(object):
             self.fig = None
             if "inactive" in grouped_group.groups:
                 inactive = grouped_group.get_group('inactive')
-                self.inactivex = inactive["concentration"].tolist()
+                self.inactivex = [np.log10(conc) for conc in inactive["concentration"].tolist()]
                 self.inactivey = inactive["percent_inhib"].tolist()
                 self.inactivelabels = inactive["full_ref"].tolist()
         results = kwargs.get("results", None)
-        if results:
-            self.results = results
-            self.inactivex = self.results["inactivex"] 
-            self.labels = self.results["labels"]
-            self.inactivey = self.results["inactivey"]
-            self.xpoints = self.results["xpoints"]
-            self.ypoints = self.results["ypoints"]
         self.x = np.log10(np.array(self.xpoints))
         self.data = np.array(self.ypoints)
 
