@@ -25,6 +25,8 @@ from cbc_common.dataframe_handler import get_config_columns, zero_pad_object_id
 from workflow.models import Visualisation, my_slug
 from multiprocessing import Lock, Process, Queue, current_process
 from datetime import datetime
+from ic50.curve_fit import IC50CurveFit
+
 # Create your models here.
 UPLOAD ="up"
 VALIDATE_COLUMNS ="vc"
@@ -133,6 +135,10 @@ class IC50VisualisationManager(models.Manager):
         return self.filter(data_mapping_revision_id=workflow_revision.id).order_by("-created")
 
 
+
+
+
+
 class IC50Visualisation(TimeStampedModel):
     '''
     Holder object for an IC50 visualisation - there will be a set of these for each
@@ -147,8 +153,28 @@ class IC50Visualisation(TimeStampedModel):
     visualisation_title = models.CharField(max_length=200, null=True, blank=True) #Will be used for the sample name
     config_json = models.TextField(default="{}")
     html = models.TextField(default="")
+    png = models.FileField(blank=True,null=True, default=None )
+    thumb = models.FileField(blank=True, null=True, default=None)
     constrained = models.NullBooleanField()
     objects = IC50VisualisationManager()
+
+
+    def get_upload_to(self, name):
+        return "%s/plates/%d/compounds/%s/%s" % (settings.MEDIA_ROOT, 
+            self.data_mapping_revision_id, 
+            self.compound_id, 
+            name)
+
+    def get_curve_fitter(self):
+        ic50_group = self.compound_id
+        configdata = self.data_mapping_revision.get_config_data()
+        group_df = configdata[configdata["global_compound_id"].isin([ic50_group,])]
+        group_df.sort(["percent_inhib","concentration"], inplace=True)
+        curve_fitter = IC50CurveFit(main_group_df=group_df)
+        title = "%s" % ic50_group
+        curve_fitter.get_fit(constrained=True)
+        return curve_fitter
+
 
     def get_svg(self):
         imgdata = StringIO()
