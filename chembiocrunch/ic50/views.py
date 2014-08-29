@@ -329,7 +329,7 @@ class Ic50VisualisationView(VisualisationView):
         self.fig = curve_fitter.fig       
         curve_fitter.get_fig(labels=True)
         self.object.html = curve_fitter.svg
-        self.object.results = json.dumps(curve_fitter.results)
+        self.object.results = json.dumps({"values": curve_fitter.results})
         self.object.save()
 
 
