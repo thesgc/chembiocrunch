@@ -8,22 +8,18 @@
   	<!-- move the list items here, 4 at a time inside a div class="carousel-item" -->
   {% for visualisation_item in visualisation_list %}
       
-  <div id="vis-{{visualisation_item.id}}" title="{{visualisation_item.results}}" class="btn col-md-2 col-sm-4 col-xs-6 vis {% if visualisation_item.html %}{{visualisation_item.error_class}}{% endif %}">
+  <div id="vis-{{visualisation_item.id}}" title="{{visualisation_item.results}}" class="col-md-2 col-sm-4 col-xs-6 vis {% if visualisation_item.html %}{{visualisation_item.error_class}}{% endif %}">
     <div class="well col-sd-8 col-sd-offset-2 {% ifequal visualisation_item.id visualisation.id %} activeitem {% endifequal %}">
 
       <div class="row-fluid">
-        <span class="workflow-title">{% if visualisation_item.visualisation_title %}{{ visualisation_item.visualisation_title|title }}{% else %} no title yet{% endif %}</span>
-        <span class="expand glyphicon glyphicon-resize-full"></span>
-      </div>
-      <div class="row">
-        <span class="workflow-date">{{ visualisation_item.created }}</span>
+        <span class="expand glyphicon glyphicon-resize-full pull-right"></span>
       </div>
 
       <div class="vis-thumb "> {% if visualisation_item.html %}
             {{ visualisation_item.html|add_responsive_tags|safe }}
 
             {% else %}
-            <a href='{% url "ic50_visualisation_view" pk=visualisation_item.id format="html" %}' target='_blank'>link</a>
+            No graph? <a onclick="fetchSvgGraph("{% url "ic50_visualisation_view" pk=visualisation_item.id format="html" %}", {{visualisation_item.id}});" href="#" target='_blank'>Reload</a>
               <div class="bubblingG">
               <span id="bubblingG_1">
               </span>
@@ -36,6 +32,21 @@
                   fetchSvgGraph("{% url "ic50_visualisation_view" pk=visualisation_item.id format="html" %}", {{visualisation_item.id}});
                 </script>
         {% endif %}</div>
+        <div class="dropdown no-margin full-width">
+            <button class="btn full-width btn-default dropdown-toggle" type="button" id="dropdownMenu{{visualisation_item.id}}" data-toggle="dropdown">
+              <span class="workflow-title">{% if visualisation_item.visualisation_title %}{{ visualisation_item.visualisation_title|title }}{% else %} no title yet{% endif %}</span>
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu{{visualisation_item.id}}">
+
+              <li role="presentation"><a href="#" class="btn btn-default input-block-level" type="link" value="new" name="new" role="menuitem" tabindex="-1">Mark as poor fit</a>
+              </li>
+
+              <li role="presentation"><a href="{% url "ic50_visualisation_view" pk=visualisation_item.id format="png" %}" class="btn btn-default input-block-level" type="link" value="new" name="new" role="menuitem" tabindex="-1">Download Image (png)</a>
+              </li>
+
+            </ul>
+        </div>
     </div>
   </div>
   <!-- ajax request specific to this graph -->
