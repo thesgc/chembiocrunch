@@ -163,7 +163,7 @@ class IC50Visualisation(TimeStampedModel):
     constrained = models.NullBooleanField()
     objects = IC50VisualisationManager()
     raw_data = models.TextField(default="{}")
-
+    marked_as_bad_fit = models.BooleanField(default=False)
 
 
 

@@ -17,9 +17,13 @@
 
       <div class="vis-thumb "> {% if visualisation_item.html %}
             {{ visualisation_item.html|add_responsive_tags|safe }}
-
+            {% if visualisation_item.marked_as_bad_fit %}
+                <a class="btn btn-lg btn-success" onclick="fetchSvgGraph("{% url "ic50_visualisation_view" marked_as_bad_fit="True" pk=visualisation_item.id format="html" %}", {{visualisation_item.id}});" href="#" target='_blank'>Mark as good fit</a>
             {% else %}
-            No graph? <a onclick="fetchSvgGraph("{% url "ic50_visualisation_view" pk=visualisation_item.id format="html" %}", {{visualisation_item.id}});" href="#" target='_blank'>Reload</a>
+                <a class="btn btn-lg btn-danger" onclick="fetchSvgGraph("{% url "ic50_visualisation_view" marked_as_bad_fit="False" pk=visualisation_item.id format="html" %}", {{visualisation_item.id}});" href="#" target='_blank'>Mark as poor fit</a>
+            {% endif %}
+            {% else %}
+            No graph? <a class="btn btn-lg btn-primary" onclick="fetchSvgGraph("{% url "ic50_visualisation_view" pk=visualisation_item.id format="html" %}", {{visualisation_item.id}});" href="#" target='_blank'>Reload</a>
               <div class="bubblingG">
               <span id="bubblingG_1">
               </span>

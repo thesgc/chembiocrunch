@@ -100,6 +100,7 @@ class Ic50UpdateView(IC50WorkflowDetailView):
     template_name = "visualise/visualisation_builder.html"
     base_html = ""
 
+
     def get_context_data(self,  **kwargs):
         # visualisation_form = None
         # if "visualisation_form" in kwargs:
@@ -202,8 +203,8 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
         context["heatmap_form"] = HeatmapForm(uploaded_data=self.workflow_revision.get_data(), steps_json=steps_json)
         context['revisions'][0][1] = "done"
         context['revisions'][1][1] = "in-progress"
-
-         
+        context["count"] = self.object.workflow_ic50_revisions.all().count()
+ 
         next_qs = self.object.workflow_ic50_revisions.filter(pk__gt=self.workflow_revision.id).order_by("pk")
         if next_qs.count() > 0:
             hm_next = next_qs[0]
@@ -289,6 +290,7 @@ class Ic50AjaxGraphs(IC50WorkflowDetailView):
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
 
+
     def get_context_data(self,  **kwargs):
         # visualisation_form = None
         # if "visualisation_form" in kwargs:
@@ -338,6 +340,10 @@ class Ic50VisualisationView(VisualisationView):
             return self.get_html()
         if self.format=="png":
             return self.get_png()
+        if "marked_as_bad_fit" in kwargs:
+            self.object.marked_as_bad_fit = kwargs.pop("marked_as_bad_fit")
+            self.object.save()
+
 
     def get_fig(self):
         curve_fitter = self.object.get_curve_fitter()
@@ -364,9 +370,6 @@ class Ic50VisualisationView(VisualisationView):
         response = HttpResponse(fsock, content_type='image/png')
         response['Content-Disposition'] = 'attachment; filename="%s.png"'% self.object.compound_id
         return response
-
-
-
 
 
 

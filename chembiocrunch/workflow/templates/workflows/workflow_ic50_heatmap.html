@@ -1,7 +1,7 @@
 {% extends "workflow_base.html" %}
 {% load crispy_forms_tags %}
 {% block action_title %}
-To get started upload your data and config files
+Plate labelled as {{ workflow_revision.plate_name }}, {{ count }} plates in total
 {% endblock action_title %}
 {% block nav %}
 <div class="container" style="padding: 15px;">
