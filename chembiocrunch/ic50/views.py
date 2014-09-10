@@ -84,6 +84,7 @@ class IC50WorkflowCreateView(IC50WorkflowView, CreateView ):
         # Call the base implementation first to get a context
         context = super(IC50WorkflowCreateView, self).get_context_data(**kwargs)
         context['revisions'][0][1] = "in-progress"
+        #context['loggedinuser'] = self.request.user
         return context
  
 
@@ -446,7 +447,7 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
                 worksheet.write(index+1,2,res.get("logIC50"))
                 try:
                    worksheet.write(index+1,3,res.get("IC50"))
-               except TypeError:
+                except TypeError:
                     worksheet.write(index+1,3,"N/A")
                 worksheet.write(index+1,4,json.dumps(res))
                 worksheet.write(index+1,5,res.get("message"))
