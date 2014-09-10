@@ -69,8 +69,8 @@ class IC50CurveFit(object):
             vary = False
         params = Parameters()
         params.add('bottom',   value= 0, vary=vary)
-        params.add('top', value=100, vary=vary)
-        params.add('logIC50', value= 1)
+        params.add('top', value=1, vary=vary)
+        params.add('logIC50', value= 3)
         params.add('hill', value= 2)
         result = minimize(ic50min, params, args=( self.x, self.data))
         self.results = result.values
@@ -86,9 +86,9 @@ class IC50CurveFit(object):
         self.results["max"] = max(self.data)
         self.results["min"] = min(self.data)
         self.results["message"] = ""
-        if self.results["max"] < 80:
+        if self.results["max"] < 0.8:
             self.results["message"] = "Low total inhibition, values could be inaccurate"
-        if self.results["min"] > 20:
+        if self.results["min"] > 0.2:
             self.results["message"] = "No low inhibition range - values could be inaccurate"
         if self.results["errorpercent"] > 20 or self.results["errorpercent"] < -20:
             self.results["message"] = "Error, no good line fit found"
@@ -113,20 +113,20 @@ class IC50CurveFit(object):
         ax.plot(self.inactivex, self.inactivey, "D", color='0.55' )
         ax.plot(self.x, self.data, 'o', )
         ax.set_xlim(xmin,max(self.x)*1.1)
-        ax.set_ylim(-10,110)
+        ax.set_ylim(-0.1,1.1)
         ax.plot(xcurve,smooted_best_fit_line, 'b')
         #self.fig = f
         
-        ax.set_xlabel(u'Log (micromolar concentration)')
-        ax.set_ylabel(u'% Inhibition')
+        ax.set_xlabel(u'Log (nanomolar concentration)')
+        ax.set_ylabel(u'Normalised Inhibition')
 
         f.tight_layout()
-
-        # if labels:
-        #     self.add_labels()
-        #     self.add_labels(inactivelabels=True)    
-        self.svg = get_svg(f)
         f.savefig(pngfile , format="png", transparent=True)
+
+        self.add_labels(ax)
+            #self.add_labels(inactivelabels=True)    
+        self.svg = get_svg(f)
+        
 
 
         plt.close(f)
@@ -153,7 +153,7 @@ class IC50CurveFit(object):
 
         
 
-    def add_labels(self, inactivelabels=False):
+    def add_labels(self, ax, inactivelabels=False):
         '''Add labels to the graph for the points to show the well code, including
         grey labels if we are labelling inactive data'''
         el = Ellipse((2, -1), 0.5, 0.5)
@@ -166,7 +166,7 @@ class IC50CurveFit(object):
             fc = "0.55"
         for  label, x, y in labeldata:
 
-            plt.annotate(
+            ax.annotate(
             "%s" % label ,
             xy = (x, y),
             gid="point_label_%s" % label,

@@ -10,7 +10,7 @@ Tab, TabHolder, AccordionGroup, Accordion, Alert, InlineCheckboxes,
 FieldWithButtons, StrictButton, InlineField
 )
 from django.forms.formsets import formset_factory, BaseFormSet
-from cbc_common.dataframe_handler import change_column_type, get_data_frame, get_excel_data_frame, get_plate_wells_with_sample_ids
+from cbc_common.dataframe_handler import cell_range, change_column_type, get_data_frame, get_excel_data_frame, get_plate_wells_with_sample_ids
 
 #from easy_select2.widgets import Select2TextInput
 from django_select2.fields import Select2ChoiceField
@@ -53,9 +53,12 @@ class IC50UploadForm(forms.ModelForm):
     form_type = None
     uploaded_config = None
     uploaded_data = None
-    uploaded_meta = None
+    uploaded_meta = pd.DataFrame()
     plates = []
     included_plate_wells = None
+    reference_compound_wells = None
+    control_wells = "A12:P12,A24:P24"
+    exclude = ["reference_compound_wells", "control_wells"]
 
 
     class Meta:
@@ -94,6 +97,7 @@ class IC50UploadForm(forms.ModelForm):
         if 'text/' in mime:
             try:
                 self.uploaded_config = get_data_frame(uploaded_config_file.temporary_file_path(), skiprows=8, header=0)
+
             except AttributeError:
                 raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
             except Exception:
@@ -119,7 +123,7 @@ class IC50UploadForm(forms.ModelForm):
             mime = magic.from_buffer(uploaded_meta_file.read(), mime=True)
             if 'text/' in mime:
                 try:
-                    self.uploaded_meta = get_data_frame(uploaded_meta_file.temporary_file_path(), skiprows=8, header=0)
+                    self.uploaded_meta = get_data_frame(uploaded_meta_file.temporary_file_path())
                 except AttributeError:
                     raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
                 except Exception:
@@ -127,20 +131,27 @@ class IC50UploadForm(forms.ModelForm):
             elif "application/" in mime:
                 try:
                     try:
-                        self.uploaded_meta = get_excel_data_frame(uploaded_meta_file.temporary_file_path(), skiprows=8, header=0)
+                        self.uploaded_meta = get_excel_data_frame(uploaded_meta_file.temporary_file_path())
                     except Exception:
                         raise forms.ValidationError("Error processing config Excel File")
                 except AttributeError:
                     raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
             else:
                 raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
+            if not self.uploaded_meta.empty:
+                controls = self.uploaded_meta[self.uploaded_meta[1].str.lower().isin(["control wells"]) & self.uploaded_meta[2].notnull()]
+                if not controls.empty:
+                    self.control_wells = controls[2].tolist()[0]
+                refs = self.uploaded_meta[self.uploaded_meta[1].str.lower().isin(["reference compound wells"]) & self.uploaded_meta[2].notnull()]
+                if not refs.empty:
+                    self.reference_compound_wells = refs[2].tolist()[0]
             return self.cleaned_data['uploaded_meta_file']
         return None
 
 
-    
     def clean(self):
         try:
+            print "testing"
             self.uploaded_config["fullname"] = self.uploaded_config["Destination Plate Name"] + ": " + self.uploaded_config["Destination Well"]
             self.uploaded_config["full_ref"] = self.uploaded_config["Destination Well"]
             self.uploaded_config["plate_ref"] = get_plate_ref(self.uploaded_config["Destination Plate Name"])
@@ -170,14 +181,13 @@ class IC50UploadForm(forms.ModelForm):
                         inc_wells[str(item)] = None
                 self.plates.append({"plate_name": name, "data" : grouped, "config" : config, "steps_json": inc_wells} )
 
-
-
         except Exception:
             raise forms.ValidationError("Possible invalid file formats")
 
 
 
     def save(self, force_insert=False, force_update=False, commit=True):
+        print "my save"
         model = super(IC50UploadForm, self).save()
         # do custom stuff
         for plate in self.plates:
@@ -191,36 +201,34 @@ class IC50UploadForm(forms.ModelForm):
     def save_plate(self,model, plate):  
         new_workflow_revision = get_model("ic50", "IC50WorkflowRevision").objects.create(workflow=model, 
                                                                                         steps_json=json.dumps(plate["steps_json"]),
-                                                                                        plate_name=plate["plate_name"])
+                                                                                        plate_name=str(plate["plate_name"]),
+                                                                                        )
         config = plate["config"]
         data = plate["data"]
         config = config[config['Sample ID'].notnull()]
-        #sample_codes = config.groupby(["fullname"])
-        controls_records = data[data["well_number"].isin(["12","24"])]
+
+        controls_records = data[data["full_ref"].isin(cell_range(self.control_wells))]
+
         maximum = controls_records["figure"].mean()
         config_columns = config.merge(data)
         config_columns["status"] = "active"
         config_columns[["figure"]] = config_columns[["figure"]].astype(float)
         minimum = 0 # Add min controls here
-        config_columns["concentration"] = config_columns["Destination Concentration"] * float(1000000)
+        # if self.reference_compound_wells:
+        #     print "problem"
+        #     reference_compound_records = data[data["full_ref"].isin(cell_range(self.reference_compound_wells))]
+        #     minimum = reference_compound_records["figure"].mean()
+
+        config_columns["concentration"] = config_columns["Destination Concentration"] * float(1000000000)
         config_columns["global_compound_id"] = config_columns["Sample ID"]
         config_columns["plate_type"]  = config_columns["Destination Plate Type"]
-        config_columns["percent_inhib"] = 100*(maximum - config_columns["figure"] )/(maximum - minimum)
+        config_columns["percent_inhib"] =  (maximum - config_columns["figure"] )/(maximum - minimum)
 
         ic50_groups = config_columns.groupby("global_compound_id")
-
-
-
         for ic50_group in ic50_groups.groups:
             if ic50_group != "NONE":
                 group_df = ic50_groups.get_group(ic50_group)
                 raw_data = group_df.to_json()
-                # results = {}
-                # results["inactivex"] = []
-                # results["labels"] = group_df["full_ref"].tolist()
-                # results["inactivey"] = []
-                # results["xpoints"] = group_df["concentration"].tolist()
-                # results["ypoints"] = group_df["figure"].tolist()
                 vis = get_model("ic50", "IC50Visualisation")(data_mapping_revision=new_workflow_revision,
                             compound_id=ic50_group,
                             #results=json.dumps({"values": results}),
@@ -229,7 +237,6 @@ class IC50UploadForm(forms.ModelForm):
                             visualisation_title=ic50_group,
                             html="")
                 vis.save()
-
         plate["data"].to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w')
         config_columns.to_hdf(new_workflow_revision.get_store_filename("configdata"),new_workflow_revision.get_store_key(), mode='w')
 

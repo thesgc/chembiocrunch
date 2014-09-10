@@ -222,7 +222,8 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
         context['next'] =  hm_next
         context['prev'] =  hm_prev
         context['current'] = self.workflow_revision_id
-        
+        context["workflow_revision"] = self.workflow_revision 
+        context["vis_count"] = self.workflow_revision.visualisations.all().exclude(html__exact="").count()
         
         context.update(kwargs)
         return context
@@ -336,13 +337,20 @@ class Ic50VisualisationView(VisualisationView):
         self.object = self.get_object()
         self.format = kwargs.pop("format")
         self.get_fig()
+        if "marked_as_bad_fit" in kwargs:
+            if int(kwargs.pop("marked_as_bad_fit")) >0:
+                self.object.marked_as_bad_fit = True
+            else:
+                self.object.marked_as_bad_fit = False
+            self.object.save()
+            print self.object.marked_as_bad_fit
+        self.object = self.get_object()
         if self.format=="html":
             return self.get_html()
         if self.format=="png":
             return self.get_png()
-        if "marked_as_bad_fit" in kwargs:
-            self.object.marked_as_bad_fit = kwargs.pop("marked_as_bad_fit")
-            self.object.save()
+
+
 
 
     def get_fig(self):
@@ -362,9 +370,11 @@ class Ic50VisualisationView(VisualisationView):
         self.object.save()
 
     def get_html(self):
+        err = self.object.error_class()
+        print err
         return JsonResponse({ "html" : add_responsive_tags(self.object.html),
                             "results" : self.object.results ,
-                            "error_class" : self.object.error_class})
+                            "error_class" : err})
     def get_png(self):
         fsock = open(self.object.png.path,"r")
         response = HttpResponse(fsock, content_type='image/png')
@@ -422,7 +432,7 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
             path +="/" +title
             workbook = xlsxwriter.Workbook(path)
             worksheet = workbook.add_worksheet()
-            column_names = ["plate", "coupound_id", "logIC50","ic50", "results", "system_comments","user_rejected", "graph"]
+            column_names = ["plate", "coupound_id", "logIC50","ic50 (nM)", "results", "system_comments","user_marked_as_bad_fit", "graph"]
             for i, name in enumerate(column_names):
                 worksheet.write(0,i,name)
                 if name=="graph":
@@ -437,7 +447,10 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
                 worksheet.write(index+1,3,res.get("IC50"))
                 worksheet.write(index+1,4,json.dumps(res))
                 worksheet.write(index+1,5,res.get("message"))
-                #worksheet.write(index,6,vis.rejected)
+                if vis.marked_as_bad_fit:
+                    worksheet.write(index+1,6,"yes")
+                else:
+                    worksheet.write(index+1,6,"no")
                 if vis.thumb:
                     worksheet.insert_image(index+1,7,vis.thumb.path)
             workbook.close()

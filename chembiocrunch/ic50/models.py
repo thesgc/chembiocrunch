@@ -56,6 +56,7 @@ class IC50Workflow(TimeStampedModel):
     uploaded_meta_file = models.FileField(max_length=1024)
     created_by = models.ForeignKey('auth.User')
     workflow_type = "ic50workflow"
+
     objects = IC50WorkflowManager()
 
     #def get_latest_data_revision(self):
@@ -191,7 +192,6 @@ class IC50Visualisation(TimeStampedModel):
         return imgdata.buf
 
 
-    @property
     def error_class(self):
         #get the results
         #find the error message part
@@ -199,7 +199,9 @@ class IC50Visualisation(TimeStampedModel):
         results = json.loads(self.results)
         error_msg = results['values']['message']
         print error_msg
-        if error_msg == "Low total inhibition, values could be inaccurate":
+        if self.marked_as_bad_fit:
+            return 'ic50-error-4'
+        elif error_msg == "Low total inhibition, values could be inaccurate":
             return 'ic50-error-1'
         elif error_msg == "No low inhibition range - values could be inaccurate":
             return 'ic50-error-2'

@@ -26,7 +26,7 @@ urlpatterns = [
     url(r'^(?P<pk>[0-9]+)/(?P<workflow_revision_id>[0-9]+)/ajax-graphs/$', views.Ic50AjaxGraphs.as_view(), name='ic50_ajax_graphs'),
     url(r'^(?P<pk>[0-9]+)/ic50-export/(?P<format>[a-zA-Z0-9]+)$', views.Ic50ExportAllView.as_view(), name='ic50_export_graphs'),
     url(r'^(?P<pk>[0-9]+)/ic50visualisation_view/(?P<format>[a-zA-Z0-9]+)/$', views.Ic50VisualisationView.as_view(), name='ic50_visualisation_view'),
-    url(r'^(?P<pk>[0-9]+)/ic50visualisation_view/(?P<format>[a-zA-Z0-9]+)/(?P<marked_as_bad_fit>[a-zA-Z0-9]+)$', views.Ic50VisualisationView.as_view(), name='ic50_visualisation_view'),
+    url(r'^(?P<pk>[0-9]+)/ic50visualisation_view/(?P<format>[a-zA-Z0-9]+)/(?P<marked_as_bad_fit>[0-1]+)$', views.Ic50VisualisationView.as_view(), name='ic50_visualisation_update_view'),
 
  ]
 

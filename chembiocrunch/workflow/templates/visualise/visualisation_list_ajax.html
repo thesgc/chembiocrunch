@@ -17,13 +17,9 @@
 
       <div class="vis-thumb "> {% if visualisation_item.html %}
             {{ visualisation_item.html|add_responsive_tags|safe }}
-            {% if visualisation_item.marked_as_bad_fit %}
-                <a class="btn btn-lg btn-success" onclick="fetchSvgGraph("{% url "ic50_visualisation_view" marked_as_bad_fit="True" pk=visualisation_item.id format="html" %}", {{visualisation_item.id}});" href="#" target='_blank'>Mark as good fit</a>
+
             {% else %}
-                <a class="btn btn-lg btn-danger" onclick="fetchSvgGraph("{% url "ic50_visualisation_view" marked_as_bad_fit="False" pk=visualisation_item.id format="html" %}", {{visualisation_item.id}});" href="#" target='_blank'>Mark as poor fit</a>
-            {% endif %}
-            {% else %}
-            No graph? <a class="btn btn-lg btn-primary" onclick="fetchSvgGraph("{% url "ic50_visualisation_view" pk=visualisation_item.id format="html" %}", {{visualisation_item.id}});" href="#" target='_blank'>Reload</a>
+            No graph? <a onclick="fetchSvgGraph("{% url "ic50_visualisation_view" pk=visualisation_item.id format="html" %}", {{visualisation_item.id}});" >Reload</a>
               <div class="bubblingG">
               <span id="bubblingG_1">
               </span>
@@ -43,11 +39,39 @@
             </button>
             <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu{{visualisation_item.id}}">
 
-              <li role="presentation"><a href="#" class="btn btn-default input-block-level" type="link" value="new" name="new" role="menuitem" tabindex="-1">Mark as poor fit</a>
-              </li>
-
               <li role="presentation"><a href="{% url "ic50_visualisation_view" pk=visualisation_item.id format="png" %}" class="btn btn-default input-block-level" type="link" value="new" name="new" role="menuitem" tabindex="-1">Download Image (png)</a>
               </li>
+                <li role="presentation">
+                {% if visualisation_item.marked_as_bad_fit %}
+                 <input type="checkbox" checked id="tester{{visualisation_item.id}}">Mark as poor fit</input>
+
+         {% else %}
+          <div class="checkbox">
+            <label>
+                          <input type="checkbox"  id="tester{{visualisation_item.id}}">Mark as poor fit</input>
+                        </label>
+                        </div>
+            {% endif %}
+<script>
+$('#tester{{visualisation_item.id}}').on('change', function (e) {
+  if(this.checked){
+    $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-3");
+            $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-4");
+            $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-2");
+            $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-1");
+fetchSvgGraph('{% url 'ic50_visualisation_update_view' marked_as_bad_fit=1 pk=visualisation_item.id format='html' %}',{{visualisation_item.id}});
+}else{
+
+  $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-3");
+            $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-4");
+            $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-2");
+            $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-1");
+  fetchSvgGraph('{% url 'ic50_visualisation_update_view' marked_as_bad_fit=0 pk=visualisation_item.id format='html' %}',{{visualisation_item.id}});
+}
+});
+</script>
+
+    </li>
 
             </ul>
         </div>
@@ -57,7 +81,6 @@
 
 
   {% endfor %}
-
 </div>
 
 
