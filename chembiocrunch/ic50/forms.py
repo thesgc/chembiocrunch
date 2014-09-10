@@ -214,10 +214,10 @@ class IC50UploadForm(forms.ModelForm):
         config_columns["status"] = "active"
         config_columns[["figure"]] = config_columns[["figure"]].astype(float)
         minimum = 0 # Add min controls here
-        # if self.reference_compound_wells:
-        #     print "problem"
-        #     reference_compound_records = data[data["full_ref"].isin(cell_range(self.reference_compound_wells))]
-        #     minimum = reference_compound_records["figure"].mean()
+        if self.reference_compound_wells:
+            print "problem"
+            reference_compound_records = data[data["full_ref"].isin(cell_range(self.reference_compound_wells))]
+            minimum = reference_compound_records["figure"].mean()
 
         config_columns["concentration"] = config_columns["Destination Concentration"] * float(1000000000)
         config_columns["global_compound_id"] = config_columns["Sample ID"]
