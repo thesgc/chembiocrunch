@@ -444,7 +444,10 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
                 worksheet.write(index+1,0,vis.data_mapping_revision.plate_name)
                 worksheet.write(index+1,1,vis.compound_id)
                 worksheet.write(index+1,2,res.get("logIC50"))
-                worksheet.write(index+1,3,res.get("IC50"))
+                try:
+                   worksheet.write(index+1,3,res.get("IC50"))
+               except TypeError:
+                    worksheet.write(index+1,3,"N/A")
                 worksheet.write(index+1,4,json.dumps(res))
                 worksheet.write(index+1,5,res.get("message"))
                 if vis.marked_as_bad_fit:
