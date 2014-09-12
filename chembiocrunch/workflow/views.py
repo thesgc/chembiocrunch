@@ -105,7 +105,7 @@ class WorkflowListView(WorkflowView, ListView):
         '''Make sure that all of the views cannot see the object unless they own it!'''
         #need to also pass ic50 models
 
-        return chain(self.model.objects.get_user_records(self.request.user), self.ic50_model.objects.get_user_records(self.request.user))
+        return chain(self.model.objects.get_user_records(self.request.user).filter(archived=False), self.ic50_model.objects.get_user_records(self.request.user).filter(archived=False))
 
 
     def get_context_data(self, **kwargs):
@@ -477,6 +477,20 @@ class VisualisationView(DetailView,):
 #             #from here, send this image to python-pptx
 #             #img_path = 'monty-truth.png'
 
+
+class VisualisationAjaxArchiveView(WorkflowDetailView):
+
+    def get(self, request, pk, *args, **kwargs):
+        try:
+            self.object = get_model("workflow", "Workflow").objects.filter(pk=pk)[0]
+        except:
+            #self.object = self.ic50_model.get(pk=pk)
+            self.object = get_model("ic50", "IC50Workflow").objects.filter(pk=pk)[0]
+
+        self.object.archived = True
+        self.object.save()
+        response = HttpResponse("yes")
+        return response
 
 
 

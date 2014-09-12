@@ -1,4 +1,5 @@
 {% extends "workflow_base.html" %}
+{% load staticfiles %}
 {% block breadcrumbs %}
 <div class="navbar ">
       <div class="container">
@@ -6,6 +7,12 @@
         </div>
     </div>
 </div>{% endblock breadcrumbs %}
+
+{% block extra_css %}
+
+<link href="{% static 'css/jquery-ui.min.css' %}" rel="stylesheet">
+
+{% endblock extra_css %}
 
 {% block help_text %}
 
@@ -36,11 +43,67 @@
     {% for workflow in object_list %}
 
         
-        <div class ="col-lg-2 col-md-2 col-sd-4 col-xs-6"><div class="well {{ workflow.workflow_type }}"><a class="close">×</a><a href="{{ workflow.id }}/workflow_data_mappings_edit"><span class="workflow-title">{{ workflow.title|title }}</span></a><br/><br/><span class="workflow-date">{{ workflow.created}}</span></div></div> <!-- end workflow holder -->
+        <div class ="col-lg-2 col-md-2 col-sd-4 col-xs-6" id="{{ workflow.id }}"><div class="well {{ workflow.workflow_type }}"><a class="close" data-workflow-id="{{ workflow.id }}">×</a><a href="{{ workflow.id }}/workflow_data_mappings_edit"><span class="workflow-title">{{ workflow.title|title }}</span></a><br/><br/><span class="workflow-date">{{ workflow.created}}</span></div></div> <!-- end workflow holder -->
     {% endfor %}
     {% endif %}
-
     
+    <div id="dialog-close" title="Archive this workflow?" style="display:none">
+        <p>Are you sure? This workflow will not be deleted but will be hidden from view</p>
+    </div>
+
 {% endblock content %}
 
+{% block extra_js %}
+<script src="{% static 'js/jquery-ui.min.js' %}" ></script>
 
+
+<script>
+
+$(document).ready(function() {
+    $('.close').each(function(){
+
+        $(this).click(function(e){
+          //get parent table cell
+          //add or remove unchecked class
+          markAsArchived($(this).attr("data-workflow-id"));
+        });
+
+    });
+});
+
+function markAsArchived(w_id) {
+    $( "#dialog-close" ).dialog({
+      resizable: false,
+      modal: true,
+      buttons: {
+        "Archive": function() {
+          //ajax function
+          $.ajax(
+            {
+                url : "/my_workflows/" + w_id + "/archive_workflow/",
+                type: "GET",
+                success:function(data, textStatus, jqXHR) 
+                {
+                    console.log(data);
+                    $( "#dialog-close" ).dialog('close');
+                    $('#' + w_id).hide();
+
+                },
+                error: function(jqXHR, textStatus, errorThrown) 
+                {
+                    console.log('couldnt archive');
+                    console.log(errorThrown);
+                }
+            });
+        },
+        Cancel: function() {
+          $( this ).dialog( "close" );
+        }
+      }
+    });
+}
+
+
+</script>
+
+{% endblock extra_js %}
