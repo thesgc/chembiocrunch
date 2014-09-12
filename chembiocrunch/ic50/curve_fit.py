@@ -134,7 +134,7 @@ class IC50CurveFit(object):
         ax.plot(self.inactivex, self.inactivey, "D", color='0.55' )
         ax.plot(self.x, self.data, 'o', )
         ax.set_xlim(xmin,max(self.x)*1.1)
-        ax.set_ylim(-10,110)
+        ax.set_ylim(-0.1,1.1)
         ax.plot(xcurve,smooted_best_fit_line, 'b')
 
         ax.set_xticks([])

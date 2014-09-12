@@ -44,7 +44,7 @@ class IC50WorkflowManager(models.Manager):
         return self.filter(created_by__id=user.id)
 
     def get_latest_workflow_revision(self, workflow_id):
-        return get_model("ic50", "IC50WorkflowRevision").objects.filter(workflow_id=workflow_id).order_by("created")[0]
+        return get_model("ic50", "IC50WorkflowRevision").objects.filter(workflow_id=workflow_id, archived=False).order_by("created")[0]
 
 
 
@@ -54,6 +54,7 @@ class IC50Workflow(TimeStampedModel):
     uploaded_config_file = models.FileField(max_length=1024)
     uploaded_data_file = models.FileField(max_length=1024)
     uploaded_meta_file = models.FileField(max_length=1024)
+    archived = models.BooleanField(default=False)
     created_by = models.ForeignKey('auth.User')
     workflow_type = "ic50workflow"
 
