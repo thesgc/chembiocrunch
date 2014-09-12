@@ -127,24 +127,26 @@ class IC50UploadForm(forms.ModelForm):
                 except AttributeError:
                     raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
                 except Exception:
-                        raise forms.ValidationError("Error processing config CSV File")
+                        raise forms.ValidationError("Error processing meta CSV File")
             elif "application/" in mime:
                 try:
                     try:
                         self.uploaded_meta = get_excel_data_frame(uploaded_meta_file.temporary_file_path())
                     except Exception:
-                        raise forms.ValidationError("Error processing config Excel File")
+                        raise forms.ValidationError("Error processing meta Excel File")
                 except AttributeError:
                     raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
             else:
                 raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
             if not self.uploaded_meta.empty:
-                controls = self.uploaded_meta[self.uploaded_meta[1].str.lower().isin(["control wells"]) & self.uploaded_meta[2].notnull()]
+                print self.uploaded_meta[5]
+                controls = self.uploaded_meta[self.uploaded_meta[4].str.lower().isin(["control wells"]) & self.uploaded_meta[5].notnull()]
                 if not controls.empty:
-                    self.control_wells = controls[2].tolist()[0]
-                refs = self.uploaded_meta[self.uploaded_meta[1].str.lower().isin(["reference compound wells"]) & self.uploaded_meta[2].notnull()]
+                    self.control_wells = controls[5].tolist()[0]
+                    print "foound" + self.control_wells
+                refs = self.uploaded_meta[self.uploaded_meta[4].str.lower().isin(["reference compound wells"]) & self.uploaded_meta[5].notnull()]
                 if not refs.empty:
-                    self.reference_compound_wells = refs[2].tolist()[0]
+                    self.reference_compound_wells = refs[5].tolist()[0]
             return self.cleaned_data['uploaded_meta_file']
         return None
 
