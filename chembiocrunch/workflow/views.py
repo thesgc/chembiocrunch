@@ -40,13 +40,15 @@ class Login(FormView):
     template_name = "login.html"
     logout = None
     def get(self, request, *args, **kwargs):
+        
         # logout = None
         # if logout in kwargs:
         #     logout = kwargs.pop("logout")
         #     print logout
         redirect_to = settings.LOGIN_REDIRECT_URL
         '''Borrowed from django base detail view'''
-        if self.request.user.is_authenticated():
+        username = request.META.get('REMOTE_USER')
+        if  username:
             return HttpResponseRedirect(redirect_to)
         context = self.get_context_data(form=self.get_form(self.get_form_class()))
         context["logout"] = self.logout
