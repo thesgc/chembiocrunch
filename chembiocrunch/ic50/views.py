@@ -84,8 +84,13 @@ class IC50WorkflowCreateView(IC50WorkflowView, CreateView ):
         # Call the base implementation first to get a context
         context = super(IC50WorkflowCreateView, self).get_context_data(**kwargs)
         context['revisions'][0][1] = "in-progress"
-        #context['loggedinuser'] = self.request.user
+        context['loggedinuser'] = self.request.user
         return context
+
+    def get_form_kwargs(self):
+        kwargs = super(IC50WorkflowCreateView, self).get_form_kwargs()
+        kwargs['request'] = self.request
+        return kwargs
  
 
 
@@ -189,7 +194,11 @@ class WorkflowHeatmapView(IC50WorkflowDetailView):
         '''Borrowed from django base detail view'''
         self.object = self.get_object()
         self.workflow_revision_id = kwargs.pop("workflow_revision_id")
-        self.workflow_revision = self.object.workflow_ic50_revisions.get(pk=self.workflow_revision_id)
+        if self.workflow_revision_id == str(0):
+            self.workflow_revision = self.object.get_latest_workflow_revision()
+            return HttpResponseRedirect(reverse("workflow_ic50_heatmap", kwargs={"pk":self.object.id, "workflow_revision_id":self.workflow_revision.id}))
+        else:
+            self.workflow_revision = self.object.workflow_ic50_revisions.get(pk=self.workflow_revision_id)
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
 

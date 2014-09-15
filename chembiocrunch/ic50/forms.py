@@ -256,7 +256,7 @@ class IC50UploadForm(forms.ModelForm):
                 'uploaded_config_file', 'uploaded_meta_file', 'save',
          )
         )
-        self.request = kwargs.pop('request', None)
+        self.request = kwargs.pop('request')
         return super(IC50UploadForm, self).__init__(*args, **kwargs)
 
 

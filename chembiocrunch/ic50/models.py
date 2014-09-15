@@ -106,7 +106,6 @@ class IC50WorkflowRevision(TimeStampedModel):
 
 
 
-
     def get_store(self):
         return get_store('workflows.%s' % (zero_pad_object_id(self.id),))
 
