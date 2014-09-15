@@ -47,9 +47,9 @@ class Login(FormView):
         #     print logout
         redirect_to = settings.LOGIN_REDIRECT_URL
         '''Borrowed from django base detail view'''
-        username = request.META.get('REMOTE_USER')
-        if  username:
-            return HttpResponseRedirect(reverse("webauth:login"))
+        username = request.META.get('REMOTE_USER', None)
+        # if  username:
+        #     return HttpResponseRedirect(reverse("webauth:login"))
         context = self.get_context_data(form=self.get_form(self.get_form_class()))
         context["logout"] = self.logout
         return self.render_to_response(context)
