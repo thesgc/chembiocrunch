@@ -54,7 +54,7 @@ class WorkflowManager(models.Manager):
         return self.filter(created_by__id=user.id)
 
     def get_latest_workflow_revision(self, workflow_id):
-        return get_model("workflow", "WorkflowDataMappingRevision").objects.filter(workflow_id=workflow_id, archived=False).order_by("-created")[0]
+        return get_model("workflow", "WorkflowDataMappingRevision").objects.filter(workflow_id=workflow_id).order_by("-created")[0]
 
 def my_slug(str):
     return slugify(str).replace("-","_")

@@ -40,14 +40,16 @@ class Login(FormView):
     template_name = "login.html"
     logout = None
     def get(self, request, *args, **kwargs):
+        
         # logout = None
         # if logout in kwargs:
         #     logout = kwargs.pop("logout")
         #     print logout
         redirect_to = settings.LOGIN_REDIRECT_URL
         '''Borrowed from django base detail view'''
-        if self.request.user.is_authenticated():
-            return HttpResponseRedirect(redirect_to)
+        username = request.META.get('REMOTE_USER', None)
+        if  username:
+            return HttpResponseRedirect(reverse("webauth:login"))
         context = self.get_context_data(form=self.get_form(self.get_form_class()))
         context["logout"] = self.logout
         return self.render_to_response(context)
@@ -480,10 +482,10 @@ class VisualisationView(DetailView,):
 
 class VisualisationAjaxArchiveView(WorkflowDetailView):
 
-    def get(self, request, pk, *args, **kwargs):
-        try:
+    def get(self, request, pk, model, *args, **kwargs):
+        if model == 'workflow':
             self.object = get_model("workflow", "Workflow").objects.filter(pk=pk)[0]
-        except:
+        elif model == 'ic50workflow':
             #self.object = self.ic50_model.get(pk=pk)
             self.object = get_model("ic50", "IC50Workflow").objects.filter(pk=pk)[0]
 
