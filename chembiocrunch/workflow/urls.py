@@ -15,6 +15,6 @@ urlpatterns = [
     url(r'^(?P<pk>[0-9]+)/visualisation_builder/(?P<workflow_revision_id>[0-9]+)/$', views.VisualisationBuilderView.as_view(), name='visualisation_builder'),
     url(r'^(?P<pk>[0-9]+)/visualisation_builder/(?P<workflow_revision_id>[0-9]+)/(?P<visualisation_id>[0-9]+)/$', views.VisualisationUpdateView.as_view(), name='visualisation_update_view'),
 
-    url(r'^(?P<pk>[0-9]+)/archive_workflow/', views.VisualisationAjaxArchiveView.as_view(), name='workflow_ajax_archive'),
+    url(r'^(?P<pk>[0-9]+)/(?P<model>workflow|ic50workflow)/archive_workflow/', views.VisualisationAjaxArchiveView.as_view(), name='workflow_ajax_archive'),
 
 ]

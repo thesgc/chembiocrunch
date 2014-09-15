@@ -482,10 +482,10 @@ class VisualisationView(DetailView,):
 
 class VisualisationAjaxArchiveView(WorkflowDetailView):
 
-    def get(self, request, pk, *args, **kwargs):
-        try:
+    def get(self, request, pk, model, *args, **kwargs):
+        if model == 'workflow':
             self.object = get_model("workflow", "Workflow").objects.filter(pk=pk)[0]
-        except:
+        elif model == 'ic50workflow':
             #self.object = self.ic50_model.get(pk=pk)
             self.object = get_model("ic50", "IC50Workflow").objects.filter(pk=pk)[0]
 
