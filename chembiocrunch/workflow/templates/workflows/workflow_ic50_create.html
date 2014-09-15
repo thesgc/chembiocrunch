@@ -9,19 +9,17 @@ To get started upload your data and config files
     You need to upload three files into the correct upload boxes:
     <ul>
         <li>
-            The output from the machine (use the data file upload box)
+            The BRG output from the machine in row by row format (use the data file upload box)
         </li>
         <li>
-            The config file to map data to your plates (use the config file upload box).
+            The Transfer file file to map data to your plates (use the transfer file upload box).
+        </li>
+        <li>
+            The assay metadata file - ensure that it includes reference compound wells (if required) and control wells - see example format <a href="{STATIC_ROOT}/meta_template.xlsx">here</a>.
         </li>
     </ul>
     </li>
-    <li>
-    They should be in the standard template format supplied by Oleg.
-    </li>
-    <li>
-    Great file names describe the experiment, include the date and are unique.
-    </li>
+
 </ul>
 {% endblock help_text %}
 {% block content %}
