@@ -377,7 +377,7 @@ class Ic50VisualisationView(VisualisationView):
         self.object.html = curve_fitter.svg
         self.object.results = json.dumps({"values": curve_fitter.results})
 
-        self.object.save()source miniconda/bin/activate cbc
+        self.object.save()
 
     def get_html(self):
         err = self.object.error_class()
