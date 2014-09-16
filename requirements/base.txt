@@ -23,3 +23,4 @@ xlsxwriter
 django-devserver
 django_javascript_settings
 jinja2
+Cython==0.19
