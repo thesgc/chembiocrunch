@@ -2,6 +2,6 @@
 -r test.txt
 django-debug-toolbar==1.2.1
 Sphinx==1.2.2
-django-devserver
 line_profiler==1.0b3
 guppy
+gunicorn
