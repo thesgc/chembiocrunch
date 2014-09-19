@@ -57,7 +57,7 @@ class IC50UploadForm(forms.ModelForm):
     plates = []
     included_plate_wells = None
     reference_compound_wells = None
-    control_wells = "A12:P12,A24:P24"
+    control_wells = "C12:P12,C24:P24"
     exclude = ["reference_compound_wells", "control_wells"]
 
 
@@ -205,20 +205,21 @@ class IC50UploadForm(forms.ModelForm):
                                                                                         steps_json=json.dumps(plate["steps_json"]),
                                                                                         plate_name=str(plate["plate_name"]),
                                                                                         )
+        included_wells = [datum for datum in plate["steps_json"] if plate["steps_json"][datum]]
         config = plate["config"]
         data = plate["data"]
         config = config[config['Sample ID'].notnull()]
 
-        controls_records = data[data["full_ref"].isin(cell_range(self.control_wells))]
-
+        controls_records = data[data["full_ref"].isin(included_wells) & data["full_ref"].isin(cell_range(self.control_wells))]
+        print "references!!!"
+        print controls_records["full_ref"]
         maximum = controls_records["figure"].mean()
         config_columns = config.merge(data)
         config_columns["status"] = "active"
         config_columns[["figure"]] = config_columns[["figure"]].astype(float)
         minimum = 0 # Add min controls here
         if self.reference_compound_wells:
-            print "problem"
-            reference_compound_records = data[data["full_ref"].isin(cell_range(self.reference_compound_wells))]
+            reference_compound_records = data[data["full_ref"].isin(included_wells) & data["full_ref"].isin(cell_range(self.reference_compound_wells))]
             minimum = reference_compound_records["figure"].mean()
 
         config_columns["concentration"] = config_columns["Destination Concentration"] * float(1000000000)

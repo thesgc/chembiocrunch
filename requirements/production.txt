@@ -3,4 +3,5 @@
 -r base.txt
 #django_webauth (via pip tmp file)
 gunicorn==18.0
-pip install -e git+git@github.com:strets123/django-webauth.git#egg=master
+-e git+git@github.com:strets123/django-webauth.git#egg=master
+python-ldap
