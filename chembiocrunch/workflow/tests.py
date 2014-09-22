@@ -5,7 +5,7 @@ from workflow.models import Workflow
 from django.core.files.base import ContentFile
 import random
 import string
-from django.contrib.auth.models import User
+from django.conf.settings import AUTH_USER_MODEL
 from workflow.views import workflows
 from django.conf import settings
 def random_string(length=10):
@@ -18,16 +18,17 @@ class TestWorkflowList(TestCase):
         return ContentFile(random_string)
 
     def setUp(self):
-        self.u1 = User.objects.create_user('temporary', 'temporary@gmail.com', 'temporary')
-        self.u12 = User.objects.create_user('bogus', 'temporary@gmail.com', 'temporary')
+        pass
+        # self.u1 = User.objects.create_user('temporary', 'temporary@gmail.com', 'temporary')
+        # self.u12 = User.objects.create_user('bogus', 'temporary@gmail.com', 'temporary')
 
-        self.factory = RequestFactory()
-        for i in range(20):
-            Workflow.objects.create(
-                title=random_string(), 
-                uploaded_file=self.workflow_file(),
-                created_by=self.u1,
-                )
+        # self.factory = RequestFactory()
+        # for i in range(20):
+        #     Workflow.objects.create(
+        #         title=random_string(), 
+        #         uploaded_file=self.workflow_file(),
+        #         created_by=self.u1,
+        #         )
 
     def tearDown(self):
         self.u1.delete()
