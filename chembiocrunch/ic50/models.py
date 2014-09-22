@@ -42,7 +42,7 @@ from cbc_common import dataframe_handler
 
 class IC50WorkflowManager(models.Manager):
     def get_user_records(self, user):
-        return self.filter(created_by__groups__name__in=["affiliation:sgc","affiliation:tdi",] archived=False)
+        return self.filter(created_by__groups__name__in=["affiliation:sgc","affiliation:tdi",], archived=False)
 
     def get_latest_workflow_revision(self, workflow_id):
         return get_model("ic50", "IC50WorkflowRevision").objects.filter(workflow_id=workflow_id, archived=False).order_by("created")[0]

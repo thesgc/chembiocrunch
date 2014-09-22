@@ -52,7 +52,7 @@ class WorkflowManager(models.Manager):
     do the query logic inline'''
     def get_user_records(self, user):
         '''Used to filter in view to ensure only permitted workflows are seen'''
-        return self.filter(created_by__id=user.id)
+        return self.filter(created_by__id=user.id, archived=False)
 
     def get_latest_workflow_revision(self, workflow_id):
         return get_model("workflow", "WorkflowDataMappingRevision").objects.filter(workflow_id=workflow_id).order_by("-created")[0]
