@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from scipy import stats
-from django.conf.settings import AUTH_USER_MODEL 
+from django.conf import  settings
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -56,7 +56,7 @@ class IC50Workflow(TimeStampedModel):
     uploaded_data_file = models.FileField(max_length=1024)
     uploaded_meta_file = models.FileField(max_length=1024)
     archived = models.BooleanField(default=False)
-    created_by = models.ForeignKey(AUTH_USER_MODEL)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL)
     workflow_type = "ic50workflow"
 
     objects = IC50WorkflowManager()

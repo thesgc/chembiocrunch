@@ -21,7 +21,7 @@ import mpld3
 from workflow.basic_units import BasicUnit
 from cbc_common.dataframe_handler import get_config_columns, zero_pad_object_id
 from cbc_common import dataframe_handler
-from django.conf.settings import AUTH_USER_MODEL 
+from django.conf import settings
 
 
 def get_labels(vis, df):
@@ -71,7 +71,7 @@ class Workflow(TimeStampedModel):
     when the user wants a similar graphing dashboard'''
     title = models.CharField(max_length=100)
     uploaded_file = models.FileField(max_length=1024)
-    created_by = models.ForeignKey(AUTH_USER_MODEL)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL)
     objects = WorkflowManager()
     workflow_type = "workflow"
     archived = models.BooleanField(default=False)
