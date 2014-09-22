@@ -209,8 +209,9 @@ class IC50UploadForm(forms.ModelForm):
         config = plate["config"]
         data = plate["data"]
         config = config[config['Sample ID'].notnull()]
+        possible_control_records = plate["config"][plate["config"]['Sample ID'].isnull()]["full_ref"].tolist()
 
-        controls_records = data[data["full_ref"].isin(included_wells) & data["full_ref"].isin(cell_range(self.control_wells)) & data["Sample ID"].isnull()]
+        controls_records = data[data["full_ref"].isin(included_wells) & data["full_ref"].isin(cell_range(self.control_wells)) & data["full_ref"].isin(possible_control_records)]
         print "references!!!"
         print controls_records["full_ref"]
         maximum = controls_records["figure"].mean()
