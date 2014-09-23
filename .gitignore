@@ -46,3 +46,5 @@ bin
 .vagrant
 package.box
 chembiocrunch/media
+chembiocrunch/assets
+chembiocrunch/chembiocrunch/settings/secret.py

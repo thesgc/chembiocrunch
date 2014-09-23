@@ -9,7 +9,7 @@ from .base import *
 # Normally you should not import ANYTHING from Django directly
 # into your settings, but ImproperlyConfigured is an exception.
 from django.core.exceptions import ImproperlyConfigured
-
+DEBUG=True
 
 def get_env_setting(setting):
     """ Get the environment setting or return exception """
@@ -21,10 +21,18 @@ def get_env_setting(setting):
 
 ########## HOST CONFIGURATION
 # See: https://docs.djangoproject.com/en/1.5/releases/1.5/#allowed-hosts-required-in-production
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["chembiohub.ox.ac.uk"]
 ########## END HOST CONFIGURATION
 
+LOGIN_URL = "/crunch/accounts/login"
+USE_X_FORWARDED_HOST = True
+FORCE_SCRIPT_NAME = ""
+STATIC_URL = '/crunch/static/'
+INSTALLED_APPS = list(INSTALLED_APPS) + ["django_webauth",] 
+AUTHENTICATION_BACKENDS =  ["django_webauth.backends.WebauthLDAP"]
+LOGIN_REDIRECT_URL = '/crunch/my_workflows/'
 ########## EMAIL CONFIGURATION
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
@@ -51,17 +59,40 @@ SERVER_EMAIL = EMAIL_HOST_USER
 ########## END EMAIL CONFIGURATION
 
 ########## DATABASE CONFIGURATION
-DATABASES = {}
+
 ########## END DATABASE CONFIGURATION
 
 
 ########## CACHE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#caches
-CACHES = {}
-########## END CACHE CONFIGURATION
+
+CACHES = {
+	    'default': {
+	        'BACKEND': 'redis_cache.RedisCache',
+	        'LOCATION': '127.0.0.1:6379',
+	        'KEY_PREFIX' :"chembiocrunch",
+	        'OPTIONS': {
+	            'DB': 1,
+	            'PARSER_CLASS': 'redis.connection.HiredisParser',
+	            'CONNECTION_POOL_CLASS': 'redis.BlockingConnectionPool',
+	            'CONNECTION_POOL_CLASS_KWARGS': {
+	                'max_connections': 50,
+	                'timeout': 20,
+	            }
+	        },
+	    },
+	}
 
 
-########## SECRET CONFIGURATION
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
-SECRET_KEY = get_env_setting('SECRET_KEY')
 ########## END SECRET CONFIGURATION
+DEBUG=True
+
+########## MEDIA CONFIGURATION
+# See: https://docs.djangoproject.com/en/dev/ref/settings/#media-root
+MEDIA_ROOT = '/var/lib/data/chembiocrunch/'
+
+# See: https://docs.djangoproject.com/en/dev/ref/settings/#media-url
+MEDIA_URL = '/media/'
+########## END MEDIA CONFIGURATION
+
+from .secret import *

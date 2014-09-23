@@ -14,7 +14,8 @@ from workflow import views
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    url(r'^$', RedirectView.as_view(url="accounts/login/")),
+    url(r'^crunch/$', RedirectView.as_view(url="/crunch/accounts/login/")),
+    url(r'^$', RedirectView.as_view(url="/crunch/accounts/login/")),
 
     # Examples:
     # url(r'^$', 'chembiocrunch.views.home', name='home'),
@@ -24,13 +25,13 @@ urlpatterns = patterns('',
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     # Uncomment the next line to enable the admin:
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^crunch/admin/', include(admin.site.urls)),
 
-    url(r'^my_workflows/', include(workflowurls)),
+    url(r'^crunch/my_workflows/', include(workflowurls)),
 
-    url(r'^accounts/login/', views.Login.as_view(), name="login" ),
-    url(r'^accounts/logout/', views.Logout.as_view(), name="logout" ),
-    url(r'^logged_out/', views.Login.as_view(logout=True), name="loggedout" ),
+    url(r'^crunch/accounts/login/', views.Login.as_view(), name="login" ),
+    url(r'^crunch/accounts/logout/', views.Logout.as_view(), name="logout" ),
+    url(r'^crunch/logged_out/', views.Login.as_view(logout=True), name="loggedout" ),
 
 
 )
@@ -46,11 +47,11 @@ if settings.DEBUG:
 
 if "django_webauth" in settings.INSTALLED_APPS:
     urlpatterns += patterns('',
-                            url(r'^webauth/', include('django_webauth.urls', 'webauth')),
+                            url(r'^crunch/webauth/', include('django_webauth.urls', 'webauth')),
                             )
 
 if "ic50" in settings.INSTALLED_APPS:
     from ic50 import urls as ic50urls
     urlpatterns += patterns('',
-        url(r'^ic50_builder/', include(ic50urls) ),
+        url(r'^crunch/ic50_builder/', include(ic50urls) ),
     )
