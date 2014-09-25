@@ -1,10 +1,14 @@
 from django.conf.urls import url
 from django.views.generic import TemplateView
 from . import views
-
+list_view = views.WorkflowListView
+from django.conf import settings
+if "ic50" in settings.INSTALLED_APPS:
+    from ic50.views import IC50WorkflowListView
+    list_view = IC50WorkflowListView
 
 urlpatterns = [
-    url(r'^$', views.WorkflowListView.as_view() , name='workflow_list'),
+    url(r'^$', list_view.as_view() , name='workflow_list'),
     url(r'^create/$', views.WorkflowCreateView.as_view(), name='workflow_create'),
     url(r'^(?P<pk>[0-9]+)/workflow_data_mappings_edit/$', views.WorkflowDataMappingEditView.as_view(), name='workflow_data_mappings_edit'),
 

@@ -21,7 +21,7 @@ from StringIO import StringIO
 from seaborn import plotting_context, set_context
 import mpld3
 from workflow.basic_units import BasicUnit
-from cbc_common.dataframe_handler import get_config_columns, zero_pad_object_id
+from cbc_common.dataframe_handler import zero_pad_object_id
 
 from workflow.models import Visualisation, my_slug
 from multiprocessing import Lock, Process, Queue, current_process
@@ -42,7 +42,7 @@ from cbc_common import dataframe_handler
 
 class IC50WorkflowManager(models.Manager):
     def get_user_records(self, user):
-        return self.filter(created_by__groups__name__in=["affiliation:sgc","affiliation:tdi",], archived=False)
+        return self.filter( archived=False)
 
     def get_latest_workflow_revision(self, workflow_id):
         return get_model("ic50", "IC50WorkflowRevision").objects.filter(workflow_id=workflow_id, archived=False).order_by("created")[0]

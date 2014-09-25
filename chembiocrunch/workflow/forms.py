@@ -10,7 +10,7 @@ Tab, TabHolder, AccordionGroup, Accordion, Alert, InlineCheckboxes,
 FieldWithButtons, StrictButton, InlineField
 )
 from django.forms.formsets import formset_factory, BaseFormSet
-from cbc_common.dataframe_handler import change_column_type, get_data_frame, get_excel_data_frame, get_plate_wells_with_sample_ids
+from cbc_common.dataframe_handler import change_column_type, get_data_frame, get_excel_data_frame
 
 #from easy_select2.widgets import Select2TextInput
 from django_select2.fields import Select2ChoiceField
@@ -31,7 +31,6 @@ from django.contrib.auth.forms import AuthenticationForm
 from crispy_forms.bootstrap import StrictButton
 import pandas as pd
 
-from cbc_common.dataframe_handler import get_ic50_data_columns, get_ic50_config_columns
 
 class UserLoginForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):

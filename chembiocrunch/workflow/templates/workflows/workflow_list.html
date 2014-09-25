@@ -24,7 +24,15 @@
         </div>
         
         <a href="{% url "workflow_create" %}"><button type="button" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> Add plain workflow</button></a>
-        <a href="{% url "workflow_ic50_create" form_type="LabcyteEcho" %}"><button type="button" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> Add IC50 workflow</button></a>
+        {% if FORM_REGISTRY %}
+        {% for form_type in FORM_REGISTRY %}
+        <a href='{% url "workflow_ic50_create" form_type=form_type %}'>
+            <button type="button" class="btn btn-success">
+                <span class="glyphicon glyphicon-plus"></span> Add IC50 workflow ({{form_type}})
+            </button>
+        </a>
+        {% endfor %}
+        {% endif %}
       
     
 

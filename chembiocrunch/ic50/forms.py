@@ -10,7 +10,7 @@ Tab, TabHolder, AccordionGroup, Accordion, Alert, InlineCheckboxes,
 FieldWithButtons, StrictButton, InlineField
 )
 from django.forms.formsets import formset_factory, BaseFormSet
-from cbc_common.dataframe_handler import cell_range, change_column_type, get_data_frame, get_excel_data_frame, get_plate_wells_with_sample_ids
+from cbc_common.dataframe_handler import cell_range,  get_data_frame, get_excel_data_frame
 
 #from easy_select2.widgets import Select2TextInput
 from django_select2.fields import Select2ChoiceField
@@ -30,8 +30,6 @@ import math
 from django.contrib.auth.forms import AuthenticationForm
 from crispy_forms.bootstrap import StrictButton
 import pandas as pd
-
-from cbc_common.dataframe_handler import get_ic50_data_columns, get_ic50_config_columns
 
 
 from datetime import datetime
@@ -57,7 +55,7 @@ class IC50UploadForm(forms.ModelForm):
     plates = []
     included_plate_wells = None
     reference_compound_wells = None
-    control_wells = "C12:P12,C24:P24"
+    control_wells = cell_range("C12:P12,C24:P24")
     exclude = ["reference_compound_wells", "control_wells"]
 
 
@@ -66,107 +64,16 @@ class IC50UploadForm(forms.ModelForm):
         exclude = ('created_by','form_type')
 
 
-    def clean_uploaded_data_file(self):
-        #TODO validate datafile tocheck only one plate present
-        uploaded_data_file = self.files['uploaded_data_file']
-        mime = magic.from_buffer(self.files["uploaded_data_file"].read(), mime=True)
-        if 'text/' in mime:
-            try:
-                self.uploaded_data = get_data_frame(uploaded_data_file.temporary_file_path())
-            except AttributeError:
-                raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
-            except Exception:
-                    raise forms.ValidationError("Error processing data Excel File")
-        elif "application/" in mime:
-            try:
-                self.uploaded_data = get_excel_data_frame(uploaded_data_file.temporary_file_path())
-            except AttributeError:
-                raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
-            except Exception:
-                    raise forms.ValidationError("Error processing data Excel File")
-        else:
-            raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
-        return self.cleaned_data['uploaded_data_file']
 
-
-
-    def clean_uploaded_config_file(self):
-
-        uploaded_config_file = self.files['uploaded_config_file']
-        mime = magic.from_buffer(self.files["uploaded_config_file"].read(), mime=True)
-        if 'text/' in mime:
-            try:
-                self.uploaded_config = get_data_frame(uploaded_config_file.temporary_file_path(), skiprows=8, header=0)
-
-            except AttributeError:
-                raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
-            except Exception:
-                    raise forms.ValidationError("Error processing config CSV File")
-        elif "application/" in mime:
-            try:
-                try:
-
-                    self.uploaded_config = get_excel_data_frame(uploaded_config_file.temporary_file_path(), skiprows=8, header=0)
-                    #self.uploaded_config["full_ref"] = self.uploaded_config["Destination Well"]
-                    #self.uploaded_config = self.uploaded_config[self.uploaded_config["Source Plate Name"]=="Intermediate Sample Plate[1]"]
-                except Exception:
-                    raise forms.ValidationError("Error processing config Excel File")
-            except AttributeError:
-                raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
-        else:
-            raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
-        return self.cleaned_data['uploaded_config_file']
-
-    def clean_uploaded_meta_file(self):
-        uploaded_meta_file = self.files.get('uploaded_meta_file', False)
-        if uploaded_meta_file:
-            mime = magic.from_buffer(uploaded_meta_file.read(), mime=True)
-            if 'text/' in mime:
-                try:
-                    self.uploaded_meta = get_data_frame(uploaded_meta_file.temporary_file_path())
-                except AttributeError:
-                    raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
-                except Exception:
-                        raise forms.ValidationError("Error processing meta CSV File")
-            elif "application/" in mime:
-                try:
-                    try:
-                        self.uploaded_meta = get_excel_data_frame(uploaded_meta_file.temporary_file_path())
-                    except Exception:
-                        raise forms.ValidationError("Error processing meta Excel File")
-                except AttributeError:
-                    raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
-            else:
-                raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
-            if not self.uploaded_meta.empty:
-                print self.uploaded_meta[5]
-                controls = self.uploaded_meta[self.uploaded_meta[4].str.lower().isin(["control wells"]) & self.uploaded_meta[5].notnull()]
-                if not controls.empty:
-                    self.control_wells = controls[5].tolist()[0]
-                    print "foound" + self.control_wells
-                refs = self.uploaded_meta[self.uploaded_meta[4].str.lower().isin(["reference compound wells"]) & self.uploaded_meta[5].notnull()]
-                if not refs.empty:
-                    self.reference_compound_wells = refs[5].tolist()[0]
-            return self.cleaned_data['uploaded_meta_file']
-        return None
 
 
     def clean(self):
+
         try:
-            print "testing"
-            self.uploaded_config["fullname"] = self.uploaded_config["Destination Plate Name"] + ": " + self.uploaded_config["Destination Well"]
-            self.uploaded_config["full_ref"] = self.uploaded_config["Destination Well"]
-            self.uploaded_config["plate_ref"] = get_plate_ref(self.uploaded_config["Destination Plate Name"])
             indexed_config = self.uploaded_config
             indexed_config_groups = indexed_config.groupby("plate_ref")
             #indexed_config = indexed_config.set_index('fullname')
-            self.uploaded_data.columns = ["fullname","figure",]
-            refs = self.uploaded_data["fullname"].str.split(':')
-            self.uploaded_data["full_ref"] = refs.str.get(1).str.strip()
-            self.uploaded_data["plate_ref"] = get_plate_ref(self.uploaded_data["fullname"])
-            matches = self.uploaded_data["full_ref"].str.findall(r"([A-Z]+)([0-9]+)")
-            self.uploaded_data["well_letter"] = matches.str.get(0).str.get(0)
-            self.uploaded_data["well_number"] = matches.str.get(0).str.get(1)
+            
             #fully_indexed = data_with_index_refs.set_index('fullname')
             #Assumed that datafile contains only one plate worth of data
             data_groups = self.uploaded_data.groupby("plate_ref")
@@ -205,14 +112,14 @@ class IC50UploadForm(forms.ModelForm):
                                                                                         steps_json=json.dumps(plate["steps_json"]),
                                                                                         plate_name=str(plate["plate_name"]),
                                                                                         )
-        included_wells = [datum for datum in plate["steps_json"] if plate["steps_json"][datum]]
+        included_wells = [LabCyteEchoIC50UploadFormdatum for datum in plate["steps_json"] if plate["steps_json"][datum]]
         config = plate["config"]
         data = plate["data"]
-        config = config[config['Sample ID'].notnull()]
-        possible_control_records = plate["config"][plate["config"]['Sample ID'].isnull()]["full_ref"].tolist()
 
-        controls_records = data[data["full_ref"].isin(included_wells) & data["full_ref"].isin(cell_range(self.control_wells)) & data["full_ref"].isin(possible_control_records)]
-        print "references!!!"
+        config = config[config['global_compound_id'].notnull()]
+        possible_control_records = plate["config"][plate["config"]['global_compound_id'].isnull()]["full_ref"].tolist()
+
+        controls_records = data[data["full_ref"].isin(included_wells) & data["full_ref"].isin(self.control_wells) & data["full_ref"].isin(possible_control_records)]
         print controls_records["full_ref"]
         maximum = controls_records["figure"].mean()
         config_columns = config.merge(data)
@@ -220,12 +127,10 @@ class IC50UploadForm(forms.ModelForm):
         config_columns[["figure"]] = config_columns[["figure"]].astype(float)
         minimum = 0 # Add min controls here
         if self.reference_compound_wells:
-            reference_compound_records = data[data["full_ref"].isin(included_wells) & data["full_ref"].isin(cell_range(self.reference_compound_wells))]
+            reference_compound_records = data[data["full_ref"].isin(included_wells) & data["full_ref"].isin(self.reference_compound_wells)]
             minimum = reference_compound_records["figure"].mean()
 
-        config_columns["concentration"] = config_columns["Destination Concentration"] * float(1000000000)
-        config_columns["global_compound_id"] = config_columns["Sample ID"]
-        config_columns["plate_type"]  = config_columns["Destination Plate Type"]
+
         config_columns["percent_inhib"] =  (maximum - config_columns["figure"] )/(maximum - minimum)
 
         ic50_groups = config_columns.groupby("global_compound_id")
@@ -258,14 +163,259 @@ class IC50UploadForm(forms.ModelForm):
                 'uploaded_config_file', 'uploaded_meta_file', 'save',
          )
         )
-        self.request = kwargs.pop('request')
+        # self.request = kwargs.pop('request')
         return super(IC50UploadForm, self).__init__(*args, **kwargs)
+
+
+    def clean_uploaded_data_file(self):
+        raise forms.ValidationError("No processing code has been implemented for this file")
+
+    def clean_uploaded_config_file(self):
+        raise forms.ValidationError("No processing code has been implemented for this file")
+
+    def clean_uploaded_meta_file(self):
+        raise forms.ValidationError("No processing code has been implemented for this file")
+
 
 
 def get_plate_ref(dfseries):
     '''split out the square backets to give the plate reference'''
     split = dfseries.str.findall(r"\[(\d)\]").str.get(0)
     return split
+
+
+
+
+
+
+
+
+class LabCyteEchoIC50UploadForm(IC50UploadForm):
+
+
+
+
+    def __init__(self, *args, **kwargs):
+
+
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+        self.helper.form_class = 'form-horizontal'
+        self.helper.add_input(Submit('save', 'Save'))
+        self.helper.layout = Layout(
+            Fieldset( '',
+                'title', 'uploaded_data_file',
+                'uploaded_config_file', 'uploaded_meta_file', 'save',
+         )
+        )
+        self.request = kwargs.pop('request')
+        return super(LabCyteEchoIC50UploadForm, self).__init__(*args, **kwargs)
+
+    def clean_uploaded_data_file(self):
+        '''This method cleans the incoming data file and converts it to a pandas DataFrame
+        The column names from the original data file are not used
+        The data file is returned as is standard in Django so that the form can be re submitted if there is an error somewhere
+        The output dataframe is expected to contain this data schema:
+        "fullname" - whatever the original full name of the plate well + plate was
+        "figure" - the raw total transmision measurement from the plate reader
+        "full_ref" - the well code i.e. A1
+        "plate_ref" - any letter or number that can be used to match this plate with the plates in the liquid handler transfer file for multiplate experiments
+        if it is not a multiplate experiment simply fill this field with 0 on both data frames 
+        "well_letter" - the letter of the well row
+        "well number" - the number of the plate column (extracted here by regex)
+        '''
+        uploaded_data_file = self.files['uploaded_data_file']
+        mime = magic.from_buffer(self.files["uploaded_data_file"].read(), mime=True)
+        if 'text/' in mime:
+            try:
+                self.uploaded_data = get_data_frame(uploaded_data_file.temporary_file_path())
+            except AttributeError:
+                raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
+            except Exception:
+                    raise forms.ValidationError("Error processing data Excel File")
+        elif "application/" in mime:
+            try:
+                self.uploaded_data = get_excel_data_frame(uploaded_data_file.temporary_file_path())
+            except AttributeError:
+                raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
+            except Exception:
+                    raise forms.ValidationError("Error processing data Excel File")
+        else:
+            raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
+
+        self.uploaded_data.columns = ["fullname","figure",]
+        refs = self.uploaded_data["fullname"].str.split(':')
+        self.uploaded_data["full_ref"] = refs.str.get(1).str.strip()
+        self.uploaded_data["plate_ref"] = get_plate_ref(self.uploaded_data["fullname"])
+        matches = self.uploaded_data["full_ref"].str.findall(r"([A-Z]+)([0-9]+)")
+        self.uploaded_data["well_letter"] = matches.str.get(0).str.get(0)
+        self.uploaded_data["well_number"] = matches.str.get(0).str.get(1)
+
+        return self.cleaned_FORM_REGISTRYdata['uploaded_data_file']
+
+
+
+    def clean_uploaded_config_file(self):
+        '''This method takes an uploaded config file and converts it to a pandas dataframe, 
+        it returns the file as is the convention in django
+        The final config dataframe should have the following columns:
+        "fullname" - whatever the original full name of the plate well + plate was
+        "full_ref" - the well code i.e. A1
+        "plate_ref" - any letter or number that can be used to match this plate with the plates in the liquid handler transfer file for multiplate experiments
+        if it is not a multiplate experiment simply fill this field with 0 on both data frames 
+        "global_compound_id" - an id for the compounds being tested. Note that by default if the compound is 
+        subjected to duplicate assays on the same plate this will be treated as a single assay and all the points plotted on one curve'''
+
+        uploaded_config_file = self.files['uploaded_config_file']
+        mime = magic.from_buffer(self.files["uploaded_config_file"].read(), mime=True)
+        if 'text/' in mime:
+            try:
+                self.uploaded_config = get_data_frame(uploaded_config_file.temporary_file_path(), skiprows=8, header=0)
+
+            except AttributeError:
+                raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
+            except Exception:
+                    raise forms.ValidationError("Error processing config CSV File")
+        elif "application/" in mime:
+            try:
+                try:
+
+                    self.uploaded_config = get_excel_data_frame(uploaded_config_file.temporary_file_path(), skiprows=8, header=0)
+                except Exception:
+                    raise forms.ValidationError("Error processing config Excel File")
+            except AttributeError:
+                raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
+        else:
+            raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
+
+        self.uploaded_config["fullname"] = self.uploaded_config["Destination Plate Name"] + ": " + self.uploaded_config["Destination Well"]
+        self.uploaded_config["full_ref"] = self.uploaded_config["Destination Well"]
+        self.uploaded_config["plate_ref"] = get_plate_ref(self.uploaded_config["Destination Plate Name"])
+        self.uploaded_config["global_compound_id"] = self.uploaded_config["Sample ID"]
+        self.uploaded_config["concentration"] = self.uploaded_config["Destination Concentration"] * float(1000000000)
+        self.uploaded_config["plate_type"]  = self.uploaded_config["Destination Plate Type"]
+
+        return self.cleaned_data['uploaded_config_file']
+
+
+
+    def clean_uploaded_meta_file(self):
+        '''Currently this method looks for the control wells and refference compound wells
+        in the metadata file as it is uploaded and sets them as attributes of the objects
+        By The default control wells are in columns 12 and 24 excluding rows A and B#
+        By default there are no reference compound wells and it is assumed that the minimum transmitance is zero
+        The cell ranges are specified in Excel format using colons and commas to separate e.g. A1:A3,A5,A7'''
+        uploaded_meta_file = self.files.get('uploaded_meta_file', False)
+        if uploaded_meta_file:
+            mime = magic.from_buffer(uploaded_meta_file.read(), mime=True)
+            if 'text/' in mime:
+                try:
+                    self.uploaded_meta = get_data_frame(uploaded_meta_file.temporary_file_path())
+                except AttributeError:
+                    raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
+                except Exception:
+                        raise forms.ValidationError("Error processing meta CSV File")
+            elif "application/" in mime:
+                try:
+                    try:
+                        self.uploaded_meta = get_excel_data_frame(uploaded_meta_file.temporary_file_path())
+                    except Exception:
+                        raise forms.ValidationError("Error processing meta Excel File")
+                except AttributeError:
+                    raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
+            else:
+                raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
+            if not self.uploaded_meta.empty:
+                print self.uploaded_meta[5]
+                controls = self.uploaded_meta[self.uploaded_meta[4].str.lower().isin(["control wells"]) & self.uploaded_meta[5].notnull()]
+                if not controls.empty:
+                    self.control_wells = cell_range(controls[5].tolist()[0])
+                refs = self.uploaded_meta[self.uploaded_meta[4].str.lower().isin(["reference compound wells"]) & self.uploaded_meta[5].notnull()]
+                if not refs.empty:
+                    self.reference_compound_wells = cell_range(refs[5].tolist()[0])
+
+            return self.cleaned_data['uploaded_meta_file']
+        return None
+
+
+
+
+
+
+
+
+class TemplateIC50UploadForm(IC50UploadForm):
+
+
+
+
+    def __init__(self, *args, **kwargs):
+        
+
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+        self.helper.form_class = 'form-horizontal'
+        self.helper.add_input(Submit('save', 'Save'))
+        self.helper.layout = Layout(
+            Fieldset( '',
+                'title', 'uploaded_data_file',
+                'uploaded_config_file', 'uploaded_meta_file', 'save',
+         )
+        )
+        self.request = kwargs.pop('request')
+        return super(TemplateIC50UploadForm, self).__init__(*args, **kwargs)
+
+    def clean_uploaded_data_file(self):
+        '''This method cleans the incoming data file and converts it to a pandas DataFrame
+        The column names from the original data file are not used
+        The data file is returned as is standard in Django so that the form can be re submitted if there is an error somewhere
+        The output dataframe is expected to contain this data schema:
+        "fullname" - whatever the original full name of the plate well + plate was
+        "figure" - the raw total transmision measurement from the plate reader
+        "full_ref" - the well code i.e. A1
+        "plate_ref" - any letter or number that can be used to match this plate with the plates in the liquid handler transfer file for multiplate experiments
+        if it is not a multiplate experiment simply fill this field with 0 on both data frames 
+        "well_letter" - the letter of the well row
+        "well number" - the number of the plate column (extracted here by regex)
+        '''
+        pass
+
+
+
+    def clean_uploaded_config_file(self):
+        '''This method takes an uploaded config file and converts it to a pandas dataframe, 
+        it returns the file as is the convention in django
+        The final config dataframe should have the following columns:
+        "fullname" - whatever the original full name of the plate well + plate was
+        "full_ref" - the well code i.e. A1
+        "plate_ref" - any letter or number that can be used to match this plate with the plates in the liquid handler transfer file for multiplate experiments
+        if it is not a multiplate experiment simply fill this field with 0 on both data frames 
+        "global_compound_id" - an id for the compounds being tested. Note that by default if the compound is 
+        subjected to duplicate assays on the same plate this will be treated as a single assay and all the points plotted on one curve'''
+        pass
+
+
+
+    def clean_uploaded_meta_file(self):
+        '''Currently this method looks for the control wells and refference compound wells
+        in the metadata file as it is uploaded and sets them as attributes of the objects
+        By The default control wells are in columns 12 and 24 excluding rows A and B#
+        By default there are no reference compound wells and it is assumed that the minimum transmitance is zero
+        The cell ranges are specified in Excel format using colons and commas to separate e.g. A1:A3,A5,A7'''
+        pass
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -347,4 +497,10 @@ class HeatmapForm(forms.Form):
             if(letter == 'A'):
                 self.helper.layout.append(column_helper.layout)
             self.helper.layout.append(loophelper.layout)
+
+
+
+FORM_REGISTRY = {"LabcyteEcho" : LabCyteEchoIC50UploadForm ,
+                   # "Template" : TemplateIC50UploadForm
+                    }
 

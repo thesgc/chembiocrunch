@@ -33,7 +33,6 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.generic import FormView, View
 from workflow.forms import UserLoginForm
 
-from itertools import chain
 
 class Login(FormView):
     form_class = UserLoginForm
@@ -109,7 +108,7 @@ class WorkflowListView(WorkflowView, ListView):
         '''Make sure that all of the views cannot see the object unless they own it!'''
         #need to also pass ic50 models
 
-        return chain(self.model.objects.get_user_records(self.request.user).filter(archived=False), self.ic50_model.objects.get_user_records(self.request.user).filter(archived=False))
+        return self.model.objects.get_user_records(self.request.user).filter(archived=False)
 
 
     def get_context_data(self, **kwargs):
@@ -118,6 +117,7 @@ class WorkflowListView(WorkflowView, ListView):
         # Add in a QuerySet of all the books
 
         context["object_list"] = list(context['object_list'])
+        context["FORM_REGISTRY"] = [form_type for form_type in FORM_REGISTRY]
 
         return context
 

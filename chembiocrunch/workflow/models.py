@@ -19,7 +19,7 @@ from StringIO import StringIO
 from seaborn import plotting_context, set_context
 import mpld3
 from workflow.basic_units import BasicUnit
-from cbc_common.dataframe_handler import get_config_columns, zero_pad_object_id
+from cbc_common.dataframe_handler import  zero_pad_object_id
 from cbc_common import dataframe_handler
 from django.conf import settings
 

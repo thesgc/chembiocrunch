@@ -97,7 +97,7 @@
         <div class="container">
       {% block breadcrumbs %}
 
-
+{% if revisions %}
         <div class="row">
             {% for key, value in revisions %}
             <div class="col-xs-2">
@@ -116,7 +116,7 @@
             </div>
             {% endfor %}
         </div>
-
+{% endif %}
 {% endblock breadcrumbs %}
       </div>
         
