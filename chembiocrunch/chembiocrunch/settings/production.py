@@ -28,7 +28,7 @@ LOGIN_URL = "/crunch/accounts/login"
 USE_X_FORWARDED_HOST = True
 FORCE_SCRIPT_NAME = ""
 STATIC_URL = '/crunch/static/'
-INSTALLED_APPS = list(INSTALLED_APPS) + ["django_webauth",] 
+#INSTALLED_APPS = list(INSTALLED_APPS) + ["django_webauth",] 
 AUTHENTICATION_BACKENDS =  ["django.contrib.auth.backends.ModelBackend","django_webauth.backends.WebauthLDAP"]
 LOGIN_REDIRECT_URL = '/crunch/my_workflows/'
 ########## EMAIL CONFIGURATION
