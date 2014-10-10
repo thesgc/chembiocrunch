@@ -112,7 +112,7 @@ class IC50UploadForm(forms.ModelForm):
                                                                                         steps_json=json.dumps(plate["steps_json"]),
                                                                                         plate_name=str(plate["plate_name"]),
                                                                                         )
-        included_wells = [LabCyteEchoIC50UploadFormdatum for datum in plate["steps_json"] if plate["steps_json"][datum]]
+        included_wells = [datum for datum in plate["steps_json"] if plate["steps_json"][datum]]
         config = plate["config"]
         data = plate["data"]
 
