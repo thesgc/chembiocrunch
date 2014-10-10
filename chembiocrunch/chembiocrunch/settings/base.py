@@ -194,10 +194,7 @@ INSTALLED_APPS = [    # Default Django apps:
     # Admin panel and documentation:
     'django.contrib.admin',
     # 'django.contrib.admindocs',
-    'cbc_common',
-     'ic50',
 
-    'workflow',
 
     'crispy_forms',
     'floppyforms',
@@ -207,7 +204,10 @@ INSTALLED_APPS = [    # Default Django apps:
     'django_select2',
     'javascript_settings',
         'devserver',
+  'workflow',
+
      'ic50',
+    'cbc_common',
 
 ]
 
