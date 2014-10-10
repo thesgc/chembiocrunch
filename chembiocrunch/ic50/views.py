@@ -7,7 +7,7 @@ from django.conf import settings
 from braces.views import LoginRequiredMixin
 
 from django.db.models import get_model
-from .forms import  FORM_REGISTRY, HeatmapForm, LabCyteEchoIC50UploadForm
+from ic50.forms import  FORM_REGISTRY, HeatmapForm, LabCyteEchoIC50UploadForm
 from django.core.urlresolvers import reverse
 from crispy_forms.layout import Layout, Div, Submit, HTML, Button, Row, Field, Fieldset, Reset
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
@@ -58,6 +58,7 @@ class IC50WorkflowListView(WorkflowListView):
 
         context["object_list"] = list(context['object_list'])
         context["FORM_REGISTRY"] = [form_type for form_type in FORM_REGISTRY]
+        print context
 
         return context
 
