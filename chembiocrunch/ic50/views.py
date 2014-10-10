@@ -440,7 +440,7 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
             worksheet1 = workbook.add_worksheet()
 
             meta = self.object.get_meta_data()
-            meta.replace(nan, "")
+            meta = meta.replace(nan, "")
             for index, line in enumerate(meta.to_records()):
                 lis = list(line)
                 worksheet1.write_row(index,1, lis)
