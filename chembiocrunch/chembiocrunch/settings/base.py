@@ -195,8 +195,9 @@ DJANGO_APPS = [    # Default Django apps:
     'django.contrib.admin',
     # 'django.contrib.admindocs',
     'cbc_common',
+     'ic50',
+
     'workflow',
-    'ic50',
 
     'crispy_forms',
     'floppyforms',
