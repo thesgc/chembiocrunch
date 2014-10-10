@@ -443,7 +443,7 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
             meta = self.object.get_meta_data()
             for index, line in enumerate(meta.to_records()):
                 lis = list(line)
-                worksheet1.write_row(index, lis)
+                worksheet1.write_row(index,1, lis)
 
 
             worksheet = workbook.add_worksheet()
