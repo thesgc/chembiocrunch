@@ -146,6 +146,10 @@ class IC50WorkflowCreateView(IC50WorkflowView, CreateView ):
         self.form_type = kwargs.pop("form_type")
         return super(IC50WorkflowCreateView, self).get(request, *args, **kwargs)
 
+    def post(self, request, *args, **kwargs):
+        self.object = None
+        self.form_type = kwargs.pop("form_type")
+        return super(IC50WorkflowCreateView, self).post(request, *args, **kwargs)
 
 
 
