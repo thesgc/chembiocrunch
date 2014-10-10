@@ -180,7 +180,7 @@ ROOT_URLCONF = '%s.urls' % SITE_NAME
 
 
 ########## APP CONFIGURATION
-DJANGO_APPS = [    # Default Django apps:
+INSTALLED_APPS = [    # Default Django apps:
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -207,15 +207,11 @@ DJANGO_APPS = [    # Default Django apps:
     'django_select2',
     'javascript_settings',
         'devserver',
+     'ic50',
 
 ]
 
-# Apps specific for this project go here.
-LOCAL_APPS = [
-]
 
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
-INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS
 ########## END APP CONFIGURATION'crispy_forms',
 
 

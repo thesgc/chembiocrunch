@@ -251,7 +251,7 @@ class LabCyteEchoIC50UploadForm(IC50UploadForm):
         self.uploaded_data["well_letter"] = matches.str.get(0).str.get(0)
         self.uploaded_data["well_number"] = matches.str.get(0).str.get(1)
 
-        return self.cleaned_FORM_REGISTRYdata['uploaded_data_file']
+        return self.cleaned_data['uploaded_data_file']
 
 
 
@@ -501,6 +501,6 @@ class HeatmapForm(forms.Form):
 
 
 FORM_REGISTRY = {"LabcyteEcho" : LabCyteEchoIC50UploadForm ,
-                   # "Template" : TemplateIC50UploadForm
+                    "Template" : TemplateIC50UploadForm
                     }
 
