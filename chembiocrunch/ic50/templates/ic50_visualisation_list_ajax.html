@@ -1,0 +1,91 @@
+{% load svg_responsive %}
+<!-- import visualisation_dropdowns.html here -->
+{% if visualisation_list %}
+<!-- <a name="list">
+</a> -->
+
+<div class="row">
+  	<!-- move the list items here, 4 at a time inside a div class="carousel-item" -->
+  {% for visualisation_item in visualisation_list %}
+      
+  <div id="vis-{{visualisation_item.id}}" title="{{visualisation_item.results}}" class="col-md-2 col-sm-4 col-xs-6 vis {% if visualisation_item.html %}{{visualisation_item.error_class}}{% endif %}">
+    <div class="well col-sd-8 col-sd-offset-2 {% ifequal visualisation_item.id visualisation.id %} activeitem {% endifequal %}">
+
+      <div class="row-fluid">
+        <span class="expand glyphicon glyphicon-resize-full pull-right"></span>
+      </div>
+
+      <div class="vis-thumb "> {% if visualisation_item.html %}
+            {{ visualisation_item.html|add_responsive_tags|safe }}
+
+            {% else %}
+            No graph? <a onclick="fetchSvgGraph("{% url "ic50_visualisation_view" pk=visualisation_item.id format="html" %}", {{visualisation_item.id}});" >Reload</a>
+              <div class="bubblingG">
+              <span id="bubblingG_1">
+              </span>
+              <span id="bubblingG_2">
+              </span>
+              <span id="bubblingG_3">
+              </span>
+              </div>
+                <script>
+                  fetchSvgGraph("{% url "ic50_visualisation_view" pk=visualisation_item.id format="html" %}", {{visualisation_item.id}});
+                </script>
+        {% endif %}</div>
+        <div class="dropdown no-margin full-width">
+            <button class="btn full-width btn-default dropdown-toggle" type="button" id="dropdownMenu{{visualisation_item.id}}" data-toggle="dropdown">
+              <span class="workflow-title">{% if visualisation_item.visualisation_title %}{{ visualisation_item.visualisation_title|title }}{% else %} no title yet{% endif %}</span>
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu{{visualisation_item.id}}">
+
+              <li role="presentation"><a href="{% url "ic50_visualisation_view" pk=visualisation_item.id format="png" %}" class="btn btn-default input-block-level" type="link" value="new" name="new" role="menuitem" tabindex="-1">Download Image (png)</a>
+              </li>
+                <li role="presentation">
+                {% if visualisation_item.marked_as_bad_fit %}
+                 <input type="checkbox" checked id="tester{{visualisation_item.id}}">Mark as poor fit</input>
+
+         {% else %}
+          <div class="checkbox">
+            <label>
+                          <input type="checkbox"  id="tester{{visualisation_item.id}}">Mark as poor fit</input>
+                        </label>
+                        </div>
+            {% endif %}
+<script>
+$('#tester{{visualisation_item.id}}').on('change', function (e) {
+  if(this.checked){
+    $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-3");
+            $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-4");
+            $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-2");
+            $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-1");
+fetchSvgGraph('{% url 'ic50_visualisation_update_view' marked_as_bad_fit=1 pk=visualisation_item.id format='html' %}',{{visualisation_item.id}});
+}else{
+
+  $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-3");
+            $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-4");
+            $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-2");
+            $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-1");
+  fetchSvgGraph('{% url 'ic50_visualisation_update_view' marked_as_bad_fit=0 pk=visualisation_item.id format='html' %}',{{visualisation_item.id}});
+}
+});
+</script>
+
+    </li>
+
+            </ul>
+        </div>
+    </div>
+  </div>
+  <!-- ajax request specific to this graph -->
+
+
+  {% endfor %}
+</div>
+
+
+
+{% include "visualise/visualisation_dropdowns_ajax.html" with pk=object.id workflow_revision_id=workflow_revision.id %}
+    
+<!-- end vis holder -->
+{% endif %}
