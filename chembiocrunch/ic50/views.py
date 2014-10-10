@@ -433,6 +433,14 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
                 os.makedirs(path)
             path +="/" +title
             workbook = xlsxwriter.Workbook(path)
+            worksheet1 = workbook.add_worksheet()
+
+            meta = self.object.get_latest_workflow_revision().get_meta_data()
+            for index, line in enumerate(meta.to_records()):
+                lis = list(line)
+                worksheet1.write_row(index, lis)
+
+
             worksheet = workbook.add_worksheet()
             column_names = ["plate", "coupound_id", "logIC50","ic50 (nM)", "results", "system_comments","user_marked_as_bad_fit", "graph"]
             for i, name in enumerate(column_names):

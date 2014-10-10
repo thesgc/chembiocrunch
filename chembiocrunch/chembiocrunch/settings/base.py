@@ -8,7 +8,7 @@ SELECT2_BOOTSTRAP = True
 ########## PATH CONFIGURATION
 # Absolute filesystem path to the Django project directory:
 DJANGO_ROOT = dirname(dirname(abspath(__file__)))
-LOGIN_REDIRECT_URL = '/my_workflows/'
+LOGIN_REDIRECT_URL = '/crunch/my_workflows/'
 LOGOUT_REDIRECT_URL = '/logged_out/'
 # Absolute filesystem path to the top-level project folder:
 SITE_ROOT = dirname(DJANGO_ROOT)
@@ -88,6 +88,7 @@ HDF5_ROOT = normpath(join(MEDIA_ROOT, 'hdf5', ""))
 MEDIA_URL = '/media/'
 ########## END MEDIA CONFIGURATION
 
+LOGIN_URL = "/crunch/accounts/login"
 
 ########## STATIC FILE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#static-root
@@ -179,8 +180,7 @@ ROOT_URLCONF = '%s.urls' % SITE_NAME
 
 
 ########## APP CONFIGURATION
-DJANGO_APPS = (
-    # Default Django apps:
+DJANGO_APPS = [    # Default Django apps:
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -196,21 +196,22 @@ DJANGO_APPS = (
     # 'django.contrib.admindocs',
     'cbc_common',
     'workflow',
+    'ic50',
+
     'crispy_forms',
     'floppyforms',
     #'easy_select2',
     #'select2light',
     #'pptx'
     'django_select2',
-    'ic50',
     'javascript_settings',
         'devserver',
 
-)
+]
 
 # Apps specific for this project go here.
-LOCAL_APPS = (
-)
+LOCAL_APPS = ]
+]
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS
