@@ -73,6 +73,21 @@ class IC50Workflow(TimeStampedModel):
     def get_latest_workflow_revision(self):
         return get_model("ic50", "IC50WorkflowRevision").objects.filter(workflow_id=self.id).order_by("pk")[0]
 
+    def get_meta_data(self):
+        filename=self.get_store_filename("metadata")
+        return read_hdf(filename,self.get_store_key(),)
+
+    def get_store_key(self):
+        return "ic50_wfdr_%s" % (  zero_pad_object_id(self.id),)
+
+    def get_store_filename(self,dtype ):
+        return '%sic50_workflow_meta%s.%s' % (settings.HDF5_ROOT, dtype, zero_pad_object_id(self.id))
+
+
+    def set_meta_data(self, df):
+        filename=self.get_store_filename("metadata")
+        df.to_hdf(filename,self.get_store_key(),mode="w")
+
 
 class IC50WorkflowRevision(TimeStampedModel):
 
@@ -128,9 +143,7 @@ class IC50WorkflowRevision(TimeStampedModel):
         filename=self.get_store_filename("configdata")
         return read_hdf(filename,self.get_store_key(),)
 
-    def get_meta_data(self):
-        filename=self.get_store_filename("metadata")
-        return read_hdf(filename,self.get_store_key(),)
+
 
 
 class IC50VisualisationManager(models.Manager):

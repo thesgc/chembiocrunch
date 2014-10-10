@@ -440,7 +440,7 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
             workbook = xlsxwriter.Workbook(path)
             worksheet1 = workbook.add_worksheet()
 
-            meta = self.object.get_latest_workflow_revision().get_meta_data()
+            meta = self.object.get_meta_data()
             for index, line in enumerate(meta.to_records()):
                 lis = list(line)
                 worksheet1.write_row(index, lis)

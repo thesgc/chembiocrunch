@@ -98,6 +98,7 @@ class IC50UploadForm(forms.ModelForm):
     def save(self, force_insert=False, force_update=False, commit=True):
         print "my save"
         model = super(IC50UploadForm, self).save()
+        model.set_meta_data(self.uploaded_meta)
         # do custom stuff
         for plate in self.plates:
             self.save_plate(model, plate)
