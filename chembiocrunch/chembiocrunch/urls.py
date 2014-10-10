@@ -50,8 +50,8 @@ if "django_webauth" in settings.INSTALLED_APPS:
                             url(r'^crunch/webauth/', include('django_webauth.urls', 'webauth')),
                             )
 
-if "ic50" in settings.INSTALLED_APPS:
-    from ic50 import urls as ic50urls
-    urlpatterns += patterns('',
-        url(r'^crunch/ic50_builder/', include(ic50urls) ),
-    )
+#if "ic50" in settings.INSTALLED_APPS:
+from ic50 import urls as ic50urls
+urlpatterns += patterns('',
+    url(r'^crunch/ic50_builder/', include(ic50urls) ),
+)

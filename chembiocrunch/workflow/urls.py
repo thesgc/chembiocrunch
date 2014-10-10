@@ -4,9 +4,9 @@ from . import views
 list_view = views.WorkflowListView
 from django.conf import settings
 print settings.INSTALLED_APPS
-if "ic50" in settings.INSTALLED_APPS:
-    from ic50.views import IC50WorkflowListView
-    list_view = IC50WorkflowListView
+#if "ic50" in settings.INSTALLED_APPS:
+from ic50.views import IC50WorkflowListView
+list_view = IC50WorkflowListView
 
 urlpatterns = [
     url(r'^$', list_view.as_view() , name='workflow_list'),
