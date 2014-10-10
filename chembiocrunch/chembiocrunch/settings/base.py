@@ -210,7 +210,7 @@ DJANGO_APPS = [    # Default Django apps:
 ]
 
 # Apps specific for this project go here.
-LOCAL_APPS = ]
+LOCAL_APPS = [
 ]
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
