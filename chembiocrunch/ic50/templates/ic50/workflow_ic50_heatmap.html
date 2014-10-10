@@ -1,0 +1,252 @@
+{% extends "workflow_base.html" %}
+{% load crispy_forms_tags %}
+{% block action_title %}
+Plate number {{ workflow_revision.plate_name }} of {{ count }} total plates imported
+{% endblock action_title %}
+{% block nav %}
+<div class="container" style="padding: 15px;">
+  {% include "visualise/visualisation_dropdowns_ajax.html" with pk=object.id workflow_revision_id=workflow_revision.id %}
+
+<div class="row">
+<a href="{% if prev %}{% url "workflow_ic50_heatmap" pk=object.id workflow_revision_id=prev.id %}" class="{% else %}/" class="disabled {% endif %} btn btn-primary pull-left"  role="button"  ><span class="glyphicon glyphicon-chevron-left"></span>Prev Plate</a>
+    <a href="{% if next %}{% url "workflow_ic50_heatmap" pk=object.id workflow_revision_id=next.id %}" class="{% else %}/" class="disabled {% endif %} btn btn-primary pull-right"  role="button"  >Next Plate<span class="glyphicon glyphicon-chevron-right"></span></a>
+  </div></div>
+{% endblock nav %}
+
+{% block help_text %}
+<ul>
+    <li>
+    Your data is displayed as a conditionally formatted heatmap
+    </li>
+    <li>
+    Validate your data by eye. You can deselect wells as outliers by clicking the value in each table cell. 
+    </li>
+    <li>
+    Deselected cells will turn grey. You can re-select cells by clicking the value again.
+    </li>
+    <li>
+      When you are finished, click Update and you will see the graphs below
+    </li>
+</ul>
+{% endblock help_text %}
+{% block content %}
+
+<form action="" class="crispy form-horizontal" method="post" id="hmp-to-ic50">
+  <fieldset>
+    <div class="row">
+      <div class="col-xs-12">
+        <div class="heatmap-container ">
+          <table class="heatmap">
+  
+          {% crispy heatmap_form %}
+  
+          </table>
+      </div>
+    </div>
+  </div>
+
+
+
+  <div class="row">
+    <div class="col-xs-12">
+      <div id="graph-loading-area" class="hidden">
+
+          <div class="bubblingG">
+          <span id="bubblingG_1">
+          </span>
+          <span id="bubblingG_2">
+          </span>
+          <span id="bubblingG_3">
+          </span>
+          </div>
+          
+      </div>
+
+      <div id="loading-status"></div>
+      
+    </div>
+  </div>
+
+
+
+  <div class="row form-actions">
+    <div class="col-xs-12">
+    <input type="submit" name="save" value="Update" class="btn btn-primary" id="submit-id-save">
+  </div>
+  </div>
+
+
+
+</form>
+
+
+{% endblock content %}
+{% block extra_js %}
+
+<script>
+
+
+
+
+$(document).ready(function() {
+  //monitor the heatmap well checkboxes
+  $('.checkboxinput').each(function(){
+
+    $(this).change(function(e){
+      //get parent table cell
+      //add or remove unchecked class
+      cell = $(this).closest('td');
+      cell.toggleClass("unchecked");
+    });
+
+  });
+
+  //monitor the column header checkboxes
+  $('.hmp_header .checkbox').change(function(e) {
+      trigger = $(this);
+      cell = $(this).closest('th');
+      column_number = cell.attr('data_column').toString();
+      //get the value of data-column
+      //set all of those to reflect the reverse checked state of the header
+      $('td[data_column="' + column_number + '"]').each(function(){
+        checkbox = $(this).find('.checkboxinput');
+        if (checkbox.prop('checked') != trigger.prop('checked')) {
+          checkbox.click();
+        }
+      });
+    
+  });
+
+  //monitor the column row checkboxes
+  $('.hmp_row_header .checkbox').change(function(e) {
+      trigger = $(this);
+      cell = $(this).closest('th');
+      row_letter = cell.attr('data_row').toString();
+      //get the value of data-row
+      //set all of those to reflect the reverse checked state of the header
+      $('td[data_row="' + row_letter + '"]').each(function(){
+        checkbox = $(this).find('.checkboxinput');
+        if (checkbox.prop('checked') != trigger.prop('checked')) {
+          checkbox.click();
+        }
+      });
+    
+  });
+
+  $('#submit-id-save').click(function(e) {
+    e.preventDefault();
+    $('#graph-loading-area').removeClass('hidden');
+    $('#loading-status').html("<p>Generating graphs...</p>");
+    $.ajax(
+    {
+        url : "{% url "workflow_ic50_heatmap" pk=object.id workflow_revision_id=current %}",
+        type: "POST",
+        data : $('#hmp-to-ic50').serialize(),
+        success:function(data, textStatus, jqXHR) 
+        {
+            //console.log(data)
+            //$('#graph-loading-area').addClass('hidden');
+            $('#loading-status').html("<p>Fetching graphs...</p>");
+            fetchGraphs();
+
+
+        },
+        error: function(jqXHR, textStatus, errorThrown) 
+        {
+            //if fails      
+        }
+    });
+  });
+
+
+{% if vis_count > 0 %}
+    $('#loading-status').html("<p>Generating graphs...</p>");
+    $.ajax(
+    {
+        url : "{% url "workflow_ic50_heatmap" pk=object.id workflow_revision_id=current %}",
+        type: "POST",
+        data : $('#hmp-to-ic50').serialize(),
+        success:function(data, textStatus, jqXHR) 
+        {
+            //console.log(data)
+            //$('#graph-loading-area').addClass('hidden');
+            $('#loading-status').html("<p>Fetching graphs...</p>");
+            fetchGraphs();
+
+
+        },
+        error: function(jqXHR, textStatus, errorThrown) 
+        {
+            //if fails      
+        }
+    });
+{% endif %}
+});
+
+function fetchGraphs() {
+  $.ajax({
+    url : "{% url "ic50_list_view_ajax" pk=object.id workflow_revision_id=current %}",
+    type: "GET",
+    success:function(data, textStatus, jqXHR) 
+    {
+        //console.log(data)
+        //$('#graph-loading-area').removeClass('hidden');
+        $('#graph-loading-area').html(data);
+        $('#loading-status').html("");
+        //buildCarousel();
+        //$(".carousel").carousel();
+        $('#graph-loading-area').removeClass('hidden');
+        //add listeners to the expand buttons on each graph
+        $('span.expand').click(function(e){
+          $(this).toggleClass('glyphicon-resize-full');
+          $(this).toggleClass('glyphicon-resize-small');
+          vis = $(this).closest('div.vis');
+          //toggle for med & large responsive classes
+          vis.toggleClass('col-md-2');
+          vis.toggleClass('col-md-6');
+          //toggle for small classes
+          vis.toggleClass('col-sm-4');
+          vis.toggleClass('col-sm-8');
+          //toggle for xtra small classes
+          vis.toggleClass('col-xs-6');
+          vis.toggleClass('col-xs-12');
+        });
+
+
+
+    },
+    error: function(jqXHR, textStatus, errorThrown) 
+    {
+        console.log("fetchGraphs ajaxfail");
+    }
+
+  });
+}
+
+function fetchSvgGraph(graph_url, vis_id){
+      $.ajax({
+        url : graph_url,
+        type: "GET",
+        success:function(data, textStatus, jqXHR) 
+        {
+            //console.log(data)
+            //$('#graph-loading-area').addClass('hidden');
+            var graph_loading = $('#vis-' + vis_id).find('.vis-thumb');
+            graph_loading.html(data.html);
+            
+
+            $('#vis-' + vis_id).addClass(data.error_class);
+
+
+        },
+        error: function(jqXHR, textStatus, errorThrown) 
+        {
+            console.log('ajax fail for graph ' + vis_id);
+        }
+      });
+    }
+
+</script>
+
+
+{% endblock extra_js %}
