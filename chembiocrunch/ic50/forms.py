@@ -96,7 +96,6 @@ class IC50UploadForm(forms.ModelForm):
 
 
     def save(self, force_insert=False, force_update=False, commit=True):
-        print "my save"
         model = super(IC50UploadForm, self).save()
         model.set_meta_data(self.uploaded_meta)
         # do custom stuff
@@ -121,9 +120,12 @@ class IC50UploadForm(forms.ModelForm):
         possible_control_records = plate["config"][plate["config"]['global_compound_id'].isnull()]["full_ref"].tolist()
 
         controls_records = data[data["full_ref"].isin(included_wells) & data["full_ref"].isin(self.control_wells) & data["full_ref"].isin(possible_control_records)]
-        print controls_records["full_ref"]
+
         maximum = controls_records["figure"].mean()
-        config_columns = config.merge(data)
+
+
+        config_columns = config.merge(data, on="full_ref")
+        config_columns.to_csv("/tmp/tester.csv")
         config_columns["status"] = "active"
         config_columns[["figure"]] = config_columns[["figure"]].astype(float)
         minimum = 0 # Add min controls here
@@ -192,13 +194,7 @@ def get_plate_ref(dfseries):
 
 
 class LabCyteEchoIC50UploadForm(IC50UploadForm):
-
-
-
-
     def __init__(self, *args, **kwargs):
-
-
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.form_class = 'form-horizontal'
@@ -211,6 +207,7 @@ class LabCyteEchoIC50UploadForm(IC50UploadForm):
         )
         self.request = kwargs.pop('request')
         return super(LabCyteEchoIC50UploadForm, self).__init__(*args, **kwargs)
+
 
     def clean_uploaded_data_file(self):
         '''This method cleans the incoming data file and converts it to a pandas DataFrame
@@ -266,7 +263,6 @@ class LabCyteEchoIC50UploadForm(IC50UploadForm):
         if it is not a multiplate experiment simply fill this field with 0 on both data frames 
         "global_compound_id" - an id for the compounds being tested. Note that by default if the compound is 
         subjected to duplicate assays on the same plate this will be treated as a single assay and all the points plotted on one curve'''
-
         uploaded_config_file = self.files['uploaded_config_file']
         mime = magic.from_buffer(self.files["uploaded_config_file"].read(), mime=True)
         if 'text/' in mime:
@@ -280,7 +276,6 @@ class LabCyteEchoIC50UploadForm(IC50UploadForm):
         elif "application/" in mime:
             try:
                 try:
-
                     self.uploaded_config = get_excel_data_frame(uploaded_config_file.temporary_file_path(), skiprows=8, header=0)
                 except Exception:
                     raise forms.ValidationError("Error processing config Excel File")
@@ -288,14 +283,12 @@ class LabCyteEchoIC50UploadForm(IC50UploadForm):
                 raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
         else:
             raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
-
         self.uploaded_config["fullname"] = self.uploaded_config["Destination Plate Name"] + ": " + self.uploaded_config["Destination Well"]
         self.uploaded_config["full_ref"] = self.uploaded_config["Destination Well"]
         self.uploaded_config["plate_ref"] = get_plate_ref(self.uploaded_config["Destination Plate Name"])
         self.uploaded_config["global_compound_id"] = self.uploaded_config["Sample ID"]
         self.uploaded_config["concentration"] = self.uploaded_config["Destination Concentration"] * float(1000000000)
         self.uploaded_config["plate_type"]  = self.uploaded_config["Destination Plate Type"]
-
         return self.cleaned_data['uploaded_config_file']
 
 
@@ -327,14 +320,12 @@ class LabCyteEchoIC50UploadForm(IC50UploadForm):
             else:
                 raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
             if not self.uploaded_meta.empty:
-                print self.uploaded_meta[5]
                 controls = self.uploaded_meta[self.uploaded_meta[4].str.lower().isin(["control wells"]) & self.uploaded_meta[5].notnull()]
                 if not controls.empty:
                     self.control_wells = cell_range(controls[5].tolist()[0])
                 refs = self.uploaded_meta[self.uploaded_meta[4].str.lower().isin(["reference compound wells"]) & self.uploaded_meta[5].notnull()]
                 if not refs.empty:
                     self.reference_compound_wells = cell_range(refs[5].tolist()[0])
-
             return self.cleaned_data['uploaded_meta_file']
         return None
 

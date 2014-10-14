@@ -273,21 +273,23 @@ class IC50HeatmapView(IC50WorkflowDetailView):
             vis_list = get_model("ic50", "ic50visualisation").objects.filter(data_mapping_revision__id=self.workflow_revision.id)
             ic50_groups = config_columns.groupby("global_compound_id")
             for vis in vis_list:
+
                 group_df = ic50_groups.get_group(vis.compound_id)
                 #Here we rebuild a given vis if some of its points have been excluded
                 if len(group_df[group_df["status"].isin(["inactive",])]) != 0:
                     vis.raw_data = group_df.to_json()
                     vis.html = ""
                     vis.save()
+
+            self.workflow_revision = self.object.workflow_ic50_revisions.get(pk=self.workflow_revision_id)
             self.workflow_revision.steps_json = json.dumps(steps_json)
             self.workflow_revision.save()
 
-            visualisation_id = self.workflow_revision.visualisations.all()[0].id
 
             #for the ajax graph loading, we can't redirect and we (I) can't send back a rendered view 
             #send back necessary config data to generate graphs
             if request.is_ajax():
-                return JsonResponse({'pk': self.object.pk, 'workflow_revision_id' : self.workflow_revision.id, "visualisation_id" : visualisation_id, })
+                return JsonResponse({'pk': self.object.pk, 'workflow_revision_id' : self.workflow_revision.id,  })
 
             #this needs to render to response rather than redirect
             return HttpResponseRedirect(
