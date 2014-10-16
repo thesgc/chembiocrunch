@@ -92,6 +92,12 @@ class IC50CurveFit(object):
         self.results["message"] = ""
         if self.results["max"] < 0.1 :
             self.results["message"] = vis.INACTIVE
+        elif self.results["IC50"] > max(self.xpoints):
+            self.results["message"] = vis.INCOMPLETE
+        elif self.results["IC50"] > max(self.xpoints):
+            self.results["message"] = vis.INCOMPLETE
+        elif self.results["IC50"] < min(self.xpoints):
+            self.results["message"] = vis.INCOMPLETE
         elif self.results["max"] < 0.8:
             self.results["message"] = vis.TOP_BELOW_80
         elif self.results["min"] > 0.2:
