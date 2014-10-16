@@ -120,19 +120,27 @@ class IC50UploadForm(forms.ModelForm):
         possible_control_records = plate["config"][plate["config"]['global_compound_id'].isnull()]["full_ref"].tolist()
 
         controls_records = data[data["full_ref"].isin(included_wells) & data["full_ref"].isin(self.control_wells) & data["full_ref"].isin(possible_control_records)]
-
+        solvent_controls_records = data[~data["full_ref"].isin(included_wells) & data["full_ref"].isin(self.control_wells) & data["full_ref"].isin(possible_control_records)]
         maximum = controls_records["figure"].mean()
-
+        maximum_error = controls_records["figure"].std()
+        solvent_maximum = solvent_controls_records["figure"].mean()
+        solvent_maximum_error = solvent_controls_records["figure"].std()
 
         config_columns = config.merge(data, on="full_ref")
-        config_columns.to_csv("/tmp/tester.csv")
         config_columns["status"] = "active"
         config_columns[["figure"]] = config_columns[["figure"]].astype(float)
         minimum = 0 # Add min controls here
+        minimum_error = 0
         if self.reference_compound_wells:
             reference_compound_records = data[data["full_ref"].isin(included_wells) & data["full_ref"].isin(self.reference_compound_wells)]
             minimum = reference_compound_records["figure"].mean()
-
+            minimum_error = reference_compound_records["figure"].std()
+        new_workflow_revision.minimum = minimum
+        new_workflow_revision.minimum_error = minimum_error
+        new_workflow_revision.maximum = maximum
+        new_workflow_revision.maximum_error = maximum_error
+        new_workflow_revision.solvent_maximum = solvent_maximum
+        new_workflow_revision.solvent_maximum_error = solvent_maximum_error      
 
         config_columns["percent_inhib"] =  (maximum - config_columns["figure"] )/(maximum - minimum)
 
@@ -287,8 +295,10 @@ class LabCyteEchoIC50UploadForm(IC50UploadForm):
         self.uploaded_config["full_ref"] = self.uploaded_config["Destination Well"]
         self.uploaded_config["plate_ref"] = get_plate_ref(self.uploaded_config["Destination Plate Name"])
         self.uploaded_config["global_compound_id"] = self.uploaded_config["Sample ID"]
-        self.uploaded_config["concentration"] = self.uploaded_config["Destination Concentration"] * float(1000000000)
+        self.uploaded_config["concentration"] = self.uploaded_config["Destination Concentration"] * float(1000000)
         self.uploaded_config["plate_type"]  = self.uploaded_config["Destination Plate Type"]
+        #filter for only the appropirate liquid handler plate type
+        self.uploaded_config = self.uploaded_config[self.uploaded_config["plate_type"].isin(["Proxiplate_384PS",])]
         return self.cleaned_data['uploaded_config_file']
 
 
@@ -493,6 +503,6 @@ class HeatmapForm(forms.Form):
 
 
 FORM_REGISTRY = {"LabcyteEcho" : LabCyteEchoIC50UploadForm ,
-                    "Template" : TemplateIC50UploadForm
+                 #   "Template" : TemplateIC50UploadForm
                     }
 

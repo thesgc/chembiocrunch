@@ -101,6 +101,13 @@ class IC50WorkflowRevision(TimeStampedModel):
     workflow = models.ForeignKey('IC50Workflow', related_name='workflow_ic50_revisions')
     plate_name = models.CharField(max_length=30, default="")
     steps_json = models.TextField(default="[]")
+    minimum = models.FloatField(default=0)
+    minimum_error = models.FloatField(default=0)
+    maximum = models.FloatField(default=0)
+    maximum_error = models.FloatField(default=0)
+    solvent_maximum = models.FloatField(default=0)
+    solvent_maximum_error = models.FloatField(default=0)  
+
 
     @property
     def previous(self):
@@ -179,6 +186,7 @@ class IC50Visualisation(TimeStampedModel):
     objects = IC50VisualisationManager()
     raw_data = models.TextField(default="{}")
     marked_as_bad_fit = models.BooleanField(default=False)
+
 
 
 

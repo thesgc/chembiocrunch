@@ -70,15 +70,19 @@ class IC50CurveFit(object):
         params = Parameters()
         params.add('bottom',   value= 0, vary=vary)
         params.add('top', value=1, vary=vary)
-        params.add('logIC50', value= 3)
+        params.add('logIC50', value= -0.1)
         params.add('hill', value= 2)
         result = minimize(ic50min, params, args=( self.x, self.data))
+
         self.results = result.values
         self.results["xpoints"] = self.xpoints
         self.results["ypoints"] = self.ypoints
         self.results["IC50"] = 10 ** result.params["logIC50"] #reverse the log
 
         self.results["logIC50error"] = result.params["logIC50"].stderr
+        self.results["IC50error"] = 10 ** self.results["logIC50error"]
+        self.results["r-squared"] = 1 - result.residual.var() / np.var(self.data)
+
         self.results["hillerror"] = result.params["hill"].stderr
         #Calculate an average % error across the hill and IC50 if greater than 30% we can scrap the result
         self.results["errorpercent"] = 50 * ((float(self.results["logIC50error"]) / float(self.results["logIC50"])) +
@@ -95,6 +99,12 @@ class IC50CurveFit(object):
         self.results["inactivex"] = self.inactivex
         self.results["labels"] = self.labels
         self.results["inactivey"] = self.inactivey
+
+        ci = lmfit.conf_interval(result, p_names=["logIC50",])
+        #retrieve the confidence intervals for upper and lower 95% for IC50 based on curve fit
+        self.results["IC50_lower_95"] = 10 ** ci["logIC50"][1]
+        self.results["IC50_upper_95"] = 10 ** ci["logIC50"][5]
+
 
 
 
@@ -117,7 +127,7 @@ class IC50CurveFit(object):
         ax.plot(xcurve,smooted_best_fit_line, 'b')
         #self.fig = f
         
-        ax.set_xlabel(u'Log (nanomolar concentration)')
+        ax.set_xlabel(u'Log (micromolar concentration)')
         ax.set_ylabel(u'Normalised Inhibition')
 
         f.tight_layout()
