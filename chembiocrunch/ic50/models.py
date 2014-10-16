@@ -1,4 +1,4 @@
-from django.db import models
+# -*- coding: utf8 -*-
 from django.db import models
 from pandas.io.pytables import get_store
 from django_extensions.db.models import TimeStampedModel
@@ -60,7 +60,7 @@ class IC50Workflow(TimeStampedModel):
     workflow_type = "ic50workflow"
 
     objects = IC50WorkflowManager()
-
+    metadata = DataFrame()
     #def get_latest_data_revision(self):
     #    return get_model("workflow", "Ic50Workflow").objects.get_latest_workflow_revision(self.id)
 
@@ -88,6 +88,20 @@ class IC50Workflow(TimeStampedModel):
         filename=self.get_store_filename("metadata")
         df.to_hdf(filename,self.get_store_key(),mode="w")
 
+    def meta_by_name(self, fieldname):
+        if self.metadata.empty:
+            self.metadata = self.get_meta_data().replace(np.nan, "")
+        dataset = self.metadata[self.metadata[4].str.lower().isin([fieldname.lower(),]) & self.metadata[5].notnull()]
+        value = ""
+        if not dataset.empty:
+            value = dataset[5].tolist()[0]
+            print value
+        return value
+
+    def get_username_for_export(self):
+        if self.created_by.first_name and self.created_by.last_name:
+            return "%s%s" % (self.created_by.first_name[1].upper() , self.created_by.last_name.upper())
+        return self.created_by.username.upper()
 
 class IC50WorkflowRevision(TimeStampedModel):
 
@@ -107,6 +121,7 @@ class IC50WorkflowRevision(TimeStampedModel):
     maximum_error = models.FloatField(default=0)
     solvent_maximum = models.FloatField(default=0)
     solvent_maximum_error = models.FloatField(default=0)  
+
 
 
     @property
@@ -171,6 +186,27 @@ class IC50Visualisation(TimeStampedModel):
     Holder object for an IC50 visualisation - there will be a set of these for each
     IC50 workflow revision
     '''
+    GOOD_CURVE = "Good Curve"              
+    TOP_BELOW_80 =  "Top plateaus at below 80%"               
+    BOTTOM_ABOVE_20 = "Bottom plateaus above 20%"             
+    TOP_ABOVE_120 = "Top plateaus above 120 %"              
+    BOTTOM_BELOW_MINUS_20 = "Bottom plateaus below- 20%"              
+    INCOMPLETE = "incomplete curve"      
+    POOR_CURVE = "poor curve"       
+    INACTIVE = "inactive compound"               
+    STEEP_HILL = "steep hillslope"      
+    TOP_NO_PLATEAUX = "Top of curve does not plateaux"
+    COMMENT_CHOICES = ((GOOD_CURVE, GOOD_CURVE),
+                        (TOP_BELOW_80, TOP_BELOW_80),
+                        (BOTTOM_ABOVE_20, BOTTOM_ABOVE_20),
+                        (TOP_ABOVE_120, TOP_ABOVE_120),
+                        (BOTTOM_BELOW_MINUS_20, BOTTOM_BELOW_MINUS_20),
+                        (INCOMPLETE, INCOMPLETE),
+                        (POOR_CURVE, POOR_CURVE),
+                        (INACTIVE, INACTIVE),
+                        (STEEP_HILL, STEEP_HILL),
+                        (TOP_NO_PLATEAUX, TOP_NO_PLATEAUX),)
+
     data_mapping_revision = models.ForeignKey('IC50WorkflowRevision', related_name="visualisations")
     x_axis = models.CharField(max_length=200, default="Destination Concentration")
     y_axis = models.CharField(max_length=200, default='Percent inhibition')
@@ -186,9 +222,34 @@ class IC50Visualisation(TimeStampedModel):
     objects = IC50VisualisationManager()
     raw_data = models.TextField(default="{}")
     marked_as_bad_fit = models.BooleanField(default=False)
+    raw_dataframe = DataFrame()
+    comment = models.CharField(max_length=30, choices=COMMENT_CHOICES, default=GOOD_CURVE)
 
 
-
+    def get_results_for_datapoint(self):
+        '''When ordered by concentration, take the nth group and do an average - only used for the 
+        export to beehive function'''
+        raw_dataframe = read_json(self.raw_data)
+        raw_dataframe.sort(["concentration"], inplace=True)
+        raw_dataframe = raw_dataframe.groupby("concentration")
+        index = 0
+        for index, group in enumerate(raw_dataframe.groups):
+            concentration = group
+            df = raw_dataframe.get_group(group)
+            inhibition = df["percent_inhib"].mean()
+            inhibition_error = df["percent_inhib"].std()
+            realind = index +1
+            yield [(u"  Compound Concentration %d (uM) (Compound Concentration Range) " % realind, concentration ,),
+                     (u"  Compound Concentration %d Inhibition (%%) (Compound Concentration Range) " % realind, inhibition ,),
+                     (u"  Compound Concentration %d Error (%%) (Compound Concentration Range) " % realind, inhibition_error ,)]
+        while index < 12:
+            index += 1
+            #Fill in any missing values up to 12 columns in total
+            realind = index +1
+            yield [(u"  Compound Concentration %d (uM) (Compound Concentration Range) " % realind , "" ,),
+                 (u"  Compound Concentration %d Inhibition (%%) (Compound Concentration Range) " % realind, "" ,),
+                 (u"  Compound Concentration %d Error (%%) (Compound Concentration Range) " % realind, "" ,)]
+            
 
     def get_upload_to(self, name):
         return "%s/plates/%d/compounds/%s/%s" % (settings.MEDIA_ROOT, 
@@ -202,7 +263,7 @@ class IC50Visualisation(TimeStampedModel):
 
         group_df.sort(["percent_inhib","concentration"], inplace=True)
         curve_fitter = IC50CurveFit(main_group_df=group_df)
-        curve_fitter.get_fit(constrained=True)
+        curve_fitter.get_fit(self, constrained=True)
         return curve_fitter
 
 
@@ -218,19 +279,11 @@ class IC50Visualisation(TimeStampedModel):
         #get the results
         #find the error message part
         #output the appropriate css class for each error
-        results = json.loads(self.results)
-        error_msg = results['values']['message']
-        print error_msg
-        if self.marked_as_bad_fit:
+        if self.comment != self.GOOD_CURVE:
             return 'ic50-error-4'
-        elif error_msg == "Low total inhibition, values could be inaccurate":
-            return 'ic50-error-1'
-        elif error_msg == "No low inhibition range - values could be inaccurate":
-            return 'ic50-error-2'
-        elif error_msg == "Error, no good line fit found":
-            return 'ic50-error-3'
         else:
-            return ''        
+            return ""
+              
 
 
 

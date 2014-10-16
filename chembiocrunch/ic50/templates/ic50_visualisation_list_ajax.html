@@ -12,14 +12,17 @@
     <div class="well col-sd-8 col-sd-offset-2 {% ifequal visualisation_item.id visualisation.id %} activeitem {% endifequal %}">
 
       <div class="row-fluid">
-        <span class="expand glyphicon glyphicon-resize-full pull-right"></span>
+        <span class="workflow-title">{% if visualisation_item.visualisation_title %}{{ visualisation_item.visualisation_title|title }}{% else %} no title yet{% endif %}</span>
+        <span class="expand glyphicon glyphicon-resize-full pull-left"></span>
+        <a href="{% url "ic50_visualisation_view" pk=visualisation_item.id format="png" %}" class="btn btn-default input-block-level" type="link" value="new" name="new" role="menuitem" tabindex="-1"><span class="expand glyphicon glyphicon-download_alt pull-right"></span></a>
+
       </div>
 
       <div class="vis-thumb "> {% if visualisation_item.html %}
             {{ visualisation_item.html|add_responsive_tags|safe }}
 
             {% else %}
-            No graph? <a onclick="fetchSvgGraph("{% url "ic50_visualisation_view" pk=visualisation_item.id format="html" %}", {{visualisation_item.id}});" >Reload</a>
+            No graph? <a href="{{ request.get_full_path }}" >Reload</a>
               <div class="bubblingG">
               <span id="bubblingG_1">
               </span>
@@ -32,49 +35,26 @@
                   fetchSvgGraph("{% url "ic50_visualisation_view" pk=visualisation_item.id format="html" %}", {{visualisation_item.id}});
                 </script>
         {% endif %}</div>
-        <div class="dropdown no-margin full-width">
-            <button class="btn full-width btn-default dropdown-toggle" type="button" id="dropdownMenu{{visualisation_item.id}}" data-toggle="dropdown">
-              <span class="workflow-title">{% if visualisation_item.visualisation_title %}{{ visualisation_item.visualisation_title|title }}{% else %} no title yet{% endif %}</span>
-              <span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu{{visualisation_item.id}}">
+        
+<select  id="vis_comment_{{visualisation_item.id}}" required="" class="select form-control form-control" >
+  {% for choice in visualisation_item.COMMENT_CHOICES %}
+  <option value="{{ choice.0 }}" {% ifequal visualisation_item.comment choice.0 %}selected="selected" {% endifequal %}>{{ choice.0 }}</option>
+  {% endfor %}
 
-              <li role="presentation"><a href="{% url "ic50_visualisation_view" pk=visualisation_item.id format="png" %}" class="btn btn-default input-block-level" type="link" value="new" name="new" role="menuitem" tabindex="-1">Download Image (png)</a>
-              </li>
-                <li role="presentation">
-                {% if visualisation_item.marked_as_bad_fit %}
-                 <input type="checkbox" checked id="tester{{visualisation_item.id}}">Mark as poor fit</input>
+</select>
 
-         {% else %}
-          <div class="checkbox">
-            <label>
-                          <input type="checkbox"  id="tester{{visualisation_item.id}}">Mark as poor fit</input>
-                        </label>
-                        </div>
-            {% endif %}
 <script>
-$('#tester{{visualisation_item.id}}').on('change', function (e) {
-  if(this.checked){
-    $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-3");
-            $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-4");
-            $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-2");
-            $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-1");
-fetchSvgGraph('{% url 'ic50_visualisation_update_view' marked_as_bad_fit=1 pk=visualisation_item.id format='html' %}',{{visualisation_item.id}});
-}else{
+$('#vis_comment_{{visualisation_item.id}}').on('change', function (e) {
+  var comment = $(this).find(":selected").text();
+  if (comment == "Good Curve"){
+    $('#vis-{{visualisation_item.id}}').removeClass("ic50-error-4");
 
-  $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-3");
-            $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-4");
-            $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-2");
-            $('#vis-' + {{visualisation_item.id}}).removeClass("ic50-error-1");
-  fetchSvgGraph('{% url 'ic50_visualisation_update_view' marked_as_bad_fit=0 pk=visualisation_item.id format='html' %}',{{visualisation_item.id}});
-}
+  }
+fetchSvgGraph('{% url 'ic50_visualisation_update_view' pk=visualisation_item.id format='html' comment='COMMENT' %}'.replace("COMMENT", comment)      ,{{visualisation_item.id}});
+
 });
 </script>
 
-    </li>
-
-            </ul>
-        </div>
     </div>
   </div>
   <!-- ajax request specific to this graph -->

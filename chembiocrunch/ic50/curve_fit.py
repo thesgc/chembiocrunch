@@ -3,7 +3,7 @@
 
 # In[1]:
 from StringIO import StringIO
-from lmfit import minimize, Parameters, Parameter, report_fit
+from lmfit import minimize, Parameters, Parameter, report_fit, conf_interval
 import numpy as np
 
 from scipy.interpolate import spline
@@ -60,7 +60,7 @@ class IC50CurveFit(object):
         self.data = np.array(self.ypoints)
 
 
-    def get_fit(self, constrained=None):
+    def get_fit(self, vis, constrained=None):
         '''This fuction runs the curve fitting using the lmfit module
         - assumes that the class has been initialised with 
         a dataframe'''
@@ -90,20 +90,29 @@ class IC50CurveFit(object):
         self.results["max"] = max(self.data)
         self.results["min"] = min(self.data)
         self.results["message"] = ""
-        if self.results["max"] < 0.8:
-            self.results["message"] = "Low total inhibition, values could be inaccurate"
-        if self.results["min"] > 0.2:
-            self.results["message"] = "No low inhibition range - values could be inaccurate"
-        if self.results["errorpercent"] > 20 or self.results["errorpercent"] < -20:
-            self.results["message"] = "Error, no good line fit found"
+        if self.results["max"] < 0.1 :
+            self.results["message"] = vis.INACTIVE
+        elif self.results["max"] < 0.8:
+            self.results["message"] = vis.TOP_BELOW_80
+        elif self.results["min"] > 0.2:
+            self.results["message"] = vis.BOTTOM_ABOVE_20
+        elif self.results["max"] > 1.2:
+            self.results["message"] = vis.TOP_ABOVE_120
+        elif self.results["min"] < -0.2 :
+            self.results["message"] = vis.BOTTOM_BELOW_MINUS_20
+        elif self.results["errorpercent"] > 30 or self.results["errorpercent"] < -30:
+            self.results["message"] = vis.POOR_CURVE
+        else:
+            self.results["message"] = vis.GOOD_CURVE
+
         self.results["inactivex"] = self.inactivex
         self.results["labels"] = self.labels
         self.results["inactivey"] = self.inactivey
 
-        ci = lmfit.conf_interval(result, p_names=["logIC50",])
-        #retrieve the confidence intervals for upper and lower 95% for IC50 based on curve fit
-        self.results["IC50_lower_95"] = 10 ** ci["logIC50"][1]
-        self.results["IC50_upper_95"] = 10 ** ci["logIC50"][5]
+        # ci = conf_interval(result, p_names=["logIC50",])
+        # #retrieve the confidence intervals for upper and lower 95% for IC50 based on curve fit
+        # self.results["IC50_lower_95"] = 10 ** ci["logIC50"][1]
+        # self.results["IC50_upper_95"] = 10 ** ci["logIC50"][5]
 
 
 

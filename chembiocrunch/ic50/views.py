@@ -18,7 +18,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 import json
-
+from pprint import pprint
 import seaborn as sns
 from workflow.models import GRAPH_MAPPINGS
 from seaborn import plotting_context, set_context
@@ -329,7 +329,7 @@ class Ic50ListViewAjax(IC50WorkflowDetailView):
 
         context["visualisation_id"] = visualisation_id
         
-        context["visualisation_list"] = context["workflow_revision"].visualisations.all()
+        context["visualisation_list"] = context["workflow_revision"].visualisations.all().order_by("created")
         context["isic50"] = True
 
         return context
@@ -347,13 +347,9 @@ class Ic50VisualisationView(VisualisationView):
         self.object = self.get_object()
         self.format = kwargs.pop("format")
         self.get_fig()
-        if "marked_as_bad_fit" in kwargs:
-            if int(kwargs.pop("marked_as_bad_fit")) >0:
-                self.object.marked_as_bad_fit = True
-            else:
-                self.object.marked_as_bad_fit = False
+        if "comment" in kwargs:
+            self.object.comment = kwargs.pop("comment")
             self.object.save()
-            print self.object.marked_as_bad_fit
         self.object = self.get_object()
         if self.format=="html":
             return self.get_html()
@@ -375,6 +371,7 @@ class Ic50VisualisationView(VisualisationView):
 
         self.object.html = curve_fitter.svg
         self.object.results = json.dumps({"values": curve_fitter.results})
+        self.object.comment = curve_fitter.results.get("message", self.object.GOOD_CURVE)
 
         self.object.save()
 
@@ -450,11 +447,11 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
 
 
             worksheet = workbook.add_worksheet()
-            column_names = ["plate", "coupound_id", "logIC50","ic50 (μM)", "IC50 standard error", "Hill", "Hill standard error", "results", "system_comments","user_marked_as_bad_fit", "graph"]
+            column_names = [u"plate", u"coupound_id", u"logIC50",u"ic50 (μM)", u"IC50 standard error", "Hill", "Hill standard error", "results", "system_comments","user_marked_as_bad_fit", "graph"]
             for i, name in enumerate(column_names):
                 worksheet.write(0,i,name)
                 if name=="graph":
-                    worksheet.set_column(i,i, 140)
+                    worksheet.set_column(i,i, 30)
 
             for index, vis in enumerate(vis_list):
                 res = json.loads(vis.results).get("values", {})
@@ -478,161 +475,91 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
                 if vis.marked_as_bad_fit:
                     worksheet.write(index+1,9,"yes")
                 else:
-                    worksheet.write(index+1,10,"no")
+                    worksheet.write(index+1,9,"no")
                 if vis.thumb:
-                    worksheet.insert_image(index+1,11,vis.thumb.path)
+                    worksheet.insert_image(index+1,10,vis.thumb.path)
             
 
             index =0
             username = self.object.get_username_for_export()
-
-            """
-Assay Type
-Date of Assay
-Assay Units
-Assay Buffer
-Compound Incubation Time (mins)
-Compound Incubation Temperature
-Protein
-Protein Concentration (nM)
-Peptide ID
-Peptide Description
-Solvent
-Solvent Concentration (%)
-Peptide Concentration (nM)
-Peptide Incubation Time
-Incubation Temperature
-Bead Donor (mg/ml)
-Bead Acceptor (mg/ml)
-Antibody Concentration(ug/ml)
-Bead Incubation time (mins)
-Incubation Temperature
-ELN Ref
-Reference Compound Wells
-Control Wells
-"""
-
+            worksheet2 = workbook.add_worksheet()
             for index, vis in enumerate(vis_list):
                 res = json.loads(vis.results).get("values", {})
-                row_data = [("  Experiment Type (Alphascreen) ", self.object.meta_by_name("Assay Type") ,)
-                    ("  Purification ID (Purification) ", self.object.meta_by_name("Protein") ,)
-                    ("  Protein Concentration (uM) (Alphascreen) ", self.object.meta_by_name("Protein Concentration (nM)") ,) #Issue with units
-                    ("  SGC Global Compound ID (Batch) (Peptide) ", self.object.meta_by_name("Peptide ID") ,)
-                    ("  SGC Global Compound ID (Batch) (Compound) ", vis.data_mapping_revision.plate_name ,)
-                    ("  Peptide Concentration (uM) (Alphascreen) ", self.object.meta_by_name("Peptide Concentration (nM)") ,)
-                    ("  Solvent (Alphascreen) ", self.object.meta_by_name("Solvent"),)
-                    ("  Solvent Concentration (%) (Alphascreen) ", self.object.meta_by_name("Solvent Concentration") ,)
-                    ("  Buffer (Alphascreen) ", self.object.meta_by_name("Assay Buffer") ,)
-                    ("  Compound Incubation Time (mins) (Alphascreen) ", self.object.meta_by_name("Compound Incubation Time (mins)") ,)
-                    ("  Peptide Incubation Time (mins) (Alphascreen) ", self.object.meta_by_name("Peptide Incubation Time") ,)
-                    ("  Bead Incubation Time (mins) (Alphascreen) ", self.object.meta_by_name("Bead Incubation Time") ,)
-                    ("  Incubation Temperatures (C) (Alphascreen) ", self.object.meta_by_name("Incubation Temperature") ,)
-                    ("  LogIC50 (relative to 1M) (Data Summary) ", res.get("logIC50", "") -6 ,)
-                    ("  LogIC50 error (Data Summary) ", res.get("logIC50error","") -6 ,)
-                    ("  IC50 (Data Summary) ", res.get("IC50", "") ,)
-                    ("  Curve Fit: Upper 95% ConfLimit (Data Summary) ", res.get("IC50_upper_95", "") ,)
-                    ("  Curve Fit: Lower 95% ConfLimit (Data Summary) ", res.get("IC50_lower_95", ""),)
-                    ("  Curve Fit: Hill Slope (Data Summary) ", res.get("IC50_lower_95", "") ,)
-                    ("  Curve (Obsolete) (Data Summary) ", "" ,)
-                    ("  Curve Fit: Bottom (Data Summary) ", res.get("bottom", "") ,)
-                    ("  Curve Fit: Top (Data Summary) ", res.get("top", "") ,)
-                    ("  R2 (Data Summary) ", res.get("r-squared", "") ,)
-                    ("  Data Quality (Data Summary) ", "" ,)
-                    ("  Comments on Curve Fit (Data Summary) ", "" ,)
-                    ("  Enzyme Reference (Alphascreen) ", vis.data_mapping_revision.maximum ,)
-                    ("  Enzyme Reference Error (Alphascreen) ", vis.data_mapping_revision.maximum_error ,)]
-                for n in range(1,12):
-                    #get a 3 member tuple of tuples with the results for a particular datapoint
-                    row_data += get_results_for_datapoint(res, n)
+                row_data = [(u"  Experiment Type (Alphascreen) ", self.object.meta_by_name("Assay Type") ,),
+                    (u"  Purification ID (Purification) ", self.object.meta_by_name("Protein") ,),
+                    (u"  Protein Concentration (uM) (Alphascreen) ", self.object.meta_by_name("Protein Concentration (nM)") ,), #Issue with units
+                    (u"  SGC Global Compound ID (Batch) (Peptide) ", self.object.meta_by_name("Peptide ID") ,),
+                    (u"  SGC Global Compound ID (Batch) (Compound) ", vis.data_mapping_revision.plate_name ,),
+                    (u"  Peptide Concentration (uM) (Alphascreen) ", self.object.meta_by_name("Peptide Concentration (nM)") ,),
+                    (u"  Solvent (Alphascreen) ", self.object.meta_by_name("Solvent"),),
+                    (u"  Solvent Concentration (%) (Alphascreen) ", self.object.meta_by_name("Solvent Concentration") ,),
+                    (u"  Buffer (Alphascreen) ", self.object.meta_by_name("Assay Buffer") ,),
+                    (u"  Compound Incubation Time (mins) (Alphascreen) ", self.object.meta_by_name("Compound Incubation Time (mins)") ,),
+                    (u"  Peptide Incubation Time (mins) (Alphascreen) ", self.object.meta_by_name("Peptide Incubation Time") ,),
+                    (u"  Bead Incubation Time (mins) (Alphascreen) ", self.object.meta_by_name("Bead Incubation Time") ,),
+                    (u"  Incubation Temperatures (C) (Alphascreen) ", self.object.meta_by_name("Incubation Temperature") ,),
+                    (u"  LogIC50 (relative to 1M) (Data Summary) ", res.get("logIC50", "") -6 ,),
+                    (u"  LogIC50 error (Data Summary) ", res.get("logIC50error","") -6 ,),
+                    (u"  IC50 (Data Summary) ", res.get("IC50", "") ,),
+                    (u"  Curve Fit: Upper 95% ConfLimit (Data Summary) ", res.get("IC50_upper_95", "") ,),
+                    (u"  Curve Fit: Lower 95% ConfLimit (Data Summary) ", res.get("IC50_lower_95", ""),),
+                    (u"  Curve Fit: Hill Slope (Data Summary) ", res.get("IC50_lower_95", "") ,),
+                    (u"  Curve (Obsolete) (Data Summary) ", "" ,),
+                    (u"  Curve Fit: Bottom (Data Summary) ", res.get("bottom", "") ,),
+                    (u"  Curve Fit: Top (Data Summary) ", res.get("top", "") ,),
+                    (u"  R2 (Data Summary) ", res.get("r-squared", "") ,),
+                    (u"  Data Quality (Data Summary) ", "" ,),
+                    (u"  Comments on Curve Fit (Data Summary) ", "" ,),
+                    (u"  Enzyme Reference (Alphascreen) ", vis.data_mapping_revision.maximum ,),
+                    (u"  Enzyme Reference Error (Alphascreen) ", vis.data_mapping_revision.maximum_error ,),]
+                
+                conc_generator = vis.get_results_for_datapoint()
+                for datum in conc_generator:
+                    row_data += datum
 
-                    # ("  Compound Concentration 1 (uM) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 1 Inhibition (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 1 Error (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 2 (uM) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 2 Inhibition (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 2 Error (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 3 (uM) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 3 Inhibition (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 3 Error (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 4 (uM) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 4 Inhibition (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 4 Error (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 5 (uM) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 5 Inhibition (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 5 Error (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 6 (uM) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 6 Inhibition (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 6 Error (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 7 (uM) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 7 Inhibition (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 7 Error (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 8 (uM) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 8 Inhibition (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 8 Error (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 9 (uM) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 9 Inhibition (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 9 Error (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 10 (uM) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 10 Inhibition (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 10 Error (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 11 (uM) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 11 Inhibition (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 11 Error (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 12 (uM) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 12 Inhibition (%) (Compound Concentration Range) ", "" ,)
-                    # ("  Compound Concentration 12 Error (%) (Compound Concentration Range) ", "" ,)
-                row_data +=   [("  No Protein Control Activity (Alphascreen) ", vis.data_mapping_revision.minimum ,)
-                    ("  No Protein Control Error (Alphascreen) ", vis.data_mapping_revision.minimum_error ,)
-                    ("  No Peptide Control Activity (Alphascreen) ", "" ,)
-                    ("  No Peptide Control Error (Alphascreen) ", "" ,)
-                    ("  Solvent Control 1 Inhibition (%) (Solvent Controls) ", vis.data_mapping_revision.solvent_maximum ,)
-                    ("  Solvent Control 1 Inhibition Error (%) (Solvent Controls) ", vis.data_mapping_revision.solvent_maximum_error ,)
-                    ("  Solvent Control 2 Inhibition (%) (Solvent Controls) ", "" ,)
-                    ("  Solvent Control 2 Inhibition Error (%) (Solvent Controls) ", "" ,)
-                    ("  Solvent Control 3 Inhibition (%) (Solvent Controls) ", "" ,)
-                    ("  Solvent Control 3 Inhibition Error (%) (Solvent Controls) ", "" ,)
-                    ("  Solvent Control 4 Inhibition (%) (Solvent Controls) ", "" ,)
-                    ("  Solvent Control 4 Inhibition Error (%) (Solvent Controls) ", "" ,)
-                    ("  Solvent Control 5 Inhibition (%) (Solvent Controls) ", "" ,)
-                    ("  Solvent Control 5 Inhibition Error (%) (Solvent Controls) ", "" ,)
-                    ("  Solvent Control 6 Inhibition (%) (Solvent Controls) ", "" ,)
-                    ("  Solvent Control 6 Inhibition Error (%) (Solvent Controls) ", "" ,)
-                    ("  Solvent Control 7 Inhibition (%) (Solvent Controls) ", "" ,)
-                    ("  Solvent Control 7 Inhibition Error (%) (Solvent Controls) ", "" ,)
-                    ("  Solvent Control 8 Inhibition (%) (Solvent Controls) ", "" ,)
-                    ("  Solvent Control 8 Inhibition Error (%) (Solvent Controls) ", "" ,)
-                    ("  Compound Concentration 1 Counter Screen Inhibition (%) (Counter Screen Inhibition) ", "" ,)
-                    ("  Compound Concentration 1 Counter Screen Inhibition Error (%) (Counter Screen Inhibition) ", "" ,)
-                    ("  Compound Concentration 2 Counter Screen Inhibition (%) (Counter Screen Inhibition) ", "" ,)
-                    ("  Compound Concentration 2 Counter Screen Inhibition Error (%) (Counter Screen Inhibition) ", "" ,)
-                    ("  Compound Concentration 3 Counter Screen Inhibition (%) (Counter Screen Inhibition) ", "" ,)
-                    ("  Compound Concentration 3 Counter Screen Inhibition Error (%) (Counter Screen Inhibition) ", "" ,)
-                    ("  Compound Concentration 4 Counter Screen Inhibition (%) (Counter Screen Inhibition) ", "" ,)
-                    ("  Compound Concentration 4 Counter Screen Inhibition Error (%) (Counter Screen Inhibition) ", "" ,)
-                    ("  Compound Concentration 5 Counter Screen Inhibition (%) (Counter Screen Inhibition) ", "" ,)
-                    ("  Compound Concentration 5 Counter Screen Inhibition Error (%) (Counter Screen Inhibition) ", "" ,)
-                    ("  Compound Concentration 6 Counter Screen Inhibition (%) (Counter Screen Inhibition) ", "" ,)
-                    ("  Compound Concentration 6 Counter Screen Inhibition Error (%) (Counter Screen Inhibition) ", "" ,)
-                    ("  Compound Concentration 7 Counter Screen Inhibition (%) (Counter Screen Inhibition) ", "" ,)
-                    ("  Compound Concentration 7 Counter Screen Inhibition Error (%) (Counter Screen Inhibition) ", "" ,)
-                    ("  Compound Concentration 8 Counter Screen Inhibition (%) (Counter Screen Inhibition) ", "" ,)
-                    ("  Compound Concentration 8 Counter Screen Inhibition Error (%) (Counter Screen Inhibition) ", "" ,)
-                    ("  ELN ID (Alphascreen) ", self.object.meta_by_name("ELN Ref") ,)
-                    ("  Comments (Alphascreen) ", "" ,)
-                    ("  Date record created (Alphascreen) ", self.object.meta_by_name("Date of Assay") ,)
-                    ("  Creator of record (Alphascreen) ", username ,))]
-
-
-
-
-
-
-
-
-
-
-
-
+                row_data +=   [(u"  No Protein Control Activity (Alphascreen) ", vis.data_mapping_revision.minimum ,),
+                    (u"  No Protein Control Error (Alphascreen) ", vis.data_mapping_revision.minimum_error ,),
+                    (u"  No Peptide Control Activity (Alphascreen) ", "" ,),
+                    (u"  No Peptide Control Error (Alphascreen) ", "" ,),
+                    (u"  Solvent Control 1 Inhibition (%) (Solvent Controls) ", vis.data_mapping_revision.solvent_maximum ,),
+                    (u"  Solvent Control 1 Inhibition Error (%) (Solvent Controls) ", vis.data_mapping_revision.solvent_maximum_error ,),
+                    (u"  Solvent Control 2 Inhibition (%) (Solvent Controls) ", "" ,),
+                    (u"  Solvent Control 2 Inhibition Error (%) (Solvent Controls) ", "" ,),
+                    (u"  Solvent Control 3 Inhibition (%) (Solvent Controls) ", "" ,),
+                    (u"  Solvent Control 3 Inhibition Error (%) (Solvent Controls) ", "" ,),
+                    (u"  Solvent Control 4 Inhibition (%) (Solvent Controls) ", "" ,),
+                    (u"  Solvent Control 4 Inhibition Error (%) (Solvent Controls) ", "" ,),
+                    (u"  Solvent Control 5 Inhibition (%) (Solvent Controls) ", "" ,),
+                    (u"  Solvent Control 5 Inhibition Error (%) (Solvent Controls) ", "" ,),
+                    (u"  Solvent Control 6 Inhibition (%) (Solvent Controls) ", "" ,),
+                    (u"  Solvent Control 6 Inhibition Error (%) (Solvent Controls) ", "" ,),
+                    (u"  Solvent Control 7 Inhibition (%) (Solvent Controls) ", "" ,),
+                    (u"  Solvent Control 7 Inhibition Error (%) (Solvent Controls) ", "" ,),
+                    (u"  Solvent Control 8 Inhibition (%) (Solvent Controls) ", "" ,),
+                    (u"  Solvent Control 8 Inhibition Error (%) (Solvent Controls) ", "" ,),
+                    (u"  Compound Concentration 1 Counter Screen Inhibition (%) (Counter Screen Inhibition) ", "" ,),
+                    (u"  Compound Concentration 1 Counter Screen Inhibition Error (%) (Counter Screen Inhibition) ", "" ,),
+                    (u"  Compound Concentration 2 Counter Screen Inhibition (%) (Counter Screen Inhibition) ", "" ,),
+                    (u"  Compound Concentration 2 Counter Screen Inhibition Error (%) (Counter Screen Inhibition) ", "" ,),
+                    (u"  Compound Concentration 3 Counter Screen Inhibition (%) (Counter Screen Inhibition) ", "" ,),
+                    (u"  Compound Concentration 3 Counter Screen Inhibition Error (%) (Counter Screen Inhibition) ", "" ,),
+                    (u"  Compound Concentration 4 Counter Screen Inhibition (%) (Counter Screen Inhibition) ", "" ,),
+                    (u"  Compound Concentration 4 Counter Screen Inhibition Error (%) (Counter Screen Inhibition) ", "" ,),
+                    (u"  Compound Concentration 5 Counter Screen Inhibition (%) (Counter Screen Inhibition) ", "" ,),
+                    (u"  Compound Concentration 5 Counter Screen Inhibition Error (%) (Counter Screen Inhibition) ", "" ,),
+                    (u"  Compound Concentration 6 Counter Screen Inhibition (%) (Counter Screen Inhibition) ", "" ,),
+                    (u"  Compound Concentration 6 Counter Screen Inhibition Error (%) (Counter Screen Inhibition) ", "" ,),
+                    (u"  Compound Concentration 7 Counter Screen Inhibition (%) (Counter Screen Inhibition) ", "" ,),
+                    (u"  Compound Concentration 7 Counter Screen Inhibition Error (%) (Counter Screen Inhibition) ", "" ,),
+                    (u"  Compound Concentration 8 Counter Screen Inhibition (%) (Counter Screen Inhibition) ", "" ,),
+                    (u"  Compound Concentration 8 Counter Screen Inhibition Error (%) (Counter Screen Inhibition) ", "" ,),
+                    (u"  ELN ID (Alphascreen) ", self.object.meta_by_name("ELN Ref") ,),
+                    (u"  Comments (Alphascreen) ", vis.comment ,),
+                    (u"  Date record created (Alphascreen) ", self.object.meta_by_name("Date of Assay") ,),
+                    (u"  Creator of record (Alphascreen) ", username ,)]
+                if index == 0:
+                    worksheet2.write_row(0,0,[item[0] for item in row_data])#
+                worksheet2.write_row(index+1,0,[item[1] if str(item[1]) != "nan" else "N/A" for item in row_data])
 
             workbook.close()
             fsock = open(path,"r")
