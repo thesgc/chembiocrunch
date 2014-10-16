@@ -380,7 +380,8 @@ class Ic50VisualisationView(VisualisationView):
         print err
         return JsonResponse({ "html" : add_responsive_tags(self.object.html),
                             "results" : self.object.results ,
-                            "error_class" : err})
+                            "error_class" : err,
+                            "comment" : self.object.comment})
     def get_png(self):
         fsock = open(self.object.png.path,"r")
         response = HttpResponse(fsock, content_type='image/png')

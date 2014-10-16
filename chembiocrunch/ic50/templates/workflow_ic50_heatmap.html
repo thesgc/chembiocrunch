@@ -233,7 +233,8 @@ function fetchSvgGraph(graph_url, vis_id){
             //$('#graph-loading-area').addClass('hidden');
             var graph_loading = $('#vis-' + vis_id).find('.vis-thumb');
             graph_loading.html(data.html);
-            
+            var select = $('#vis_comment_' + vis_id);
+            select.val(data.comment);
 
             $('#vis-' + vis_id).addClass(data.error_class);
 
