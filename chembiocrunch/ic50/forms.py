@@ -73,6 +73,8 @@ class IC50UploadForm(forms.ModelForm):
             
             #fully_indexed = data_with_index_refs.set_index('fullname')
             #Assumed that datafile contains only one plate worth of data
+            #Sort by the plate reference to create plates in order
+            self.uploaded_data.sort(["plate_ref"], inplace=True)
             data_groups = self.uploaded_data.groupby("plate_ref")
             for name, grouped in data_groups:
                 #Iterate the names and groups in the dataset
@@ -140,7 +142,8 @@ class IC50UploadForm(forms.ModelForm):
         new_workflow_revision.solvent_maximum_error = solvent_maximum_error      
 
         config_columns["percent_inhib"] =  (maximum - config_columns["figure"] )/(maximum - minimum)
-
+        #sort by plate ref in order to create the items in order
+        config_columns.sort("full_ref", inplace=True)
         ic50_groups = config_columns.groupby("global_compound_id")
         for ic50_group in ic50_groups.groups:
             if ic50_group != "NONE":
