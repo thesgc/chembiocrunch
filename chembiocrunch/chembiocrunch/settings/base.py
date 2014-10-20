@@ -231,12 +231,17 @@ LOGGING = {
             '()': 'django.utils.log.RequireDebugFalse'
         }
     },
-    'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'filters': ['require_debug_false'],
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
+    # 'handlers': {
+    #     'mail_admins': {
+    #         'level': 'ERROR',
+    #         'filters': ['require_debug_false'],
+    #         'class': 'django.utils.log.AdminEmailHandler'
+    #     }
+    # },
+    'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': '/tmp/cbc.log',
     },
     'loggers': {
         'django.request': {
