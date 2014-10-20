@@ -64,9 +64,6 @@ class IC50UploadForm(forms.ModelForm):
         exclude = ('created_by','form_type')
 
 
-
-
-
     def clean(self):
 
         try:
@@ -333,6 +330,8 @@ class LabCyteEchoIC50UploadForm(IC50UploadForm):
                 controls = self.uploaded_meta[self.uploaded_meta[4].str.lower().isin(["control wells"]) & self.uploaded_meta[5].notnull()]
                 if not controls.empty:
                     self.control_wells = cell_range(controls[5].tolist()[0])
+                else:
+                    raise forms.ValidationError("Control well cell ranges should be in the meta data file")
                 refs = self.uploaded_meta[self.uploaded_meta[4].str.lower().isin(["reference compound wells"]) & self.uploaded_meta[5].notnull()]
                 if not refs.empty:
                     self.reference_compound_wells = cell_range(refs[5].tolist()[0])
