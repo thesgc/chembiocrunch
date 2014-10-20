@@ -24,7 +24,7 @@ path.append(DJANGO_ROOT)
 FILE_UPLOAD_HANDLERS = ( "django.core.files.uploadhandler.TemporaryFileUploadHandler","django.core.files.uploadhandler.MemoryFileUploadHandler",)
 ########## DEBUG CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#debug
-DEBUG = False
+DEBUG = True
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#template-debug
 TEMPLATE_DEBUG = DEBUG
@@ -231,18 +231,14 @@ LOGGING = {
             '()': 'django.utils.log.RequireDebugFalse'
         }
     },
-    # 'handlers': {
-    #     'mail_admins': {
-    #         'level': 'ERROR',
-    #         'filters': ['require_debug_false'],
-    #         'class': 'django.utils.log.AdminEmailHandler'
-    #     }
-    # },
-    'file': {
+    'handlers': {
+        'file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
             'filename': '/tmp/cbc.log',
+        },
     },
+
     'loggers': {
         'django.request': {
             'handlers': ['mail_admins'],
