@@ -89,14 +89,17 @@ class IC50Workflow(TimeStampedModel):
         df.to_hdf(filename,self.get_store_key(),mode="w")
 
     def meta_by_name(self, fieldname):
-        if self.metadata.empty:
-            self.metadata = self.get_meta_data().replace(np.nan, "")
-        dataset = self.metadata[self.metadata[4].str.lower().isin([fieldname.lower(),]) & self.metadata[5].notnull()]
-        value = ""
-        if not dataset.empty:
-            value = dataset[5].tolist()[0]
-            print value
-        return value
+        try: 
+            if self.metadata.empty:
+                self.metadata = self.get_meta_data().replace(np.nan, "")
+            dataset = self.metadata[self.metadata[4].str.lower().isin([fieldname.lower(),]) & self.metadata[5].notnull()]
+            value = ""
+            if not dataset.empty:
+                value = dataset[5].tolist()[0]
+                print value
+            return value
+        except KeyError:
+            return ""
 
     def get_username_for_export(self):
         if self.created_by.first_name and self.created_by.last_name:
