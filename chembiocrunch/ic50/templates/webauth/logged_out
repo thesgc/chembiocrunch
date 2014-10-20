@@ -3,7 +3,7 @@
 {% load crispy_forms_tags %}
  
 {% block action_title %}
-Logged out, log in again below if you wish{% endif %}
+Logged out, log in again below if you wish
 
 {% endblock action_title %}
         {% block help_text %}
