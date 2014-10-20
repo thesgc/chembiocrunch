@@ -12,8 +12,8 @@
     <div class="well col-sd-8 col-sd-offset-2 {% ifequal visualisation_item.id visualisation.id %} activeitem {% endifequal %}">
 
       <div class="row-fluid">
-        <span class="workflow-title">{% if visualisation_item.visualisation_title %}{{ visualisation_item.visualisation_title|title }}{% else %} no title yet{% endif %}</span>
-        <div class="pull-right">
+        <span class="workflow-title coll-xs-11">{% if visualisation_item.visualisation_title %}{{ visualisation_item.visualisation_title|title }}{% else %} no title yet{% endif %}</span>
+        <div class="col-xs-1">
         <span class="expand glyphicon glyphicon-resize-full "></span>
         <a href="{% url "ic50_visualisation_view" pk=visualisation_item.id format="png" %}" type="link" value="new" name="new" ><span class="expand glyphicon glyphicon-download-alt "></span></a>
       </div>
