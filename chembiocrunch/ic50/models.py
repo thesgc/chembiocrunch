@@ -93,13 +93,13 @@ class IC50Workflow(TimeStampedModel):
             if self.metadata.empty:
                 self.metadata = self.get_meta_data().replace(np.nan, "")
             dataset = self.metadata[self.metadata[4].str.lower().isin([fieldname.lower(),]) & self.metadata[5].notnull()]
-            value = ""
+            value = 0
             if not dataset.empty:
                 value = dataset[5].tolist()[0]
                 print value
             return value
         except KeyError:
-            return ""
+            return 0
 
     def get_username_for_export(self):
         if self.created_by.first_name and self.created_by.last_name:
@@ -114,7 +114,6 @@ class IC50WorkflowRevision(TimeStampedModel):
     the datasets are split out into separate dataframes at the point of
     saving the intial data files (the IC50 workflow)
     '''
-
     workflow = models.ForeignKey('IC50Workflow', related_name='workflow_ic50_revisions')
     plate_name = models.CharField(max_length=30, default="")
     steps_json = models.TextField(default="[]")
@@ -124,8 +123,6 @@ class IC50WorkflowRevision(TimeStampedModel):
     maximum_error = models.FloatField(default=0)
     solvent_maximum = models.FloatField(default=0)
     solvent_maximum_error = models.FloatField(default=0)  
-
-
 
     @property
     def previous(self):

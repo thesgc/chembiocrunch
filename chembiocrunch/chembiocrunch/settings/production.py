@@ -9,7 +9,7 @@ from .base import *
 # Normally you should not import ANYTHING from Django directly
 # into your settings, but ImproperlyConfigured is an exception.
 from django.core.exceptions import ImproperlyConfigured
-DEBUG=True
+DEBUG=False
 
 def get_env_setting(setting):
     """ Get the environment setting or return exception """
@@ -86,7 +86,6 @@ CACHES = {
 
 
 ########## END SECRET CONFIGURATION
-DEBUG=True
 
 ########## MEDIA CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#media-root

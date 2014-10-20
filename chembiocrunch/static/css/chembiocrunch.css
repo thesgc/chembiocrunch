@@ -495,3 +495,8 @@ transform: translateY(-21px);
 {
     overflow-x: auto;
 }
+
+
+.expand {
+    cursor:nesw-resize;
+}
