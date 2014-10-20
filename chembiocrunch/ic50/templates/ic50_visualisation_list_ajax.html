@@ -13,9 +13,10 @@
 
       <div class="row-fluid">
         <span class="workflow-title">{% if visualisation_item.visualisation_title %}{{ visualisation_item.visualisation_title|title }}{% else %} no title yet{% endif %}</span>
-        <span class="expand glyphicon glyphicon-resize-full pull-left"></span>
-        <a href="{% url "ic50_visualisation_view" pk=visualisation_item.id format="png" %}" class="pull-right" type="link" value="new" name="new" ><span class="expand glyphicon glyphicon-download-alt "></span></a>
-
+        <div class="pull-right">
+        <span class="expand glyphicon glyphicon-resize-full "></span>
+        <a href="{% url "ic50_visualisation_view" pk=visualisation_item.id format="png" %}" type="link" value="new" name="new" ><span class="expand glyphicon glyphicon-download-alt "></span></a>
+      </div>
       </div>
 
       <div class="vis-thumb "> {% if visualisation_item.html %}
