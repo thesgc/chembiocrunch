@@ -9,7 +9,7 @@ SELECT2_BOOTSTRAP = True
 # Absolute filesystem path to the Django project directory:
 DJANGO_ROOT = dirname(dirname(abspath(__file__)))
 LOGIN_REDIRECT_URL = '/crunch/my_workflows/'
-LOGOUT_REDIRECT_URL = '/logged_out/'
+LOGOUT_REDIRECT_URL = 'https://webauth.ox.ac.uk/logout'
 # Absolute filesystem path to the top-level project folder:
 SITE_ROOT = dirname(DJANGO_ROOT)
 
