@@ -28,7 +28,7 @@ from multiprocessing import Lock, Process, Queue, current_process
 from datetime import datetime
 from ic50.curve_fit import IC50CurveFit
 from pandas.io.json import read_json
-import titlecase
+from titlecase import titlecase
 # Create your models here.
 UPLOAD ="up"
 VALIDATE_COLUMNS ="vc"

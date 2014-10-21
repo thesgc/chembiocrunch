@@ -38,6 +38,7 @@ import xlsxwriter
 import time
 # Create your views here.
 from itertools import chain
+from titlecase import titlecase
 
 from numpy import nan
 class IC50WorkflowListView(WorkflowListView):
@@ -249,7 +250,6 @@ class IC50HeatmapView(IC50WorkflowDetailView):
         context['current'] = self.workflow_revision_id
         context["workflow_revision"] = self.workflow_revision 
         context["vis_count"] = self.workflow_revision.visualisations.all().exclude(html__exact="").count()
-        
         context.update(kwargs)
         return context
 
@@ -451,7 +451,7 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
 
 
             worksheet = workbook.add_worksheet("Results Summary")
-            column_names = [u"plate", u"coupound_id", u"logIC50",u"ic50 (μM)", u"IC50 standard error", "Hill", "Hill standard error", "system_comments","user_marked_as_bad_fit", "graph"]
+            column_names = [u"Plate", u"Coupound id", u"LogIC50",u"IC50 (μM)", u"IC50 standard error", "Hill", "Hill standard error", "System Comments", "graph"]
             for i, name in enumerate(column_names):
                 worksheet.write(0,i,name, bold)
                 worksheet.set_column(i,i, 40)
@@ -474,12 +474,8 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
                     worksheet.write(index+1,5,"N/A")
                     worksheet.write(index+1,6,res.get("N/A"))
                 worksheet.write(index+1,7,res.get("message"))
-                if vis.marked_as_bad_fit:
-                    worksheet.write(index+1,8,"yes")
-                else:
-                    worksheet.write(index+1,9,"no")
                 if vis.thumb:
-                    worksheet.insert_image(index+1,9,vis.thumb.path)
+                    worksheet.insert_image(index+1,8,vis.thumb.path)
             
 
             index =0
