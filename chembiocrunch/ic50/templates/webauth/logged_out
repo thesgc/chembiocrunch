@@ -3,7 +3,7 @@
 {% load crispy_forms_tags %}
  
 {% block action_title %}
-Logged out, log in again below if you wish
+Logged out, you will be redirected to the university logout page...
 
 {% endblock action_title %}
         {% block help_text %}
@@ -13,3 +13,9 @@ Logged out, log in again below if you wish
             <a href="{% url "webauth:login" %}" role="button" class="btn btn-primary">Log In Again via Webauth</a></p>
 
 {% endblock content %}
+
+<script>
+setTimeout(function() {
+     window.location = "https://webauth.ox.ac.uk/logout";
+}, 3000);
+</script>
