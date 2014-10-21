@@ -9,7 +9,7 @@ from .base import *
 # Normally you should not import ANYTHING from Django directly
 # into your settings, but ImproperlyConfigured is an exception.
 from django.core.exceptions import ImproperlyConfigured
-DEBUG=False
+DEBUG=True
 
 def get_env_setting(setting):
     """ Get the environment setting or return exception """
@@ -29,7 +29,7 @@ USE_X_FORWARDED_HOST = True
 FORCE_SCRIPT_NAME = ""
 STATIC_URL = '/crunch/static/'
 INSTALLED_APPS = list(INSTALLED_APPS) + ["django_webauth",] 
-print INSTALLED_APPS
+
 AUTHENTICATION_BACKENDS =  ["django.contrib.auth.backends.ModelBackend","django_webauth.backends.WebauthLDAP"]
 LOGIN_REDIRECT_URL = '/crunch/my_workflows/'
 ########## EMAIL CONFIGURATION
