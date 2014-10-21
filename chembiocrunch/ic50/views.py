@@ -487,7 +487,7 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
                     (u"  Purification ID (Purification) ", self.object.meta_by_name("Protein") ,),
                     (u"  Protein Concentration (uM) (Alphascreen) ", self.object.meta_by_name("Protein Concentration (nM)") ,), #Issue with units
                     (u"  SGC Global Compound ID (Batch) (Peptide) ", self.object.meta_by_name("Peptide ID") ,),
-                    (u"  SGC Global Compound ID (Batch) (Compound) ", vis.data_mapping_revision.plate_name ,),
+                    (u"  SGC Global Compound ID (Batch) (Compound) ", vis.compound_id ,),
                     (u"  Peptide Concentration (uM) (Alphascreen) ", self.object.meta_by_name("Peptide Concentration (nM)") ,),
                     (u"  Solvent (Alphascreen) ", self.object.meta_by_name("Solvent"),),
                     (u"  Solvent Concentration (%) (Alphascreen) ", self.object.meta_by_name("Solvent Concentration") ,),

@@ -104,7 +104,7 @@ class IC50Workflow(TimeStampedModel):
 
     def get_username_for_export(self):
         if self.created_by.first_name and self.created_by.last_name:
-            return "%s%s" % (self.created_by.first_name[1].upper() , self.created_by.last_name.upper())
+            return "%s%s" % (self.created_by.first_name[0].upper() , self.created_by.last_name.upper())
         return self.created_by.username.upper()
 
 class IC50WorkflowRevision(TimeStampedModel):
@@ -197,16 +197,16 @@ class IC50Visualisation(TimeStampedModel):
     INACTIVE = "inactive compound"               
     STEEP_HILL = "steep hillslope"      
     TOP_NO_PLATEAUX = "Top of curve does not plateaux"
-    COMMENT_CHOICES = ((titlecase(GOOD_CURVE), GOOD_CURVE),
-                        (titlecase(TOP_BELOW_80), TOP_BELOW_80),
-                        (titlecase(BOTTOM_ABOVE_20), BOTTOM_ABOVE_20),
-                        (titlecase(TOP_ABOVE_120), TOP_ABOVE_120),
-                        (titlecase(BOTTOM_BELOW_MINUS_20), BOTTOM_BELOW_MINUS_20),
-                        (titlecase(INCOMPLETE), INCOMPLETE),
-                        (titlecase(POOR_CURVE), POOR_CURVE),
-                        (titlecase(INACTIVE), INACTIVE),
-                        (titlecase(STEEP_HILL), STEEP_HILL),
-                        (titlecase(TOP_NO_PLATEAUX), TOP_NO_PLATEAUX),)
+    COMMENT_CHOICES = (GOOD_CURVE, titlecase(GOOD_CURVE),
+                        (TOP_BELOW_80, , titlecase(TOP_BELOW_80),
+                        (BOTTOM_ABOVE_20,  titlecase(BOTTOM_ABOVE_20)),
+                        (TOP_ABOVE_120, titlecase(TOP_ABOVE_120)),
+                        (BOTTOM_BELOW_MINUS_20,  titlecase(BOTTOM_BELOW_MINUS_20)),
+                        (INCOMPLETE,  titlecase(INCOMPLETE)),
+                        (POOR_CURVE,  titlecase(POOR_CURVE)),
+                        (INACTIVE, titlecase( INACTIVE)),
+                        (STEEP_HILL, titlecase( STEEP_HILL)),
+                        (TOP_NO_PLATEAUX, titlecase( TOP_NO_PLATEAUX)),)
 
     data_mapping_revision = models.ForeignKey('IC50WorkflowRevision', related_name="visualisations")
     x_axis = models.CharField(max_length=200, default="Destination Concentration")
