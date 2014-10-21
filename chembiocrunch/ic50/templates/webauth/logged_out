@@ -12,10 +12,8 @@ Logged out, you will be redirected to the university logout page...
 {% block content %}
             <a href="{% url "webauth:login" %}" role="button" class="btn btn-primary">Log In Again via Webauth</a></p>
 
+
+            <a href="https://webauth.ox.ac.uk/logout" role="button" class="btn btn-danger">Log out of Webauth entirely</a></p>
+
 {% endblock content %}
 
-<script>
-setTimeout(function() {
-     window.location = "https://webauth.ox.ac.uk/logout";
-}, 3000);
-</script>
