@@ -483,6 +483,14 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
             worksheet2 = workbook.add_worksheet("Results Beehive Format")
             for index, vis in enumerate(vis_list):
                 res = json.loads(vis.results).get("values", {})
+                logic50 = res.get("logIC50", "N/A")
+                if logic50 != "N/A":
+                    logic50 = logic50 -6
+
+                logic50error = res.get("logIC50error","N/A")
+                if logic50error != "N/A":
+                    logic50error = logic50error -6
+
                 row_data = [(u"  Experiment Type (Alphascreen) ", self.object.meta_by_name("Assay Type") ,),
                     (u"  Purification ID (Purification) ", self.object.meta_by_name("Protein") ,),
                     (u"  Protein Concentration (uM) (Alphascreen) ", self.object.meta_by_name("Protein Concentration (nM)") ,), #Issue with units
@@ -496,8 +504,8 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
                     (u"  Peptide Incubation Time (mins) (Alphascreen) ", self.object.meta_by_name("Peptide Incubation Time") ,),
                     (u"  Bead Incubation Time (mins) (Alphascreen) ", self.object.meta_by_name("Bead Incubation Time") ,),
                     (u"  Incubation Temperatures (C) (Alphascreen) ", self.object.meta_by_name("Incubation Temperature") ,),
-                    (u"  LogIC50 (relative to 1M) (Data Summary) ", res.get("logIC50", "") -6 ,),
-                    (u"  LogIC50 error (Data Summary) ", res.get("logIC50error","") -6 ,),
+                    (u"  LogIC50 (relative to 1M) (Data Summary) ", logic50 ,),
+                    (u"  LogIC50 error (Data Summary) ",logic50error ,),
                     (u"  IC50 (Data Summary) ", res.get("IC50", "") ,),
                     (u"  Curve Fit: Upper 95% ConfLimit (Data Summary) ", res.get("IC50_upper_95", "") ,),
                     (u"  Curve Fit: Lower 95% ConfLimit (Data Summary) ", res.get("IC50_lower_95", ""),),
