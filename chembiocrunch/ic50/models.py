@@ -197,8 +197,8 @@ class IC50Visualisation(TimeStampedModel):
     INACTIVE = "inactive compound"               
     STEEP_HILL = "steep hillslope"      
     TOP_NO_PLATEAUX = "Top of curve does not plateaux"
-    COMMENT_CHOICES = (GOOD_CURVE, titlecase(GOOD_CURVE),
-                        (TOP_BELOW_80, titlecase(TOP_BELOW_80),
+    COMMENT_CHOICES = ((GOOD_CURVE, titlecase(GOOD_CURVE)),
+                        (TOP_BELOW_80, titlecase(TOP_BELOW_80)),
                         (BOTTOM_ABOVE_20,  titlecase(BOTTOM_ABOVE_20)),
                         (TOP_ABOVE_120, titlecase(TOP_ABOVE_120)),
                         (BOTTOM_BELOW_MINUS_20,  titlecase(BOTTOM_BELOW_MINUS_20)),
