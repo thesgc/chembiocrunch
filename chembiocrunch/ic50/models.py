@@ -28,6 +28,7 @@ from multiprocessing import Lock, Process, Queue, current_process
 from datetime import datetime
 from ic50.curve_fit import IC50CurveFit
 from pandas.io.json import read_json
+import titlecase
 # Create your models here.
 UPLOAD ="up"
 VALIDATE_COLUMNS ="vc"
@@ -196,16 +197,16 @@ class IC50Visualisation(TimeStampedModel):
     INACTIVE = "inactive compound"               
     STEEP_HILL = "steep hillslope"      
     TOP_NO_PLATEAUX = "Top of curve does not plateaux"
-    COMMENT_CHOICES = ((GOOD_CURVE, GOOD_CURVE),
-                        (TOP_BELOW_80, TOP_BELOW_80),
-                        (BOTTOM_ABOVE_20, BOTTOM_ABOVE_20),
-                        (TOP_ABOVE_120, TOP_ABOVE_120),
-                        (BOTTOM_BELOW_MINUS_20, BOTTOM_BELOW_MINUS_20),
-                        (INCOMPLETE, INCOMPLETE),
-                        (POOR_CURVE, POOR_CURVE),
-                        (INACTIVE, INACTIVE),
-                        (STEEP_HILL, STEEP_HILL),
-                        (TOP_NO_PLATEAUX, TOP_NO_PLATEAUX),)
+    COMMENT_CHOICES = ((titlecase(GOOD_CURVE), GOOD_CURVE),
+                        (titlecase(TOP_BELOW_80), TOP_BELOW_80),
+                        (titlecase(BOTTOM_ABOVE_20), BOTTOM_ABOVE_20),
+                        (titlecase(TOP_ABOVE_120), TOP_ABOVE_120),
+                        (titlecase(BOTTOM_BELOW_MINUS_20), BOTTOM_BELOW_MINUS_20),
+                        (titlecase(INCOMPLETE), INCOMPLETE),
+                        (titlecase(POOR_CURVE), POOR_CURVE),
+                        (titlecase(INACTIVE), INACTIVE),
+                        (titlecase(STEEP_HILL), STEEP_HILL),
+                        (titlecase(TOP_NO_PLATEAUX), TOP_NO_PLATEAUX),)
 
     data_mapping_revision = models.ForeignKey('IC50WorkflowRevision', related_name="visualisations")
     x_axis = models.CharField(max_length=200, default="Destination Concentration")

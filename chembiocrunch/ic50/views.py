@@ -438,21 +438,23 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
                 os.makedirs(path)
             path +="/" +title
             workbook = xlsxwriter.Workbook(path)
-            worksheet1 = workbook.add_worksheet()
+            worksheet1 = workbook.add_worksheet("Assay Meta Data")
+            bold = workbook.add_format({'bold': True})
 
             meta = self.object.get_meta_data()
             meta = meta.replace(nan, "")
+            worksheet1.set_column(0,10, 40)
+
             for index, line in enumerate(meta.to_records()):
                 lis = list(line)[1:]
                 worksheet1.write_row(index,0, lis)
 
 
-            worksheet = workbook.add_worksheet()
-            column_names = [u"plate", u"coupound_id", u"logIC50",u"ic50 (μM)", u"IC50 standard error", "Hill", "Hill standard error", "results", "system_comments","user_marked_as_bad_fit", "graph"]
+            worksheet = workbook.add_worksheet("Results Summary")
+            column_names = [u"plate", u"coupound_id", u"logIC50",u"ic50 (μM)", u"IC50 standard error", "Hill", "Hill standard error", "system_comments","user_marked_as_bad_fit", "graph"]
             for i, name in enumerate(column_names):
-                worksheet.write(0,i,name)
-                if name=="graph":
-                    worksheet.set_column(i,i, 30)
+                worksheet.write(0,i,name, bold)
+                worksheet.set_column(i,i, 40)
 
             for index, vis in enumerate(vis_list):
                 res = json.loads(vis.results).get("values", {})
@@ -471,19 +473,18 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
                     worksheet.write(index+1,4,res.get("N/A"))
                     worksheet.write(index+1,5,"N/A")
                     worksheet.write(index+1,6,res.get("N/A"))
-                worksheet.write(index+1,7,json.dumps(res))
-                worksheet.write(index+1,8,res.get("message"))
+                worksheet.write(index+1,7,res.get("message"))
                 if vis.marked_as_bad_fit:
-                    worksheet.write(index+1,9,"yes")
+                    worksheet.write(index+1,8,"yes")
                 else:
                     worksheet.write(index+1,9,"no")
                 if vis.thumb:
-                    worksheet.insert_image(index+1,10,vis.thumb.path)
+                    worksheet.insert_image(index+1,9,vis.thumb.path)
             
 
             index =0
             username = self.object.get_username_for_export()
-            worksheet2 = workbook.add_worksheet()
+            worksheet2 = workbook.add_worksheet("Results Beehive Format")
             for index, vis in enumerate(vis_list):
                 res = json.loads(vis.results).get("values", {})
                 row_data = [(u"  Experiment Type (Alphascreen) ", self.object.meta_by_name("Assay Type") ,),
@@ -559,7 +560,7 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
                     (u"  Date record created (Alphascreen) ", self.object.meta_by_name("Date of Assay") ,),
                     (u"  Creator of record (Alphascreen) ", username ,)]
                 if index == 0:
-                    worksheet2.write_row(0,0,[item[0] for item in row_data])#
+                    worksheet2.write_row(0,0,[item[0] for item in row_data], bold)#
                 worksheet2.write_row(index+1,0,[item[1] if str(item[1]) != "nan" else "N/A" for item in row_data])
 
             workbook.close()
