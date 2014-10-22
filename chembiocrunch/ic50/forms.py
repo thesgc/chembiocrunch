@@ -149,9 +149,8 @@ class IC50UploadForm(forms.ModelForm):
             if ic50_group != "NONE":
                 group_df = ic50_groups.get_group(ic50_group)
                 raw_data = group_df.to_json()
-                vis = get_model("ic50", "IC50Visualisation")(data_mapping_revision=new_workflow_revision,
+                vis = get_model("ic50", "IC50Visualisation")(data_mapping_revision_id=new_workflow_revision.id,
                             compound_id=ic50_group,
-                            #results=json.dumps({"values": results}),
                             raw_data=raw_data,
                             constrained=True,
                             visualisation_title=ic50_group,
@@ -159,7 +158,7 @@ class IC50UploadForm(forms.ModelForm):
                 vis.save()
         plate["data"].to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w')
         config_columns.to_hdf(new_workflow_revision.get_store_filename("configdata"),new_workflow_revision.get_store_key(), mode='w')
-
+        new_workflow_revision.save()
 
 
     def __init__(self, *args, **kwargs):

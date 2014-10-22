@@ -1,7 +1,7 @@
 {% extends "workflow_base.html" %}
 {% load crispy_forms_tags %}
 {% block action_title %}
-Plate number {{ workflow_revision.plate_name }} of {{ count }} total plates imported
+Plate [{{ workflow_revision.plate_name }} ({{ index }} of {{ count }} total plates imported)
 {% endblock action_title %}
 {% block nav %}
 <div class="container" style="padding: 15px;">

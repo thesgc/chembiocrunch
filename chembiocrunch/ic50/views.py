@@ -208,6 +208,7 @@ class IC50HeatmapView(IC50WorkflowDetailView):
     template_name = "workflow_ic50_heatmap.html"
     workflow_revision_id = None
     workflow_revision = None
+    index = 1
 
     def get(self, request, *args, **kwargs):
         '''Borrowed from django base detail view'''
@@ -217,7 +218,10 @@ class IC50HeatmapView(IC50WorkflowDetailView):
             self.workflow_revision = self.object.get_latest_workflow_revision()
             return HttpResponseRedirect(reverse("workflow_ic50_heatmap", kwargs={"pk":self.object.id, "workflow_revision_id":self.workflow_revision.id}))
         else:
-            self.workflow_revision = self.object.workflow_ic50_revisions.get(pk=self.workflow_revision_id)
+            for ind, wf in enumerate(self.object.workflow_ic50_revisions.all().order_by("created")):
+                if int(wf.id) == int(self.workflow_revision_id):
+                    self.workflow_revision = wf
+                    self.index = ind + 1
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
 
@@ -228,7 +232,7 @@ class IC50HeatmapView(IC50WorkflowDetailView):
         steps_json = json.loads(self.workflow_revision.steps_json)
 
         context["heatmap_form"] = HeatmapForm(uploaded_data=self.workflow_revision.get_data(), steps_json=steps_json)
-
+        context["index"] = self.index
         context["count"] = self.object.workflow_ic50_revisions.all().count()
  
         next_qs = self.object.workflow_ic50_revisions.filter(pk__gt=self.workflow_revision.id).order_by("pk")
@@ -237,7 +241,7 @@ class IC50HeatmapView(IC50WorkflowDetailView):
         else:
             hm_next = None
 
-        prev_qs = self.object.workflow_ic50_revisions.filter(pk__lt=self.workflow_revision.id).order_by("pk")
+        prev_qs = self.object.workflow_ic50_revisions.filter(pk__lt=self.workflow_revision.id).order_by("-pk")
         if prev_qs.count() > 0:
             hm_prev = prev_qs[0]
         else:
