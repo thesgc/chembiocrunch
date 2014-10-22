@@ -2,6 +2,7 @@
 import csv
 from pandas import DataFrame, ExcelFile, Series
 from pandas.io.parsers import read_csv as rc
+from pandas.io.json import read_json
 import re
 import numpy as np
 DATA_TYPE_TYPES = {

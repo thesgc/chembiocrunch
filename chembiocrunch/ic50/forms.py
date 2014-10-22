@@ -66,18 +66,21 @@ class IC50UploadForm(forms.ModelForm):
 
     def clean(self):
 
-        try:
-            indexed_config = self.uploaded_config
-            indexed_config_groups = indexed_config.groupby("plate_ref")
-            #indexed_config = indexed_config.set_index('fullname')
-            
-            #fully_indexed = data_with_index_refs.set_index('fullname')
-            #Assumed that datafile contains only one plate worth of data
-            #Sort by the plate reference to create plates in order
-            self.uploaded_data.sort(["plate_ref"], inplace=True)
-            data_groups = self.uploaded_data.groupby("plate_ref")
-            for name, grouped in data_groups:
-                #Iterate the names and groups in the dataset
+        # try:
+        indexed_config = self.uploaded_config
+        indexed_config_groups = indexed_config.groupby("plate_ref")
+
+        #indexed_config = indexed_config.set_index('fullname')
+        
+        #fully_indexed = data_with_index_refs.set_index('fullname')
+        #Assumed that datafile contains only one plate worth of data
+        #Sort by the plate reference to create plates in order
+        self.uploaded_data.sort(["plate_ref"], inplace=True)
+        data_groups = self.uploaded_data.groupby("plate_ref")
+        for name, grouped in data_groups:
+            #Iterate the names and groups in the dataset
+            if name in indexed_config_groups.groups:
+                print "found this %s" % str(name)
                 config = indexed_config_groups.get_group(name)
                 wells = [str(row) for row in config["full_ref"] ]
                 included_plate_wells = set(wells)
@@ -88,9 +91,6 @@ class IC50UploadForm(forms.ModelForm):
                     else:
                         inc_wells[str(item)] = None
                 self.plates.append({"plate_name": name, "data" : grouped, "config" : config, "steps_json": inc_wells} )
-
-        except Exception:
-            raise forms.ValidationError("Possible invalid file formats")
 
 
 
@@ -191,7 +191,8 @@ class IC50UploadForm(forms.ModelForm):
 
 def get_plate_ref(dfseries):
     '''split out the square backets to give the plate reference'''
-    split = dfseries.str.findall(r"\[(\d)\]").str.get(0)
+    split = dfseries.str.split(r"\[").str.get(1)
+    split = split.str.encode("ascii", "ignore")
     return split
 
 
@@ -236,7 +237,7 @@ class LabCyteEchoIC50UploadForm(IC50UploadForm):
             try:
                 self.uploaded_data = get_data_frame(uploaded_data_file.temporary_file_path())
             except AttributeError:
-                raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
+                raise forms.ValidationError('Cuploaded_configannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
             except Exception:
                     raise forms.ValidationError("Error processing data Excel File")
         elif "application/" in mime:
@@ -252,7 +253,7 @@ class LabCyteEchoIC50UploadForm(IC50UploadForm):
         self.uploaded_data.columns = ["fullname","figure",]
         refs = self.uploaded_data["fullname"].str.split(':')
         self.uploaded_data["full_ref"] = refs.str.get(1).str.strip()
-        self.uploaded_data["plate_ref"] = get_plate_ref(self.uploaded_data["fullname"])
+        self.uploaded_data["plate_ref"] = get_plate_ref(refs.str.get(0).str.strip())
         matches = self.uploaded_data["full_ref"].str.findall(r"([A-Z]+)([0-9]+)")
         self.uploaded_data["well_letter"] = matches.str.get(0).str.get(0)
         self.uploaded_data["well_number"] = matches.str.get(0).str.get(1)
@@ -323,6 +324,7 @@ class LabCyteEchoIC50UploadForm(IC50UploadForm):
                 try:
                     try:
                         self.uploaded_meta = get_excel_data_frame(uploaded_meta_file.temporary_file_path())
+
                     except Exception:
                         raise forms.ValidationError("Error processing meta Excel File")
                 except AttributeError:

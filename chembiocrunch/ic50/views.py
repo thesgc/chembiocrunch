@@ -405,32 +405,6 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
         context = self.get_context_data(object=self.object)
         vis_list = get_model("ic50", "ic50visualisation").objects.filter(data_mapping_revision__workflow__id=self.object.id)
 
-        # if self.format == "ppt":
-        #     #create a ppt file
-        #     #each slide has one graph
-        #     pptx_file_path = '/tmp/test.pptx'
-        #     prs = Presentation()
-        #     blank_slide_layout = prs.slide_layouts[6]
-        #     for vis in vis_list:
-        #         slide = prs.slides.add_slide(blank_slide_layout)
-
-        #         #parser = etree.XMLParser(recover=True, encoding='utf-8')
-        #         #xml = etree.parse(vis.html, parser)raw_data
-
-        #         #strxml = objectify.dump(xml)
-
-        #         # fig = svg2png(vis.html.encode('utf-8'))
-        #         left = Inches(0)
-        #         top = Inches(1.5)
-        #         pic = slide.shapes.add_picture(fig, left, top)
-                
-        #     prs.save(file_path)
-        #     fsock = open(file_path,"r")
-        #     response = HttpResponse(fsock, content_type='application/vnd.openxmlformats-officedocument.presentationml.presentation')
-        #     response['Content-Disposition'] = 'attachment; filename=TestPpt.pptx'
-        #     #fc.print_png(response)
-        #     return response
-
         if self.format == "xlsx":
             title = self.object.title + "_output.xlsx"
             path = self.object.get_upload_to("")
@@ -454,7 +428,7 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
             column_names = [u"Plate", u"Coupound id", u"LogIC50",u"IC50 (μM)", u"IC50 standard error", "Hill", "Hill standard error", "System Comments", "graph"]
             for i, name in enumerate(column_names):
                 worksheet.write(0,i,name, bold)
-                worksheet.set_column(i,i, 40)
+                worksheet.set_column(i,i, 20)
 
             for index, vis in enumerate(vis_list):
                 res = json.loads(vis.results).get("values", {})
