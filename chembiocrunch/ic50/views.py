@@ -544,7 +544,7 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
                 if index == 0:
                     worksheet2.write_row(0,0,[item[0] for item in row_data], bold)#
 
-                worksheet2.write_row(index+1,0,[item[1] if (str(item[1]).lower() == "nan" or str(item[1]).lower() == "inf")  "N/A" else item[1] for item in row_data])
+                worksheet2.write_row(index+1,0,["N/A" if (str(item[1]).lower() == "nan") else "N/A" if (str(item[1]).lower() == "inf") else item[1] for item in row_data])
 
             workbook.close()
             fsock = open(path,"r")
