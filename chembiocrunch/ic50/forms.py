@@ -91,7 +91,8 @@ class IC50UploadForm(forms.ModelForm):
                     else:
                         inc_wells[str(item)] = None
                 self.plates.append({"plate_name": name, "data" : grouped, "config" : config, "steps_json": inc_wells} )
-
+        if len(self.plates) == 0:
+            raise forms.ValidationError("No plate references match between the transfer file and the output file, please ensure the files come from the same experiment")
 
 
     def save(self, force_insert=False, force_update=False, commit=True):
