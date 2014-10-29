@@ -5,3 +5,4 @@
 gunicorn==18.0
 -e git+git@github.com:strets123/django-webauth.git#egg=master
 python-ldap
+django-select2
