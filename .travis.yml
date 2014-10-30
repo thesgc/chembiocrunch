@@ -1,7 +1,7 @@
 language: python
 python:
   - 2.7
-  - 3.3
+  #- 3.3
 notifications:
   email: false
 
@@ -21,7 +21,7 @@ install:
   # Coverage packages are on my binstar channel
 #  - conda install --yes -c dan_blanchard python-coveralls nose-cov
   - pip install -r requirements/test.txt
-  - conda create -m -n chembiocrunch pip pandas numexpr Cython pytables matplotlib pillow lxml
+  - conda create --yes -m -n chembiocrunch pip pandas numexpr Cython pytables matplotlib pillow lxml
   - source activate chembiocrunch
   - pip install -r requirements/test.txt
 # Run test
