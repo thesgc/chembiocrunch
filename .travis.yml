@@ -24,6 +24,7 @@ install:
   - conda create --yes -m -n chembiocrunch pip pandas numexpr Cython pytables matplotlib pillow lxml
   - source activate chembiocrunch
   - pip install -r requirements/test.txt
+  
 # Run test
 # script:
 #   - 
