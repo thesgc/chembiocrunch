@@ -85,9 +85,9 @@ class IC50WorkflowView(LoginRequiredMixin):
     '''Base class for all views in IC50, will eventually handle permissions'''
     model = get_model("ic50", "IC50Workflow")
 
-    # def get_queryset(self):
-    #     '''Make sure that all of the views cannot see the object unless they own it!'''
-    #     return self.model.objects.get_user_records(self.request.user)
+    def get_queryset(self):
+        '''Make sure that all of the views cannot see the object unless they own it!'''
+        return self.model.objects.get_user_records(self.request.user)
 
     def get_context_data(self, **kwargs):
         '''Adds a status object called revisions to the page context
