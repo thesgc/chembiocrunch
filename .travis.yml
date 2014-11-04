@@ -1,7 +1,7 @@
 language: python
 python:
   - 2.7
-  - 3.3
+  #- 3.3
 notifications:
   email: false
 
@@ -17,11 +17,11 @@ before_install:
   - sudo ln -s /run/shm /dev/shm
 # Install packages
 install:
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION pip pandas psycopg2 numexpr Cython pytables matplotlib pillow
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION pip pandas numexpr Cython pytables matplotlib pillow lxml
   # Coverage packages are on my binstar channel
 #  - conda install --yes -c dan_blanchard python-coveralls nose-cov
   - pip install -r requirements/test.txt
-  - conda create -m -n chembiocrunch pip pandas psycopg2 numexpr Cython pytables matplotlib pillow
+  - conda create --yes -m -n chembiocrunch pip pandas numexpr Cython pytables matplotlib pillow lxml
   - source activate chembiocrunch
   - pip install -r requirements/test.txt
 # Run test

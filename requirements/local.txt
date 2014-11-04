@@ -5,3 +5,4 @@ Sphinx==1.2.2
 line_profiler==1.0b3
 guppy
 gunicorn
+django-select2

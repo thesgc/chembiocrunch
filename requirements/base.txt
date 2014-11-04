@@ -11,17 +11,13 @@ django-floppyforms
 django_shell_ipynb
 python-pptx
 mpld3
-Cython
-tables
 seaborn
 hiredis
 django-redis
-django-select2
 xlrd
 lmfit
 xlsxwriter
 django-devserver
 django_javascript_settings
 jinja2
-Cython==0.19
 titlecase
