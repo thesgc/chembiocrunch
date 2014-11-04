@@ -51,9 +51,11 @@ class WorkflowManager(models.Manager):
     '''Manager allows extra functions to be added to the objects of a model so that you can run queries without having to 
     do the query logic inline'''
     def get_user_records(self, user):
-        if user.groups.filter(name__in =["affiliation:sgc", "affiliation:tdi"]).count() > 0:
+        groups_list = user.groups.filter(name__in =["affiliation:sgc", "affiliation:tdi"])
+        if  groups_list.count > 0:
+            all_users_in_group = groups_list.select_related('User').all()
             
-            return self.filter(created_by__group__name__in=["affiliation:sgc", "affiliation:tdi"])
+            return self.filter(created_by__in=all_users_in_group)
         else:
             return self.filter(created_by__id=user.id)
 
