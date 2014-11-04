@@ -53,9 +53,7 @@ class WorkflowManager(models.Manager):
     def get_user_records(self, user):
         groups_list = user.groups.filter(name__in =["affiliation:sgc", "affiliation:tdi"])
         if  groups_list.count > 0:
-            all_users_in_group = groups_list.select_related('User').all()
-            
-            return self.filter(created_by__in=all_users_in_group)
+            return self.filter(created_by__groups__id__in=all_users_in_group.values_list(["id"], flat=True))
         else:
             return self.filter(created_by__id=user.id)
 
