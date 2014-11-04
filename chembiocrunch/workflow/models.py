@@ -51,8 +51,11 @@ class WorkflowManager(models.Manager):
     '''Manager allows extra functions to be added to the objects of a model so that you can run queries without having to 
     do the query logic inline'''
     def get_user_records(self, user):
-        '''Used to filter in view to ensure only permitted workflows are seen'''
-        return self.filter(created_by__id=user.id, archived=False)
+        if user.groups.filter(name__in =["affiliation:sgc", "affiliation:tdi"]).count() > 0:
+            
+            return self.filter(created_by__group__name__in=["affiliation:sgc", "affiliation:tdi"])
+        else:
+            return self.filter(created_by__id=user.id)
 
     def get_latest_workflow_revision(self, workflow_id):
         return get_model("workflow", "WorkflowDataMappingRevision").objects.filter(workflow_id=workflow_id).order_by("-created")[0]
