@@ -45,7 +45,7 @@ class IC50WorkflowManager(models.Manager):
     def get_user_records(self, user):
         groups_list = user.groups.filter(name__in =["affiliation:sgc", "affiliation:tdi"])
         if  groups_list.count > 0:
-            return self.filter(created_by__groups__id__in=groups_list.values_list("pk", flat=True))
+            return self.filter(created_by__groups__name__in=["affiliation:sgc", "affiliation:tdi"])
         else:
             return self.filter(created_by__id=user.id)
 
