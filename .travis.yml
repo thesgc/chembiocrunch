@@ -32,3 +32,6 @@ install:
 # Calculate coverage
 # after_success:
 #   - coveralls --config_file .coveragerc
+
+
+#Thanks to https://gist.github.com/dan-blanchard/7045057
