@@ -16,14 +16,20 @@ Plate [{{ workflow_revision.plate_name }} ({{ index }} of {{ count }} total plat
 {% block help_text %}
 <ul>
     <li>
-    Your data is displayed as a conditionally formatted heatmap
+Your data is displayed as a conditionally formatted heatmap
+   </li>
+    <li>
+Validate your data by eye.
     </li>
     <li>
-    Validate your data by eye. You can deselect wells as outliers by clicking the value in each table cell. 
+You can deselect wells as outliers by clicking the value in each table cell. Deselected cells will turn grey.
     </li>
     <li>
-    Deselected cells will turn grey. You can re-select cells by clicking the value again.
-    </li>
+      You can deselect columns and rows by clicking on the label.
+       </li>
+    <li>
+You can re-select cells by clicking the value again.
+ </li>
     <li>
       When you are finished, click Update and you will see the graphs below
     </li>
@@ -32,13 +38,14 @@ Plate [{{ workflow_revision.plate_name }} ({{ index }} of {{ count }} total plat
 {% block content %}
 
 <form action="" class="crispy form-horizontal" method="post" id="hmp-to-ic50">
+  {% csrf_token %}
   <fieldset>
     <div class="row">
       <div class="col-xs-12">
         <div class="heatmap-container ">
           <table class="heatmap">
   
-          {% crispy heatmap_form %}
+          {{ heatmap_form.element_list | safe }}
   
           </table>
       </div>
@@ -202,7 +209,7 @@ function fetchGraphs() {
           $(this).toggleClass('glyphicon-resize-small');
           vis = $(this).closest('div.vis');
           //toggle for med & large responsive classes
-          vis.toggleClass('col-md-2');
+          vis.toggleClass('col-md-3');
           vis.toggleClass('col-md-6');
           //toggle for small classes
           vis.toggleClass('col-sm-4');

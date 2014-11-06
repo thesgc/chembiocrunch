@@ -414,8 +414,16 @@ class TemplateIC50UploadForm(IC50UploadForm):
 
 
 
-
-
+def human(num):
+    num = int(num)
+    if num > 1000000000:
+        return "%dbn" % (num / 1000000000)
+    if num > 1000000:
+        return "%dm" % (num / 1000000)
+    if num > 10000:
+        return "%dk" % (num / 1000)
+    else:
+        return num
 
 
 
@@ -450,29 +458,35 @@ class HeatmapForm(forms.Form):
         column_helper.layout=Layout(
             HTML('<tr><td>&nbsp;</td>')
         )
+        element_list = ['<tr><td>&nbsp;</td>' ,]
         for letter in well_letters:
             #create table row
+            loopels = []
             loophelper = HeatmapFormHelper()
             loophelper.layout = Layout()
             loophelper.layout.fields.extend([
                 HTML('<tr>')
             ])
+            loopels.append('<tr>')
             self.fields['header_' + str(letter)] = forms.BooleanField(initial=False, label=letter, required=False)
             loophelper.layout.fields.extend([
                     HTML('<th data_row="' + str(letter) + '" class="hmp_row_header">'),
                     'header_' + str(letter),
                     HTML('</th>')
                 ])
+            temp = '<div class="form-group"><div id="div_id_header_%s" class="checkbox"><label for="id_header_%s" class=""><input type="checkbox" name="header_%s" class="checkboxinput checkbox" id="id_header_%s">%s</label></div></div>' % (letter,letter,letter,letter,letter)
+            loopels.append('<th data_row="' + str(letter) + '" class="hmp_row_header">' + temp +'</th>')
             #loop through subset of ud which has that letter
             subset = ud[ud['well_letter'] == letter]
             subset = subset.convert_objects(convert_numeric=True).sort("well_number")
+            rows_list = []
             for index, row in subset.iterrows():
                 well_str = row['well_letter'] + str(row['well_number'])
                 #work out the class number to apply for conditional formatting -
                 #an integer between 1-10 worked out from the fraction this value is of the maximum
 
                 try:
-
+                    row_list = []
                     initial = j.pop(well_str)
                     condclassint = int(math.ceil((float(row['figure']) / float(hi_value)) * 10))
                     cond_class = str(condclassint)
@@ -480,13 +494,19 @@ class HeatmapForm(forms.Form):
                     if not initial:
                         cond_class += " unchecked"
                         disable_attrs = {'disabled':'disabled'}
-
-                    self.fields[well_str] = forms.BooleanField(initial=initial, required=False, label=int(row['figure']), widget=forms.CheckboxInput(attrs=disable_attrs))
+                    field = forms.BooleanField(initial=initial, required=False, label=int(row['figure']), widget=forms.CheckboxInput(attrs=disable_attrs))
+                    self.fields[well_str] = field
                     loophelper.layout.fields.extend([
                         HTML('<td data_row="' + row['well_letter'] + '" data_column="' + str(row['well_number']) + '" class="hide-checkbox hmp' + cond_class + '">'),
                         well_str,
                         HTML('</td>')
                     ])
+                    checked = ""
+                    if initial:
+                        checked ="checked"
+                    cell_temp = '<div class="form-group"><div id="div_id_%s" class="checkbox"><label for="id_%s" class=""><input type="checkbox" name="%s" %s class="checkboxinput checkbox" id="id_%s">%s </label></div></div>' % (well_str, well_str,well_str, checked , well_str, human(row['figure']))
+                    loopels.append('<td data_row="' + row['well_letter'] + '" data_column="')
+                    loopels.append(str(row['well_number']) + '" class="hide-checkbox hmp' + cond_class + '">' + cell_temp + '</td>')
                     #add a table heading cell for each column - only do this for the first row
                     if (letter == 'A'):
                         self.fields['header_' + str(row['well_number'])] = forms.BooleanField(initial=False, required=False, label=row['well_number'])
@@ -495,6 +515,10 @@ class HeatmapForm(forms.Form):
                                 'header_' + str(row['well_number']),
                                 HTML('</th>')
                             ])
+                        template = '<div class="form-group"><div id="div_id_header_%d" class="checkbox"><label for="id_header_%d" class=""><input type="checkbox" name="header_%d" class="checkboxinput checkbox" id="id_header_%d">%d</label></div></div>' % (row['well_number'], row['well_number'], row['well_number'], row['well_number'], row['well_number'])
+
+                        element_list.append('<th data_column="' + str(row['well_number']) + '" class="hmp_header">')
+                        element_list.append(template + '</th>')
                     cond_class = ""
                 except KeyError:
                     #value already popped
@@ -502,7 +526,11 @@ class HeatmapForm(forms.Form):
             #this may have to change to reflect how the row names have been assigned - will work for 99% of current examples though
             if(letter == 'A'):
                 self.helper.layout.append(column_helper.layout)
+
             self.helper.layout.append(loophelper.layout)
+            element_list.extend("".join(loopels))
+            self.element_list = "".join(element_list)
+
 
 
 

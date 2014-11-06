@@ -105,10 +105,13 @@ span.workflow-date {
 	color: #999;
 }
 a.close{
-	margin-right: -10px;
-	margin-top: -15px;
+	margin-right: 5px;
+	margin-top: 5px;
 }
-
+a.close{
+    margin-left: 0px;
+    margin-top: 5px;
+}
 /* Breadcrumb progress indicator CSS */
 .arrow-box.not-done{
 	/* same colour as bootstrap alert/error buttons */
@@ -499,4 +502,49 @@ transform: translateY(-21px);
 
 .expand {
     cursor:nesw-resize;
+}
+
+
+.row-flex, .row-flex > div[class*='col-'] {  
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    flex:1 1 auto;
+    margin-bottom : 20px;
+}
+
+.row-flex-wrap {
+    -webkit-flex-flow: row wrap;
+    align-content: flex-start;
+    flex:0;
+}
+
+.row-flex > div[class*='col-'], .container-flex > div[class*='col-'] {
+     margin:-.2px; /* hack adjust for wrapping */
+     margin-bottom : 20px;
+}
+
+.container-flex > div[class*='col-'] div,.row-flex > div[class*='col-'] div {
+    width:100%;
+}
+
+
+.flex-col {
+    display: flex;
+    display: -webkit-flex;
+    flex: 1 100%;
+    flex-flow: column nowrap;
+}
+
+.flex-grow {
+    display: flex;
+    -webkit-flex: 2;
+    flex: 2;
+}
+
+
+.bottom-margin {
+    margin-bottom: 20px;
 }

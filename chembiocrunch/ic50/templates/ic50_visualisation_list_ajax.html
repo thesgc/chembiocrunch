@@ -8,19 +8,19 @@
   	<!-- move the list items here, 4 at a time inside a div class="carousel-item" -->
   {% for visualisation_item in visualisation_list %}
       
-  <div id="vis-{{visualisation_item.id}}" class="col-md-2 col-sm-4 col-xs-6 vis {% if visualisation_item.html %}{{visualisation_item.error_class}}{% endif %}">
+  <div id="vis-{{visualisation_item.id}}" class="col-md-3 col-sm-4 col-xs-6 vis {% if visualisation_item.html %}{{visualisation_item.error_class}}{% endif %}">
     <div class="well col-sd-8 col-sd-offset-2 {% ifequal visualisation_item.id visualisation.id %} activeitem {% endifequal %}">
 
       <div class="row-fluid">
-        <div class="col-xs-8">{% if visualisation_item.visualisation_title %}{{ visualisation_item.visualisation_title|title }}{% else %} no title yet{% endif %}</div>
-<div class="col-xs-1 pull-right">
+        <h3 class="">
+        
+      {% if visualisation_item.visualisation_title %}{{ visualisation_item.visualisation_title|title }}{% else %} no title yet{% endif %}
+      <a href="{% url "ic50_visualisation_view" pk=visualisation_item.id format="png" %}" type="link" value="new" name="new" ><span class="glyphicon glyphicon-download-alt "></span></a>
   <a>
         <span class="expand glyphicon glyphicon-resize-full "></span>
       </a>
-        </div>
-        <div class="col-xs-1">
-        <a href="{% url "ic50_visualisation_view" pk=visualisation_item.id format="png" %}" type="link" value="new" name="new" ><span class="glyphicon glyphicon-download-alt "></span></a>
-      </div>
+        </h3>
+        
               
       </div>
 
