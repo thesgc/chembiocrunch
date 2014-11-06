@@ -52,10 +52,11 @@ class WorkflowManager(models.Manager):
     do the query logic inline'''
     def get_user_records(self, user):
         groups_list = user.groups.filter(name__in =["affiliation:sgc", "affiliation:tdi"])
-        if  groups_list.count > 0:
-            return self.filter(created_by__groups__id__in=groups_list.values_list("pk", flat=True))
+        if  groups_list.count() > 0:
+            return self.filter(created_by__groups__name__in=["affiliation:sgc", "affiliation:tdi"])
         else:
             return self.filter(created_by__id=user.id)
+
 
     def get_latest_workflow_revision(self, workflow_id):
         return get_model("workflow", "WorkflowDataMappingRevision").objects.filter(workflow_id=workflow_id).order_by("-created")[0]

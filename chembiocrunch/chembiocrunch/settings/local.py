@@ -9,7 +9,7 @@ from .base import *
 ALLOWED_HOSTS= ["localhost"]
 ########## DEBUG CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#debug
-DEBUG = True
+DEBUG = False
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#template-debug
 TEMPLATE_DEBUG = DEBUG
@@ -71,7 +71,7 @@ DEVSERVER_MODULES = (
 
     # Modules not enabled by default
     'devserver.modules.ajax.AjaxDumpModule',
-  #  'devserver.modules.profile.MemoryUseModule',
+   # 'devserver.modules.profile.MemoryUseModule',
    # 'devserver.modules.cache.CacheSummaryModule',
     'devserver.modules.profile.LineProfilerModule',
 )

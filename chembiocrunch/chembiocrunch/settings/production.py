@@ -9,7 +9,7 @@ from .base import *
 # Normally you should not import ANYTHING from Django directly
 # into your settings, but ImproperlyConfigured is an exception.
 from django.core.exceptions import ImproperlyConfigured
-DEBUG=True
+DEBUG=False
 
 def get_env_setting(setting):
     """ Get the environment setting or return exception """
@@ -23,6 +23,15 @@ def get_env_setting(setting):
 # See: https://docs.djangoproject.com/en/1.5/releases/1.5/#allowed-hosts-required-in-production
 ALLOWED_HOSTS = ["chembiohub.ox.ac.uk"]
 ########## END HOST CONFIGURATION
+
+TEMPLATE_LOADERS = (
+    ('django.template.loaders.cached.Loader', (
+        'django.template.loaders.filesystem.Loader',
+        'django.template.loaders.app_directories.Loader',
+    )),
+)
+
+
 
 LOGIN_URL = "/crunch/accounts/login"
 USE_X_FORWARDED_HOST = True

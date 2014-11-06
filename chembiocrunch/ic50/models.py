@@ -44,10 +44,10 @@ from cbc_common import dataframe_handler
 class IC50WorkflowManager(models.Manager):
     def get_user_records(self, user):
         groups_list = user.groups.filter(name__in =["affiliation:sgc", "affiliation:tdi"])
-        if  groups_list.count > 0:
-            return self.filter(created_by__groups__name__in=["affiliation:sgc", "affiliation:tdi"])
+        if  groups_list.count() > 0:
+            return self.select_related("created_by__groups").filter(created_by__groups__name__in=["affiliation:sgc", "affiliation:tdi"])
         else:
-            return self.filter(created_by__id=user.id)
+            return self.filter(created_by__id=user.id).select_related("created_by")
 
     def get_latest_workflow_revision(self, workflow_id):
         return get_model("ic50", "IC50WorkflowRevision").objects.filter(workflow_id=workflow_id, archived=False).order_by("created")[0]

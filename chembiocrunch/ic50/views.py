@@ -41,6 +41,7 @@ from itertools import chain
 from titlecase import titlecase
 
 from numpy import nan
+
 class IC50WorkflowListView(WorkflowListView):
     '''Lists only the workflows that belong to that user'''
     template_name = "workflows/workflow_list.html"
@@ -48,34 +49,17 @@ class IC50WorkflowListView(WorkflowListView):
     def get_queryset(self):
         '''Make sure that all of the views cannot see the object unless they own it!'''
         #need to also pass ic50 models
-
-        return chain(self.model.objects.get_user_records(self.request.user).filter(archived=False), self.ic50_model.objects.get_user_records(self.request.user).filter(archived=False))
-
+        return self.ic50_model.objects.get_user_records(self.request.user).filter(archived=False)
 
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context
         context = super(WorkflowListView, self).get_context_data(**kwargs)
-        # Add in a QuerySet of all the books
 
-        context["object_list"] = list(context['object_list'])
         context["FORM_REGISTRY"] = [form_type for form_type in FORM_REGISTRY]
-        print context
-
         return context
-
 
     def post(self, request, *args, **kwargs):
         pass
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -93,10 +77,6 @@ class IC50WorkflowView(LoginRequiredMixin):
         '''Adds a status object called revisions to the page context
         which is used to manage breadcrumbs'''
         context = super(IC50WorkflowView, self).get_context_data(**kwargs)
-        # context['revisions'] = [["upload" ,"not-done"],
-        #                         ["validate" ,"not-done"],
-        #                         ["visualise", "not-done"],
-        #                         ["customise" , "not-done"]]
         return context
 
 class IC50WorkflowDetailView(IC50WorkflowView, DetailView, ):
