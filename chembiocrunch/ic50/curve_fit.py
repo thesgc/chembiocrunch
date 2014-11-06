@@ -125,7 +125,6 @@ class IC50CurveFit(object):
 
     def get_fig(self, labels=True, figsize=(6,4), titles=True,  pngfile=None, thumbfile=None):
         sns.set_style("whitegrid")
-
         xcurve = np.linspace(self.x.min(),self.x.max(),200)
         ycurve = [(self.results["bottom"] + (self.results["top"] - self.results["bottom"])/(1 + np.exp((self.results["logIC50"] - xdatum)*self.results["hill"]))) for xdatum in xcurve]
         smooted_best_fit_line = spline(xcurve,ycurve,xcurve)

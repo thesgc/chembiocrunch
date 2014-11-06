@@ -65,7 +65,7 @@ class IC50UploadForm(forms.ModelForm):
 
 
     def clean(self):
-
+        self.plates = []
         # try:
         indexed_config = self.uploaded_config
         indexed_config_groups = indexed_config.groupby("plate_ref")

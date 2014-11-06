@@ -107,7 +107,6 @@ class WorkflowListView(WorkflowView, ListView):
     def get_queryset(self):
         '''Make sure that all of the views cannot see the object unless they own it!'''
         #need to also pass ic50 models
-
         return self.model.objects.get_user_records(self.request.user).filter(archived=False)
 
 
