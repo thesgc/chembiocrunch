@@ -12,7 +12,7 @@
     <div class="well col-sd-8 col-sd-offset-2 {% ifequal visualisation_item.id visualisation.id %} activeitem {% endifequal %}">
 
       <div class="row-fluid">
-        <h3 class="">
+        <h3 class="blue">
         
       {% if visualisation_item.visualisation_title %}{{ visualisation_item.visualisation_title|title }}{% else %} no title yet{% endif %}
       <a href="{% url "ic50_visualisation_view" pk=visualisation_item.id format="png" %}" type="link" value="new" name="new" ><span class="glyphicon glyphicon-download-alt "></span></a>
