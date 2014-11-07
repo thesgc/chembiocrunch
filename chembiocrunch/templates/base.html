@@ -136,7 +136,7 @@
 {% endcomment %}
 
       <script>
-  var html = '<div class=""><a href="/crunch/" role="button" class="btn btn-primary"><span class="glyphicon glyphicon-home"></span>Crunch Home</a>          <p class="navbar-text navbar-right text-capitalize"><button type="button" class="btn btn-default"><span class="glyphicon glyphicon-user"></span>{% if request.user.first_name %}{{ request.user.first_name }}{% else %} {{request.user}}{% endif %}</button>            <a href="/crunch/webauth/logout" role="button" class="btn btn-primary">Log Out</a></p>        </div><!--/.nav-collapse -->';
+  var html = '<div class="pull-right"><a href="/crunch/" role="button" class="btn btn-primary"><span class="glyphicon glyphicon-home"></span>Crunch Home</a><button type="button" class="btn btn-default"><span class="glyphicon glyphicon-user"></span>{% if request.user.first_name %}{{ request.user.first_name }}{% else %} {{request.user}}{% endif %}</button>            <a href="/crunch/webauth/logout" role="button" class="btn btn-primary">Log Out</a>        </div><!--/.nav-collapse -->';
 $( document ).ready(function() {  
   //$(".login").toggleClass("hidden");
 
