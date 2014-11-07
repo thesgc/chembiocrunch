@@ -2,7 +2,7 @@
 {% load cri %}
 
 <!DOCTYPE html>
-{% cri http://chembiohub.ox.ac.uk/cbh-header.html 0 %}
+{% cri http://chembiohub.ox.ac.uk/cbh-header.html 300 %}
 
 
 <html lang="en">
@@ -141,13 +141,15 @@ $( document ).ready(function() {
   //$(".login").toggleClass("hidden");
 
   $(".login").html(html);
+    $(".login").toggleClass("hidden");
+
   $("#social-icons").toggleClass("hidden");
 $("#slogan").html("<h2>ChemBio Crunch - a simple tool to analyse assay data</h2>");
 });
   </script>
 
 
-      <div class="container fluid">
+      <div class="container-fluid">
         <h2>
         {% block action_title %}
         {% endblock action_title %}
@@ -155,12 +157,12 @@ $("#slogan").html("<h2>ChemBio Crunch - a simple tool to analyse assay data</h2>
       </div>
       {% block nav %}
       {% endblock nav %}
-      <div class="infobox container fluid">
+      <div class="infobox container-fluid">
         {% block help_text %}
          
         {% endblock help_text %}
       </div>
-      <div class="container fluid">
+      <div class="container-fluid">
       {% block content %}
         <p>Use this document as a way to quick start any new project.</p>
 
