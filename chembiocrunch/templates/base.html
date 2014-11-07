@@ -136,7 +136,7 @@
 {% endcomment %}
 
       <script>
-  var html = '<div class=""><h2><span class="glyphicon glyphicon-user"></span>&nbsp;{% if request.user.first_name %}{{ request.user.first_name }}{% else %} {{request.user}}{% endif %}           <a class="pull-right" href="/crunch/webauth/logout" role="" class=""><span class="glyphicon glyphicon-log-out"></span>&nbsp;Log Out</a>  </h2>      </div><!--/.nav-collapse -->';
+  var html = '<div class="pull-right"><h2><span class="glyphicon glyphicon-user"></span>&nbsp;{% if request.user.first_name %}{{ request.user.first_name }}{% else %} {{request.user}}{% endif %}      &nbsp;&nbsp;&nbsp;     <a class="" href="/crunch/webauth/logout" role="" class=""><span class="glyphicon glyphicon-log-out"></span>&nbsp;Log Out</a>  </h2>      </div><!--/.nav-collapse -->';
 $( document ).ready(function() {  
   //$(".login").toggleClass("hidden");
 
@@ -145,7 +145,7 @@ $( document ).ready(function() {
 
   $("#social-icons").toggleClass("hidden");
 $("#slogan").html("<a href='/crunch' ><h2 class='no-bottom-margin'>ChemBio Crunch - The assay data analyser</h2></a>");
-
+$(".container").toggleClass("container-fluid").toggleClass("container");
 });
   </script>
 
