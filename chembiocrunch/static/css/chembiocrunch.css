@@ -211,6 +211,12 @@ list-style-position:inside;
 	border: 1px solid #002147;
 
 }
+.spacer {
+    margin-top: 20px; /* define margin as you see fit */
+}
+.heatmap {
+    margin-bottom: 10px;
+}
 /* Heatmap plate CSS */
 table.heatmap {
 	width:100%;
