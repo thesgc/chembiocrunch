@@ -20,6 +20,9 @@ margin-left:50px;
     line-height: 1.33;
     padding: 10px 16px;
 }
+.container-fluid {
+    width:80%;
+}
 .login {
      display: inline ;
 }
