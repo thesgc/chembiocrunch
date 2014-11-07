@@ -1,7 +1,11 @@
         {% for form_type in FORM_REGISTRY %}
-        <a href='{% url "workflow_ic50_create" form_type=form_type %}'>
-            <button type="button" class="btn btn-success">
+        <ul class="inlineb" {% ifequal  form_type 'Template' %} title='New data entry forms can be added for different machines' {% endifequal %}>
+        <a {% ifequal  form_type 'Template' %}
+            disabled  {% endifequal %}  {% ifnotequal  form_type 'Template' %} href='{% url "workflow_ic50_create" form_type=form_type %}'{% else % }href="javascript: void(0)" {% endifnotequal  %} class='{{ form_type }}'>
+            <button type="button" {% ifequal  form_type 'Template' %}
+            disabled  {% endifequal %}class="btn btn-success">
                 <span class="glyphicon glyphicon-plus"></span> Add IC50 workflow ({{form_type}})
             </button>
         </a>
+    </ul>
         {% endfor %}

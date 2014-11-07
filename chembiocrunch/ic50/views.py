@@ -361,7 +361,6 @@ class Ic50VisualisationView(VisualisationView):
 
     def get_html(self):
         err = self.object.error_class()
-        print err
         return JsonResponse({ "html" : add_responsive_tags(self.object.html),
                             "results" : self.object.results ,
                             "error_class" : err,
@@ -409,7 +408,7 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
 
 
             worksheet = workbook.add_worksheet("Results Summary")
-            column_names = [u"Plate", u"Coupound id", u"LogIC50",u"IC50 (μM)", u"IC50 standard error", "Hill", "Hill standard error", "System Comments", "graph"]
+            column_names = [u"Plate", u"Compound id", u"LogIC50",u"IC50 (μM)", u"IC50 standard error", "Hill", "Hill standard error", "System Comments", "graph"]
             for i, name in enumerate(column_names):
                 worksheet.write(0,i,name, bold)
                 worksheet.set_column(i,i, 20)
@@ -530,5 +529,4 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
             fsock = open(path,"r")
             response = HttpResponse(fsock, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = 'attachment; filename=%s' % title
-            #fc.print_png(response)
             return response

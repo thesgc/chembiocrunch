@@ -65,34 +65,36 @@ class IC50UploadForm(forms.ModelForm):
 
 
     def clean(self):
-        self.plates = []
-        # try:
-        indexed_config = self.uploaded_config
-        indexed_config_groups = indexed_config.groupby("plate_ref")
+        try:
+            self.plates = []
+            # try:
+            indexed_config = self.uploaded_config
+            indexed_config_groups = indexed_config.groupby("plate_ref")
 
-        #indexed_config = indexed_config.set_index('fullname')
-        
-        #fully_indexed = data_with_index_refs.set_index('fullname')
-        #Assumed that datafile contains only one plate worth of data
-        #Sort by the plate reference to create plates in order
-        self.uploaded_data.sort(["plate_ref"], inplace=True)
-        data_groups = self.uploaded_data.groupby("plate_ref")
-        for name, grouped in data_groups:
-            #Iterate the names and groups in the dataset
-            if name in indexed_config_groups.groups:
-                print "found this %s" % str(name)
-                config = indexed_config_groups.get_group(name)
-                wells = [str(row) for row in config["full_ref"] ]
-                included_plate_wells = set(wells)
-                inc_wells = {}
-                for item in grouped["full_ref"]:
-                    if item in included_plate_wells:
-                        inc_wells[str(item)] = True
-                    else:
-                        inc_wells[str(item)] = None
-                self.plates.append({"plate_name": name, "data" : grouped, "config" : config, "steps_json": inc_wells} )
-        if len(self.plates) == 0:
-            raise forms.ValidationError("No plate references match between the transfer file and the output file, please ensure the files come from the same experiment")
+            #indexed_config = indexed_config.set_index('fullname')
+            
+            #fully_indexed = data_with_index_refs.set_index('fullname')
+            #Assumed that datafile contains only one plate worth of data
+            #Sort by the plate reference to create plates in order
+            self.uploaded_data.sort(["plate_ref"], inplace=True)
+            data_groups = self.uploaded_data.groupby("plate_ref")
+            for name, grouped in data_groups:
+                #Iterate the names and groups in the dataset
+                if name in indexed_config_groups.groups:
+                    config = indexed_config_groups.get_group(name)
+                    wells = [str(row) for row in config["full_ref"] ]
+                    included_plate_wells = set(wells)
+                    inc_wells = {}
+                    for item in grouped["full_ref"]:
+                        if item in included_plate_wells:
+                            inc_wells[str(item)] = True
+                        else:
+                            inc_wells[str(item)] = None
+                    self.plates.append({"plate_name": name, "data" : grouped, "config" : config, "steps_json": inc_wells} )
+            if len(self.plates) == 0:
+                raise forms.ValidationError("No plate references match between the transfer file and the output file, please ensure the files come from the same experiment")
+        except:
+            raise forms.ValidationError('Error merging files, are you sure that both the files are the correct format?')
 
 
     def save(self, force_insert=False, force_update=False, commit=True):
@@ -310,38 +312,44 @@ class LabCyteEchoIC50UploadForm(IC50UploadForm):
         By The default control wells are in columns 12 and 24 excluding rows A and B#
         By default there are no reference compound wells and it is assumed that the minimum transmitance is zero
         The cell ranges are specified in Excel format using colons and commas to separate e.g. A1:A3,A5,A7'''
-        uploaded_meta_file = self.files.get('uploaded_meta_file', False)
-        if uploaded_meta_file:
-            mime = magic.from_buffer(uploaded_meta_file.read(), mime=True)
-            if 'text/' in mime:
-                try:
-                    self.uploaded_meta = get_data_frame(uploaded_meta_file.temporary_file_path())
-                except AttributeError:
-                    raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
-                except Exception:
-                        raise forms.ValidationError("Error processing meta CSV File")
-            elif "application/" in mime:
-                try:
-                    try:
-                        self.uploaded_meta = get_excel_data_frame(uploaded_meta_file.temporary_file_path())
+        try:
+            uploaded_meta_file = self.files.get('uploaded_meta_file', False)
 
+            if uploaded_meta_file:
+                mime = magic.from_buffer(uploaded_meta_file.read(), mime=True)
+                if 'text/' in mime:
+                    try:
+                        self.uploaded_meta = get_data_frame(uploaded_meta_file.temporary_file_path())
+                    except AttributeError:
+                        raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
                     except Exception:
-                        raise forms.ValidationError("Error processing meta Excel File")
-                except AttributeError:
-                    raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
-            else:
-                raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
-            if not self.uploaded_meta.empty:
-                controls = self.uploaded_meta[self.uploaded_meta[4].str.lower().isin(["control wells"]) & self.uploaded_meta[5].notnull()]
-                if not controls.empty:
-                    self.control_wells = cell_range(controls[5].tolist()[0])
+                            raise forms.ValidationError("Error processing meta CSV File")
+                elif "application/" in mime:
+                    try:
+                        try:
+                            self.uploaded_meta = get_excel_data_frame(uploaded_meta_file.temporary_file_path())
+
+                        except Exception:
+                            raise forms.ValidationError("Error processing meta Excel File")
+                    except AttributeError:
+                        raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
                 else:
-                    raise forms.ValidationError("Control well cell ranges should be in the meta data file")
-                refs = self.uploaded_meta[self.uploaded_meta[4].str.lower().isin(["reference compound wells"]) & self.uploaded_meta[5].notnull()]
-                if not refs.empty:
-                    self.reference_compound_wells = cell_range(refs[5].tolist()[0])
-            return self.cleaned_data['uploaded_meta_file']
-        return None
+                    raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
+                if not self.uploaded_meta.empty:
+                    controls = self.uploaded_meta[self.uploaded_meta[4].str.lower().isin(["control wells"]) & self.uploaded_meta[5].notnull()]
+                    if not controls.empty:
+                        self.control_wells = cell_range(controls[5].tolist()[0])
+                    else:
+                        raise forms.ValidationError("Control well cell ranges should be in the meta data file")
+                    refs = self.uploaded_meta[self.uploaded_meta[4].str.lower().isin(["reference compound wells"]) & self.uploaded_meta[5].notnull()]
+                    if not refs.empty:
+                        self.reference_compound_wells = cell_range(refs[5].tolist()[0])
+                return self.cleaned_data['uploaded_meta_file']
+            else:
+                raise forms.ValidationError('No meta data file found')
+        except:
+            raise forms.ValidationError('Error processing meta data file')
+
 
 
 
@@ -474,7 +482,7 @@ class HeatmapForm(forms.Form):
                     'header_' + str(letter),
                     HTML('</th>')
                 ])
-            temp = '<div class="form-group"><div id="div_id_header_%s" class="checkbox"><label for="id_header_%s" class=""><input type="checkbox" name="header_%s" class="checkboxinput checkbox" id="id_header_%s">%s</label></div></div>' % (letter,letter,letter,letter,letter)
+            temp = '<div class="form-group"><div id="div_id_header_%s" class="checkbox"><label for="id_header_%s" class="fillin"><input type="checkbox" name="header_%s" class="checkboxinput checkbox" id="id_header_%s">%s</label></div></div>' % (letter,letter,letter,letter,letter)
             loopels.append('<th data_row="' + str(letter) + '" class="hmp_row_header">' + temp +'</th>')
             #loop through subset of ud which has that letter
             subset = ud[ud['well_letter'] == letter]
@@ -504,7 +512,7 @@ class HeatmapForm(forms.Form):
                     checked = ""
                     if initial:
                         checked ="checked"
-                    cell_temp = '<div class="form-group"><div id="div_id_%s" class="checkbox"><label for="id_%s" class=""><input type="checkbox" name="%s" %s class="checkboxinput checkbox" id="id_%s">%s </label></div></div>' % (well_str, well_str,well_str, checked , well_str, human(row['figure']))
+                    cell_temp = '<div class="form-group "><div id="div_id_%s" class="checkbox "><label for="id_%s" class="fillin"><input type="checkbox" name="%s" %s class="fillin checkboxinput checkbox" id="id_%s">%s </label></div></div>' % (well_str, well_str,well_str, checked , well_str, human(row['figure']))
                     loopels.append('<td data_row="' + row['well_letter'] + '" data_column="')
                     loopels.append(str(row['well_number']) + '" class="hide-checkbox hmp' + cond_class + '">' + cell_temp + '</td>')
                     #add a table heading cell for each column - only do this for the first row
@@ -515,7 +523,7 @@ class HeatmapForm(forms.Form):
                                 'header_' + str(row['well_number']),
                                 HTML('</th>')
                             ])
-                        template = '<div class="form-group"><div id="div_id_header_%d" class="checkbox"><label for="id_header_%d" class=""><input type="checkbox" name="header_%d" class="checkboxinput checkbox" id="id_header_%d">%d</label></div></div>' % (row['well_number'], row['well_number'], row['well_number'], row['well_number'], row['well_number'])
+                        template = '<div class="form-group"><div id="div_id_header_%d" class="checkbox"><label for="id_header_%d" class="fillin"><input type="checkbox" name="header_%d" class="checkboxinput checkbox" id="id_header_%d">%d</label></div></div>' % (row['well_number'], row['well_number'], row['well_number'], row['well_number'], row['well_number'])
 
                         element_list.append('<th data_column="' + str(row['well_number']) + '" class="hmp_header">')
                         element_list.append(template + '</th>')
@@ -534,7 +542,9 @@ class HeatmapForm(forms.Form):
 
 
 
-FORM_REGISTRY = {"LabcyteEcho" : LabCyteEchoIC50UploadForm ,
-                 #   "Template" : TemplateIC50UploadForm
+FORM_REGISTRY = {
+                    "Template" : TemplateIC50UploadForm,
+
+"LC Echo/BMG" : LabCyteEchoIC50UploadForm ,
                     }
 

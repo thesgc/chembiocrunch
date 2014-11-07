@@ -21,7 +21,29 @@ margin-left:50px;
     padding: 10px 16px;
 }
 
+.inlineb {
+    display: inline !important;
+}
+.fillin{
+display: inline-block;
+  padding: 9px 10px;
+  font-size: @baseFontSize + 2px;
+  line-height: normal;
+  text-align: center !important;
+  width: 100%;
+  
+  vertical-align: middle;
+  .buttonBackground(@white, darken(@white, 10%));
+ 
+  cursor: pointer;
+-webkit-user-select: none; /* Chrome/Safari */        
+-moz-user-select: none; /* Firefox */
+-ms-user-select: none; /* IE10+ */
 
+/* Rules below not implemented in browsers yet */
+-o-user-select: none;
+user-select: none;
+}
 
 .form-control {
     height: auto;
@@ -231,12 +253,12 @@ th.hmp_header {
 /*colours for heatmap table gradations */
 .heatmap td.hmp10 {background-color:rgb(165,0,38); color: #ddd;}
 .heatmap td.hmp9 {background-color:rgb(215,48,39); color: #ddd;}
-.heatmap td.hmp8 {background-color:rgb(244,109,67); color: #ddd;}
-.heatmap td.hmp7 {background-color:rgb(253,174,97); color: #ddd;}
+.heatmap td.hmp8 {background-color:rgb(244,109,67); color: #444;}
+.heatmap td.hmp7 {background-color:rgb(253,174,97); color: #444;}
 .heatmap td.hmp6 {background-color:rgb(254,224,139); color:#444;}
 .heatmap td.hmp5 {background-color:rgb(217,239,139); color: #444;}
-.heatmap td.hmp4 {background-color:rgb(166,217,106); color: #ddd;}
-.heatmap td.hmp3 {background-color:rgb(102,189,99); color: #ddd;}
+.heatmap td.hmp4 {background-color:rgb(166,217,106); color: #444;}
+.heatmap td.hmp3 {background-color:rgb(102,189,99); color: #444;}
 .heatmap td.hmp2 {background-color:rgb(26,152,80); color: #ddd;}
 .heatmap td.hmp1 {background-color:rgb(0,104,55); color: #ddd;}
 
@@ -332,7 +354,8 @@ transform: rotate(90deg);
 	font-size: 0.7em;
 }
 .ic50-error-1 div {
-	background-color: tomato;
+	background-color: #F5DFE4;
+    color: white;
 }
 .ic50-error-2 div {
 	background-color: lemonchiffon;
@@ -341,7 +364,16 @@ transform: rotate(90deg);
 	background-color: darkorange;
 }
 .ic50-error-4 div {
-    background-color: red;
+    background-color: #ee5f5b;
+    
+}
+
+.ic50-error-4 .well .row-fluid h3 {
+    color : #fff;
+}
+
+.ic50-error-4 .well .row-fluid h3 a {
+    color : #fff;
 }
 .no-margin {
 	margin: 0 !important;

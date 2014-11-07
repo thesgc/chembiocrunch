@@ -101,7 +101,6 @@ class IC50Workflow(TimeStampedModel):
             value = 0
             if not dataset.empty:
                 value = dataset[5].tolist()[0]
-                print value
             return value
         except KeyError:
             return 0
