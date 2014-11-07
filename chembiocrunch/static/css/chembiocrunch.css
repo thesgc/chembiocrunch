@@ -22,6 +22,7 @@ margin-left:50px;
 }
 .container-fluid {
     width:80%;
+    margin: auto;
 }
 .login {
      display: inline ;
