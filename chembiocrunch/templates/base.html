@@ -1,7 +1,5 @@
 {% load staticfiles %}
-
-
-
+{% load cri %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -72,7 +70,8 @@
   <body>
 
 
-
+{% cri http://chembiohub.ox.ac.uk/cbh-header.html 0 %}
+{% comment %}
     <nav class="navbar navbar-default" role="navigation">
       <div class="container">
         <div class="navbar-header">
@@ -130,7 +129,20 @@
     </div><!-- /container -->
   </div><!-- /headerwrap -->
 
-    
+
+
+{% endcomment %}
+
+      <script>
+  var html = '<div class="collapse navbar-collapse">          <p class="navbar-text navbar-right text-capitalize"><button type="button" class="btn btn-default"><span class="glyphicon glyphicon-user"></span>{% if request.user.first_name %}{{ request.user.first_name }}{% else %} {{request.user}}{% endif %}</button>            <a href="/crunch/webauth/logout" role="button" class="btn btn-primary">Log Out</a></p>        </div><!--/.nav-collapse -->';
+$( document ).ready(function() {  
+  //$(".login").toggleClass("hidden");
+
+  $(".login").html(html);
+  $("#social-icons").toggleClass("hidden");
+$("#slogan").text("ChemBio Crunch - a simple tool to analyse assay data");
+});
+  </script>
 
 
       <div class="container">

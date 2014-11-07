@@ -20,7 +20,9 @@ margin-left:50px;
     line-height: 1.33;
     padding: 10px 16px;
 }
-
+.login {
+     display: inline ;
+}
 .inlineb {
     display: inline !important;
 }
@@ -542,10 +544,13 @@ transform: translateY(-21px);
     display: -moz-box;
     display: -ms-flexbox;
     display: -webkit-flex;
+    display: -moz-box-flex;
     display: flex;
     flex:1 1 auto;
     margin-bottom : 20px;
 }
+
+
 
 .row-flex-wrap {
     -webkit-flex-flow: row wrap;
@@ -565,6 +570,7 @@ transform: translateY(-21px);
 
 .flex-col {
     display: flex;
+    
     display: -webkit-flex;
     flex: 1 100%;
     flex-flow: column nowrap;
