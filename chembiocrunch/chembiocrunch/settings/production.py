@@ -76,24 +76,28 @@ SERVER_EMAIL = EMAIL_HOST_USER
 ########## CACHE CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#caches
 
+# CACHES = {
+# 	    'default': {
+# 	        'BACKEND': 'redis_cache.RedisCache',
+# 	        'LOCATION': '127.0.0.1:6379',
+# 	        'KEY_PREFIX' :"chembiocrunch",
+# 	        'OPTIONS': {
+# 	            'DB': 1,
+# 	            'PARSER_CLASS': 'redis.connection.HiredisParser',
+# 	            'CONNECTION_POOL_CLASS': 'redis.BlockingConnectionPool',
+# 	            'CONNECTION_POOL_CLASS_KWARGS': {
+# 	                'max_connections': 50,
+# 	                'timeout': 20,
+# 	            }
+# 	        },
+# 	    },
+# 	}
+
 CACHES = {
-	    'default': {
-	        'BACKEND': 'redis_cache.RedisCache',
-	        'LOCATION': '127.0.0.1:6379',
-	        'KEY_PREFIX' :"chembiocrunch",
-	        'OPTIONS': {
-	            'DB': 1,
-	            'PARSER_CLASS': 'redis.connection.HiredisParser',
-	            'CONNECTION_POOL_CLASS': 'redis.BlockingConnectionPool',
-	            'CONNECTION_POOL_CLASS_KWARGS': {
-	                'max_connections': 50,
-	                'timeout': 20,
-	            }
-	        },
-	    },
-	}
-
-
+    'default': {
+        'BACKEND': 'django.core.cache.backends.dummy.DummyCache',
+    }
+}
 ########## END SECRET CONFIGURATION
 
 ########## MEDIA CONFIGURATION
