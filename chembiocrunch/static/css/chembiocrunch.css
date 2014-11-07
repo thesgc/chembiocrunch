@@ -169,9 +169,7 @@ a.close{
 	padding-bottom: 10px;
 
 }
-.container {
-	width:95%;
-}
+
 
 .btn-primary {
 	background-color: #44687D;
@@ -570,7 +568,7 @@ transform: translateY(-21px);
 
 .flex-col {
     display: flex;
-    
+
     display: -webkit-flex;
     flex: 1 100%;
     flex-flow: column nowrap;
