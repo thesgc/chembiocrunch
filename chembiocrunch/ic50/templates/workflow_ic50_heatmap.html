@@ -8,7 +8,7 @@
 
 <div class="row">
 <a href="{% if prev %}{% url "workflow_ic50_heatmap" pk=object.id workflow_revision_id=prev.id %}" class="{% else %}/" class="disabled {% endif %} btn btn-primary pull-left"  role="button"  ><span class="glyphicon glyphicon-chevron-left"></span>Prev Plate</a>
-<h2 class = "blue inlineb">Plate [{{ workflow_revision.plate_name }} ({{ index }} of {{ count }} total plates imported)</h2>
+<h2 class = "blue inlineb">&nbsp;&nbsp;&nbsp;Plate [{{ workflow_revision.plate_name }} ({{ index }} of {{ count }} total plates imported)</h2>
     <a href="{% if next %}{% url "workflow_ic50_heatmap" pk=object.id workflow_revision_id=next.id %}" class="{% else %}/" class="disabled {% endif %} btn btn-primary pull-right"  role="button"  >Next Plate<span class="glyphicon glyphicon-chevron-right"></span></a>
   </div></div>
 {% endblock nav %}
