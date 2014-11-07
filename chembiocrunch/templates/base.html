@@ -136,7 +136,7 @@
 {% endcomment %}
 
       <script>
-  var html = '<div class="pull-right"><h2><span class="glyphicon glyphicon-user"></span>{% if request.user.first_name %}{{ request.user.first_name }}{% else %} {{request.user}}{% endif %}</h2>           <a href="/crunch/webauth/logout" role="" class=""><h2>Log Out</h2></a>        </div><!--/.nav-collapse -->';
+  var html = '<div class=""><h2><span class="glyphicon glyphicon-user"></span>{% if request.user.first_name %}{{ request.user.first_name }}{% else %} {{request.user}}{% endif %}           <a href="/crunch/webauth/logout" role="" class=""><span class="glyphicon glyphicon-log-out"></span>Log Out</a>  </h2>      </div><!--/.nav-collapse -->';
 $( document ).ready(function() {  
   //$(".login").toggleClass("hidden");
 
@@ -150,7 +150,7 @@ $("#slogan").html("<a href='/crunch' ><h2 class='no-bottom-margin'>ChemBio Crunc
   </script>
 
 
-      <div class="container-fluid">
+      <div class="container">
         <h2 class="blue">
         {% block action_title %}
         {% endblock action_title %}
