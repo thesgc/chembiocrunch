@@ -136,7 +136,7 @@
 {% endcomment %}
 
       <script>
-  var html = '<div class=""><h2><span class="glyphicon glyphicon-user"></span>{% if request.user.first_name %}{{ request.user.first_name }}{% else %} {{request.user}}{% endif %}           <a href="/crunch/webauth/logout" role="" class=""><span class="glyphicon glyphicon-log-out"></span>Log Out</a>  </h2>      </div><!--/.nav-collapse -->';
+  var html = '<div class=""><h2><span class="glyphicon glyphicon-user"></span>&nbsp;{% if request.user.first_name %}{{ request.user.first_name }}{% else %} {{request.user}}{% endif %}           <a class="pull-right" href="/crunch/webauth/logout" role="" class=""><span class="glyphicon glyphicon-log-out"></span>&nbsp;Log Out</a>  </h2>      </div><!--/.nav-collapse -->';
 $( document ).ready(function() {  
   //$(".login").toggleClass("hidden");
 
