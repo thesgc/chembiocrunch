@@ -489,6 +489,9 @@ class VisualisationAjaxArchiveView(WorkflowDetailView):
         elif model == 'ic50workflow':
             #self.object = self.ic50_model.get(pk=pk)
             self.object = get_model("ic50", "IC50Workflow").objects.filter(pk=pk)[0]
+        elif model == 'qpcrworkflow':
+            #self.object = self.ic50_model.get(pk=pk)
+            self.object = get_model("qpcr", "qpcrworkflow").objects.filter(pk=pk)[0]
 
         self.object.archived = True
         self.object.save()

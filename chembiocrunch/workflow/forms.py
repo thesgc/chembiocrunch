@@ -121,6 +121,7 @@ class CreateWorkflowForm(forms.ModelForm):
 
 
 
+
 DATA_TYPE_CHOICES = (
     ("object", "Label"),
     ("float64", "Decimal Number"),

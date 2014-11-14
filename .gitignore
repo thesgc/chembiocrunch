@@ -48,3 +48,4 @@ package.box
 chembiocrunch/media
 chembiocrunch/assets
 chembiocrunch/chembiocrunch/settings/secret.py
+chembiocrunch/bower_components/*

@@ -1,3 +1,4 @@
+{% load staticfiles %}
         {% for form_type in FORM_REGISTRY %}
         <ul class="inlineb" {% ifequal  form_type 'Template' %} title='New data entry forms can be added for different machines' {% endifequal %}>
         <a {% ifequal  form_type 'Template' %}
@@ -9,3 +10,12 @@
         </a>
     </ul>
         {% endfor %}
+    <ul class="inlineb" >
+        <a  href="{% static '' %}chembiocrunch_vis/app/index.html#/qpcr_create">
+            <button type="button" class="btn btn-primary">
+                <span class="glyphicon glyphicon-plus"></span> Add QPCR workflow
+            </button>
+        </a>
+    </ul>
+
+        

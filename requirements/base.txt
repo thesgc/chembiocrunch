@@ -21,3 +21,5 @@ django-devserver
 django_javascript_settings
 jinja2
 titlecase
+django-bower
+jsonfield

@@ -42,6 +42,7 @@ from titlecase import titlecase
 
 from numpy import nan
 
+
 class IC50WorkflowListView(WorkflowListView):
     '''Lists only the workflows that belong to that user'''
     template_name = "workflows/workflow_list.html"
@@ -49,7 +50,14 @@ class IC50WorkflowListView(WorkflowListView):
     def get_queryset(self):
         '''Make sure that all of the views cannot see the object unless they own it!'''
         #need to also pass ic50 models
-        return self.ic50_model.objects.get_user_records(self.request.user).filter(archived=False)
+        qs1 = self.ic50_model.objects.get_user_records(self.request.user).filter(archived=False)
+        #try:
+        qs2 = get_model("qpcr", "qpcrworkflow").objects.get_user_records(self.request.user).filter(archived=False)
+        return chain(qs1,qs2)
+        # except:
+        #     pass
+        # return qs1
+
 
     def get_context_data(self, **kwargs):
         # Call the base implementation first to get a context

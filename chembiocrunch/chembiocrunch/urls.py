@@ -10,7 +10,7 @@ from workflow import urls as workflowurls
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 from workflow import views
-
+from qpcr import urls as qpcr_urls
 admin.autodiscover()
 
 urlpatterns = patterns('',
@@ -32,6 +32,8 @@ urlpatterns = patterns('',
     url(r'^crunch/accounts/login/', views.Login.as_view(), name="login" ),
     url(r'^crunch/accounts/logout/', views.Logout.as_view(), name="logout" ),
     url(r'^crunch/logged_out/', views.Login.as_view(logout=True), name="loggedout" ),
+
+    url(r'^crunch/qpcr/', include(qpcr_urls)),
 
 
 )

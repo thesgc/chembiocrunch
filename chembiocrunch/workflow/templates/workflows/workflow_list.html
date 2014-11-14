@@ -22,51 +22,36 @@
         <div>
           <p>Workflows are data containers where you can analyse your experimental results</p>
         </div>
-        
-       <!--  <a href="{% url "workflow_create" %}"><button type="button" class="btn btn-success"><span class="glyphicon glyphicon-plus"></span> Add plain workflow</button></a> -->
         {% if FORM_REGISTRY %}
         {% include "ic50_workflow_buttons.html" %}
         {% endif %}
-      
     
 
 {% endblock help_text %}
 
 {% block action_title %}
 
-{% if object_list %}Your Workflows:{% else %}You do not have any workflows yet, create one below:{% endif %}
+<h2>{% if object_list %}Your Workflows:{% else %}You do not have any workflows yet, create one below:{% endif %}</h2>
 
 {% endblock action_title %}
 
 {% block content %}  
 
     {% if object_list %}
-    <div class='row row-flex row-flex-wrap'>
+    <div class='row'>
     {% for workflow in object_list %}
 
 
-        <div class ="bottom-margin  col-lg-3 col-md-3 col-sd-4 col-xs-6" id="{{ workflow.id }}"><div class=" panel-default flex-col {{ workflow.workflow_type }}">
-          <div class="panel-header">
-          <a class="close" data-workflow-id="{{ workflow.id }}" data-archive-url="{% url "workflow_ajax_archive" pk=workflow.id model=workflow.workflow_type  %}">×</a>
-        </div>
-         <div class="panel-body flex-grow">
-
-         <a href="
+        <div class ="col-lg-3 col-md-3 col-sd-4 col-xs-6" id="{{ workflow.id }}"><div class="well {{ workflow.workflow_type }}"><a class="close" data-workflow-id="{{ workflow.id }}" data-archive-url="{% url "workflow_ajax_archive" pk=workflow.id model=workflow.workflow_type  %}">×</a><a href="
             {% if workflow.workflow_type == 'ic50workflow' %}
                 {% url "workflow_ic50_heatmap" pk=workflow.id workflow_revision_id=0 %}
+            {% elif workflow.workflow_type == 'qpcrworkflow' %}
+                {% comment %} Compose an angularjs url for this object {% endcomment %}
+                {% static '' %}chembiocrunch_vis/app/index.html#/qpcr_detail/{{workflow.id}}
             {% else %}
                 {{ workflow.id }}/workflow_data_mappings_edit
             {% endif %}
-            "><span class="workflow-title">{{ workflow.title|title }}</span></a>
-          </div>
-            <div class="panel-footer">
-            <span class="glyphicon glyphicon-time"></span> 
-            <span class="workflow-date">{{ workflow.created|timesince}} ago</span>
-            <br/>
-            <span class="glyphicon glyphicon-user"></span> 
-            <span class="workflow-date">{{ workflow.created_by.first_name }} {{ workflow.created_by.last_name }}</span>
-            </div>
-          </div></div> <!-- end workflow holder -->
+            "><span class="workflow-title">{{ workflow.title|title }}</span></a><br/><br/><span class="glyphicon glyphicon-time"></span> <span class="workflow-date">{{ workflow.created|timesince}} ago</span><br/><span class="glyphicon glyphicon-user"></span> <span class="workflow-date">{{ workflow.created_by.first_name }} {{ workflow.created_by.last_name }}</span></div></div> <!-- end workflow holder -->
 
     {% endfor %}
     {% endif %}
@@ -82,19 +67,15 @@
 
 
 <script>
-
 $(document).ready(function() {
     $('.close').each(function(){
-
         $(this).click(function(e){
           //get parent table cell
           //add or remove unchecked class
           markAsArchived($(this).attr("data-workflow-id"), $(this).attr("data-archive-url"));
         });
-
     });
 });
-
 function markAsArchived(w_id, w_url) {
     $( "#dialog-close" ).dialog({
       resizable: false,
@@ -112,7 +93,6 @@ function markAsArchived(w_id, w_url) {
                     console.log(data);
                     $( "#dialog-close" ).dialog('close');
                     $('#' + w_id).hide();
-
                 },
                 error: function(jqXHR, textStatus, errorThrown) 
                 {
@@ -127,10 +107,6 @@ function markAsArchived(w_id, w_url) {
       }
     });
 }
-
-// $('.pull-down').each(function() {
-//     $(this).css('margin-top', $(this).parent().height()-$(this).height())
-// });
 </script>
 
 {% endblock extra_js %}

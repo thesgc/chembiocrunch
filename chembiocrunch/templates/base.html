@@ -1,8 +1,6 @@
 {% load staticfiles %}
-{% load cri %}
 
 <!DOCTYPE html>
-{% cri http://chembiohub.ox.ac.uk/cbh-header.html 300 %}
 
 
 <html lang="en">
@@ -58,10 +56,22 @@
 <!--     <link href="{% static 'css/main.css' %}" rel="stylesheet">
  -->
     <!-- This file store project specific CSS -->
-    <link href="{% static 'css/chembiocrunch.css' %}" rel="stylesheet">
 
     <!-- This file store autocomplete dropdown specific CSS -->
     <link href="{% static 'css/select2.css' %}" rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'bootstrap/dist/css/bootstrap.css' %}" />
+
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+    <!-- build:css(.) styles/vendor.css -->
+    <!-- bower:css -->
+    <link rel="stylesheet" href="{% static 'codemirror/lib/codemirror.css' %}" />
+    <link rel="stylesheet" href="{% static 'chembiohub-theme/css/main.css' %}" />
+    <!-- endbower -->
+    <!-- endbuild -->
+    <!-- build:css(.) styles/main.css -->
+    <link rel="stylesheet" href="{% static 'chembiohub-theme/css/cbh-template-header.css' %}">
+    <link rel="stylesheet" href="{% static 'chembiohub-theme/css/font.css' %}">
 
 
 
@@ -72,84 +82,12 @@
 
   <body>
 
-
-{% comment %}
-    <nav class="navbar navbar-default" role="navigation">
-      <div class="container">
-        <div class="navbar-header">
-          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="/crunch/">ChemBio Crunch</a>
-        </div>
-        <div class="collapse navbar-collapse">
-          <p class="navbar-text navbar-right text-capitalize"><button type="button" class="btn btn-default"><span class="glyphicon glyphicon-user"></span>{% if request.user.first_name %}{{ request.user.first_name }}{% else %} {{request.user}}{% endif %}</button>
-            <a href="/crunch/webauth/logout" role="button" class="btn btn-primary">Log Out</a></p>
-        </div><!--/.nav-collapse -->
-      </div>
-    </nav>
-
-    <div id="headerwrap">
-    <div class="container">
-      <div class="row centered">
-        <div class="col-lg-12 ">
-          <h1>
-              {% block page_title %}Welcome to ChemBio Crunch{% endblock page_title %}
-          </h1> 
-          <h2>{% block page_subtitle %}A simple tool to manipulate and visualise assay data{% endblock page_subtitle %}</h2>     
-          
-        </div><!-- /col-lg-6 -->
-        <div class="container">
-      {% block breadcrumbs %}
-
-{% if revisions %}
-        <div class="row">
-            {% for key, value in revisions %}
-            <div class="col-xs-2">
-                
-
-
-
-
-            <div class="arrow-box {{key}} {{value}}" >
-                {{ key|title }}
-            </div>
-            </div>
-            <div class="col-xs-1">
-            <div class="arrow-box" >           
-            </div>
-            </div>
-            {% endfor %}
-        </div>
-{% endif %}
-{% endblock breadcrumbs %}
-      </div>
-        
-      </div><!-- /row -->
-    </div><!-- /container -->
-  </div><!-- /headerwrap -->
-
-
-
-{% endcomment %}
-
-      <script>
-  var html = '<div class="pull-right"><h2><span class="glyphicon glyphicon-user"></span>&nbsp;{% if request.user.first_name %}{{ request.user.first_name }}{% else %} {{request.user}}{% endif %}      &nbsp;&nbsp;&nbsp;     <a class="" href="/crunch/webauth/logout" role="" class=""><span class="glyphicon glyphicon-log-out"></span>&nbsp;Log Out</a>  </h2>      </div><!--/.nav-collapse -->';
-$( document ).ready(function() {  
-  //$(".login").toggleClass("hidden");
-
-  $(".login").html(html);
-    $(".login").toggleClass("hidden");
-
-  $("#social-icons").toggleClass("hidden");
-$("#slogan").html("<a href='/crunch' ><h2 class='no-bottom-margin'><span class='glyphicon glyphicon-home'>&nbsp;</span>ChemBio Crunch - The assay data analyser</h2></a>");
-$(".container").toggleClass("container-fluid").toggleClass("container");
-});
-  </script>
-
-
+{% with ur='/home/vagrant/chembiocrunch/chembiocrunch/chembiocrunch/bower_components/bower_components/chembiohub-theme/templates/crunch_header.html' %}
+{% ssi ur %}
+{% endwith %}
+{% with ur='/var/www/chembiocrunch/chembiocrunch/chembiocrunch/bower_components/bower_components/chembiohub-theme/templates/crunch_header.html' %}
+{% ssi ur %}
+{% endwith %}
       <div class="container-fluid spacer">
         <h2 class="blue">
         {% block action_title %}
