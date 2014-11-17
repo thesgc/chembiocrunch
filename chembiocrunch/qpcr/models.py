@@ -20,8 +20,7 @@ class QPCRWorkflowManager(models.Manager):
 
 class QPCRWorkflow(TimeStampedModel):
     '''Object to hold the data files for a specific IC50 workflow'''
-    title = models.CharField(max_length=300,unique=Trueexit
-        )
+    title = models.CharField(max_length=300,unique=True)
     dataset = JSONField()
     objects = QPCRWorkflowManager()
     archived = models.BooleanField(default=False)
