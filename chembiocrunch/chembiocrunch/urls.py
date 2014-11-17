@@ -14,7 +14,9 @@ from qpcr import urls as qpcr_urls
 admin.autodiscover()
 
 urlpatterns = patterns('',
+    url(r'^crunch$', RedirectView.as_view(url="/crunch/accounts/login/")),
     url(r'^crunch/$', RedirectView.as_view(url="/crunch/accounts/login/")),
+
     url(r'^$', RedirectView.as_view(url="/crunch/accounts/login/")),
 
     # Examples:
