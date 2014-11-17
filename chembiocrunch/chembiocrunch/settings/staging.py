@@ -19,3 +19,4 @@ BOWER_INSTALLED_APPS = (
 ALLOWED_INCLUDE_ROOTS = ('/home/vagrant', '/var/www')
 ALLOWED_HOSTS = "*"
 DEBUG = True
+LOGGING_CONFIG =None
