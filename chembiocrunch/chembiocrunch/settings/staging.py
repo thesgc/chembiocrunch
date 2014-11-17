@@ -6,6 +6,7 @@ INSTALLED_APPS += (
     'djangobower',
     'rest_framework',
     'qpcr',
+    'gunicorn',
 )
 
 STATICFILES_FINDERS += ('djangobower.finders.BowerFinder',)
