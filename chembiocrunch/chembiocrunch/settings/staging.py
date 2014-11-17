@@ -20,3 +20,5 @@ ALLOWED_INCLUDE_ROOTS = ('/home/vagrant', '/var/www')
 ALLOWED_HOSTS = "*"
 DEBUG = True
 LOGGING_CONFIG =None
+
+MEDIA_ROOT = '/var/lib/data/chembiocrunch/'
