@@ -16,3 +16,4 @@ BOWER_INSTALLED_APPS = (
 )
 
 ALLOWED_INCLUDE_ROOTS = ('/home/vagrant', '/var/www')
+ALLOWED_HOSTS = ("staging.chembiohub.ox.ac.uk")
