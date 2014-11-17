@@ -1,4 +1,5 @@
 from .production import *
+from os.path import abspath, basename, dirname, join, normpath
 
 
 INSTALLED_APPS += (
@@ -22,3 +23,4 @@ DEBUG = True
 LOGGING_CONFIG =None
 
 MEDIA_ROOT = '/var/lib/data/chembiocrunch/'
+HDF5_ROOT = normpath(join(MEDIA_ROOT, 'hdf5', ""))
