@@ -14,6 +14,17 @@ margin-left:50px;
 }
 /*Making button always large
 */
+
+.checkbox , .form-horizontal {
+    padding-top: 0px !important;
+    min-height :0px;
+}
+.dataset{
+    margin-left :-10px !important;
+        margin-right :0px !important;
+
+}
+
 .btn, .btn-group  {
     border-radius: 6px;
     font-size: 18px;
@@ -31,13 +42,14 @@ margin-left:50px;
     display: inline !important;
     margin-top:10px;
 }
+
 .fillin{
 display: inline-block;
-  padding: 9px 10px;
+  padding: 5px 6px;
   font-size: @baseFontSize + 2px;
   line-height: normal;
   text-align: center !important;
-  width: 100%;
+  width: 70%;
   
   vertical-align: middle;
   .buttonBackground(@white, darken(@white, 10%));
@@ -258,26 +270,39 @@ th.hmp_header {
 
 
 .heatmap td.hide-checkbox label {
-	margin-left: -20px;
+	margin-left: 0px;
 }
 
 /*colours for heatmap table gradations */
-.heatmap td.hmp10 {background-color:rgb(165,0,38); color: #ddd;}
-.heatmap td.hmp9 {background-color:rgb(215,48,39); color: #ddd;}
-.heatmap td.hmp8 {background-color:rgb(244,109,67); color: #444;}
-.heatmap td.hmp7 {background-color:rgb(253,174,97); color: #444;}
-.heatmap td.hmp6 {background-color:rgb(254,224,139); color:#444;}
-.heatmap td.hmp5 {background-color:rgb(217,239,139); color: #444;}
-.heatmap td.hmp4 {background-color:rgb(166,217,106); color: #444;}
-.heatmap td.hmp3 {background-color:rgb(102,189,99); color: #444;}
-.heatmap td.hmp2 {background-color:rgb(26,152,80); color: #ddd;}
-.heatmap td.hmp1 {background-color:rgb(0,104,55); color: #ddd;}
+.heatmap td.hmp10 {background-color:rgb(165,20,38); color: #ddd;   opacity: 0.85;
+}
+.heatmap td.hmp9 {background-color:rgb(215,48,39); color: #ddd;  opacity: 0.85;
+}
+.heatmap td.hmp8 {background-color:rgb(244,109,67); color: #444;  opacity: 0.85;
+}
+.heatmap td.hmp7 {background-color:rgb(253,174,97); color: #444;  opacity: 0.85;
+}
+.heatmap td.hmp6 {background-color:rgb(254,224,139); color:#444;  opacity: 0.85;
+}
+.heatmap td.hmp5 {background-color:rgb(217,239,139); color: #444;  opacity: 0.85;
+}
+.heatmap td.hmp4 {background-color:rgb(166,217,106); color: #444;  opacity: 0.85;
+}
+.heatmap td.hmp3 {background-color:rgb(102,189,99); color: #444;  opacity: 0.85;
+}
+.heatmap td.hmp2 {background-color:rgb(26,152,80); color: #ddd;  opacity: 0.85;
+}
+.heatmap td.hmp1 {background-color:rgb(20,104,55); color: #ddd;  opacity: 0.85;
+}
 
 
 /* Then this class last to override any other colour */
-.heatmap td.unchecked {
-	background-color: #ddd;
-	color:#aaa;
+.heatmap td.unchecked label {
+	    text-decoration: line-through overline underline !important;
+
+
+font-weight: 1 !important;
+color: #aaa !important;
 }
 .heatmap td.hide-checkbox input[type=checkbox], .heatmap th input[type=checkbox]  {
    position: absolute;

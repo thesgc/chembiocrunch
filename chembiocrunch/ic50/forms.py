@@ -157,7 +157,8 @@ class IC50UploadForm(forms.ModelForm):
                             raw_data=raw_data,
                             constrained=True,
                             visualisation_title=ic50_group,
-                            html="")
+                            html="",
+                            starting_platewell=min(group_df["full_ref"]))
                 vis.save()
         plate["data"].to_hdf(new_workflow_revision.get_store_filename("data"), new_workflow_revision.get_store_key(), mode='w')
         config_columns.to_hdf(new_workflow_revision.get_store_filename("configdata"),new_workflow_revision.get_store_key(), mode='w')
@@ -237,14 +238,14 @@ class LabCyteEchoIC50UploadForm(IC50UploadForm):
         mime = magic.from_buffer(self.files["uploaded_data_file"].read(), mime=True)
         if 'text/' in mime:
             try:
-                self.uploaded_data = get_data_frame(uploaded_data_file.temporary_file_path())
+                self.uploaded_data = get_data_frame(uploaded_data_file.temporary_file_path(), names=["fullname","figure",])
             except AttributeError:
-                raise forms.ValidationError('Cuploaded_configannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
+                raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
             except Exception:
                     raise forms.ValidationError("Error processing data Excel File")
         elif "application/" in mime:
             try:
-                self.uploaded_data = get_excel_data_frame(uploaded_data_file.temporary_file_path())
+                self.uploaded_data = get_excel_data_frame(uploaded_data_file.temporary_file_path(), names=["fullname","figure",])
             except AttributeError:
                 raise forms.ValidationError('Cannot access the file during upload due to application misconfiguration. Please consult the application administrator and refer them to the documentation on github')
             except Exception:
@@ -252,7 +253,7 @@ class LabCyteEchoIC50UploadForm(IC50UploadForm):
         else:
             raise forms.ValidationError('File must be in CSV, XLS or XLSX format')
 
-        self.uploaded_data.columns = ["fullname","figure",]
+        #self.uploaded_data.columns = 
         refs = self.uploaded_data["fullname"].str.split(':')
         self.uploaded_data["full_ref"] = refs.str.get(1).str.strip()
         self.uploaded_data["plate_ref"] = get_plate_ref(refs.str.get(0).str.strip())
@@ -482,7 +483,7 @@ class HeatmapForm(forms.Form):
                     'header_' + str(letter),
                     HTML('</th>')
                 ])
-            temp = '<div class="form-group"><div id="div_id_header_%s" class="checkbox"><label for="id_header_%s" class="fillin"><input type="checkbox" name="header_%s" class="checkboxinput checkbox" id="id_header_%s">%s</label></div></div>' % (letter,letter,letter,letter,letter)
+            temp = '<div class="form-group"><div id="div_id_header_%s" class="checkbox"><label for="id_header_%s" class="fillin"><input type="checkbox" name="header_%s" class="checkboxinput checkbox" id="id_header_%s">%s&nbsp;&nbsp;</label></div></div>' % (letter,letter,letter,letter,letter)
             loopels.append('<th data_row="' + str(letter) + '" class="hmp_row_header">' + temp +'</th>')
             #loop through subset of ud which has that letter
             subset = ud[ud['well_letter'] == letter]
@@ -495,7 +496,7 @@ class HeatmapForm(forms.Form):
 
                 try:
                     row_list = []
-                    initial = j.pop(well_str)
+                    initial = j[well_str]
                     condclassint = int(math.ceil((float(row['figure']) / float(hi_value)) * 10))
                     cond_class = str(condclassint)
                     disable_attrs = {}
@@ -512,18 +513,21 @@ class HeatmapForm(forms.Form):
                     checked = ""
                     if initial:
                         checked ="checked"
-                    cell_temp = '<div class="form-group "><div id="div_id_%s" class="checkbox "><label for="id_%s" class="fillin"><input type="checkbox" name="%s" %s class="fillin checkboxinput checkbox" id="id_%s">%s </label></div></div>' % (well_str, well_str,well_str, checked , well_str, human(row['figure']))
+                    cell_temp = '<div class="form-group dataset"><div id="div_id_%s" class="checkbox "><label for="id_%s" class="fillin"><input type="checkbox" name="%s" %s class="fillin checkboxinput checkbox" id="id_%s">%s </label></div></div>' % (well_str, well_str,well_str, checked , well_str, human(row['figure']))
                     loopels.append('<td data_row="' + row['well_letter'] + '" data_column="')
                     loopels.append(str(row['well_number']) + '" class="hide-checkbox hmp' + cond_class + '">' + cell_temp + '</td>')
                     #add a table heading cell for each column - only do this for the first row
                     if (letter == 'A'):
                         self.fields['header_' + str(row['well_number'])] = forms.BooleanField(initial=False, required=False, label=row['well_number'])
+                        extra = "&nbsp;"
+                        if int(row['well_number']) > 9:
+                            extra = ""
                         column_helper.layout.fields.extend([
                                 HTML('<th data_column="' + str(row['well_number']) + '" class="hmp_header">'),
                                 'header_' + str(row['well_number']),
                                 HTML('</th>')
                             ])
-                        template = '<div class="form-group"><div id="div_id_header_%d" class="checkbox"><label for="id_header_%d" class="fillin"><input type="checkbox" name="header_%d" class="checkboxinput checkbox" id="id_header_%d">%d</label></div></div>' % (row['well_number'], row['well_number'], row['well_number'], row['well_number'], row['well_number'])
+                        template = '<div class="form-group dataset"><div id="div_id_header_%d" class="checkbox"><label for="id_header_%d" class="fillin"><input type="checkbox" name="header_%d" class="checkboxinput checkbox" id="id_header_%d">%s%d</label></div></div>' % (row['well_number'], row['well_number'], row['well_number'], row['well_number'],extra, row['well_number'])
 
                         element_list.append('<th data_column="' + str(row['well_number']) + '" class="hmp_header">')
                         element_list.append(template + '</th>')

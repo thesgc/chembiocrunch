@@ -74,7 +74,7 @@
     <link rel="stylesheet" href="{% static 'chembiohub-theme/css/font.css' %}">
 
 
-
+ 
     <!-- Use this to quickly test CSS changes in a template,
         then move to chembiocrunch.css -->
     {% block extra_css %}{% endblock extra_css %}
@@ -88,6 +88,9 @@
 {% with ur='/var/www/chembiocrunch/chembiocrunch/assets/chembiohub-theme/templates/crunch_header.html' %}
 {% ssi ur %}
 {% endwith %}
+
+   <link rel="stylesheet" href="{% static 'css/chembiocrunch.css' %}">
+
       <div class="container-fluid spacer">
         <h2 class="blue">
         {% block action_title %}
