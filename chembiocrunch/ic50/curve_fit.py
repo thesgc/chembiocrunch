@@ -93,8 +93,6 @@ class IC50CurveFit(object):
             self.results["message"] = vis.INACTIVE
         elif self.results["IC50"] > max(self.xpoints):
             self.results["message"] = vis.INCOMPLETE
-        elif self.results["IC50"] > max(self.xpoints):
-            self.results["message"] = vis.INCOMPLETE
         elif self.results["IC50"] < min(self.xpoints):
             self.results["message"] = vis.INCOMPLETE
         elif self.results["max"] < 0.8:
@@ -141,8 +139,9 @@ class IC50CurveFit(object):
         ax.set_ylim(-0.1,1.1)
         ax.plot(xcurve,smooted_best_fit_line, 'b')
         #self.fig = f
-        
-        ax.set_xlabel(u'Log (micromolar concentration)')
+        ax.set_xticklabels(["","0.1","0.316","1","3.16","10","31.6"])
+
+        ax.set_xlabel(u'Micromolar Concentration')
         ax.set_ylabel(u'Normalised Inhibition')
 
         f.tight_layout()

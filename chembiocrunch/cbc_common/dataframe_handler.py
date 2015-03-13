@@ -18,14 +18,14 @@ alphabet = ["".join(comb) for comb in cwr(stuff, repeat=1)]
 alphabet += ["".join(comb) for comb in cwr(stuff, repeat=2)]
 alphabet += ["".join(comb) for comb in cwr(stuff, repeat=3)]
 
-def get_data_frame(read_csv, skiprows=0, header=0):
+def get_data_frame(read_csv, skiprows=0, header=None, names=None):
     '''Returns a dataframe from a csv buffer'''  
-    pd = rc(read_csv, infer_datetime_format=True,index_col=None, header=header, skiprows=skiprows,)
+    pd = rc(read_csv, infer_datetime_format=True,index_col=None, header=header, skiprows=skiprows,names=names,)
     return pd
 
-def get_excel_data_frame(read_excel, skiprows=0, header=None):
+def get_excel_data_frame(read_excel, skiprows=0, header=None, names=None):
     data = ExcelFile(read_excel)
-    df = data.parse(data.sheet_names[0], header=header,index_col=None, skiprows=skiprows, )
+    df = data.parse(data.sheet_names[0], header=header,index_col=None, skiprows=skiprows,names=names, )
     return df
 
 

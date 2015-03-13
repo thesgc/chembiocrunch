@@ -170,7 +170,7 @@ class Ic50LoadingAreaAjax(IC50WorkflowDetailView):
 
         context["base_html"] = self.base_html
         context["visualisation_id"] = visualisation_id
-        context["visualisation_list"] = context["workflow_revision"].visualisations.all()
+        context["visualisation_list"] = context["workflow_revision"].visualisations.all().orderby("starting_platewell")
         context["visualisation"] = context["visualisation_list"].get(pk=visualisation_id)
 
         context["isic50"] = True
@@ -272,6 +272,7 @@ class IC50HeatmapView(IC50WorkflowDetailView):
                 if len(group_df[group_df["status"].isin(["inactive",])]) != 0:
                     vis.raw_data = group_df.to_json()
                     vis.html = ""
+                    vis.always_reload = True
                     vis.save()
 
             self.workflow_revision = self.object.workflow_ic50_revisions.get(pk=self.workflow_revision_id)
@@ -321,7 +322,7 @@ class Ic50ListViewAjax(IC50WorkflowDetailView):
 
         context["visualisation_id"] = visualisation_id
         
-        context["visualisation_list"] = context["workflow_revision"].visualisations.all().order_by("created")
+        context["visualisation_list"] = context["workflow_revision"].visualisations.all().order_by("starting_platewell")
         context["isic50"] = True
 
         return context
@@ -403,6 +404,14 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
                 os.makedirs(path)
             path +="/" +title
             workbook = xlsxwriter.Workbook(path)
+            format = workbook.add_format()
+
+            format.set_align('center')
+            format.set_align('vcenter')
+            format.set_num_format('0.00')
+
+            f2 =  workbook.add_format()
+            f2.set_num_format('0.00')
             worksheet1 = workbook.add_worksheet("Assay Meta Data")
             bold = workbook.add_format({'bold': True})
 
@@ -424,21 +433,27 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
             for index, vis in enumerate(vis_list):
                 res = json.loads(vis.results).get("values", {})
                 worksheet.set_row(index+1, 100)
-                worksheet.write(index+1,0,vis.data_mapping_revision.plate_name)
-                worksheet.write(index+1,1,vis.compound_id)
-                worksheet.write(index+1,2,res.get("logIC50"))
+                worksheet.write(index+1,0,"[" + vis.data_mapping_revision.plate_name, format)
+                worksheet.write(index+1,1,vis.compound_id, format)
+                worksheet.write(index+1,2,res.get("logIC50"), format)
                 try:
-                    worksheet.write(index+1,3,res.get("IC50"))
-                    worksheet.write(index+1,4,res.get("IC50error"))
-                    worksheet.write(index+1,5,res.get("hill"))
-                    worksheet.write(index+1,6,res.get("hillerror"))
+                    if res.get("message") != vis.INCOMPLETE and res.get("message") != vis.INACTIVE :
+                        worksheet.write(index+1,3,res.get("IC50"), format)
+                        worksheet.write(index+1,4,res.get("IC50error"), format)
+                        worksheet.write(index+1,5,res.get("hill"), format)
+                        worksheet.write(index+1,6,res.get("hillerror"), format)
+                    else:
+                        worksheet.write(index+1,3,"Out of Range", format)
+                        worksheet.write(index+1,4,"Out of Range", format)
+                        worksheet.write(index+1,5,"Out of Range", format)
+                        worksheet.write(index+1,6,"Out of Range", format)
 
                 except TypeError:
-                    worksheet.write(index+1,3,"N/A")
-                    worksheet.write(index+1,4,res.get("N/A"))
-                    worksheet.write(index+1,5,"N/A")
-                    worksheet.write(index+1,6,res.get("N/A"))
-                worksheet.write(index+1,7,res.get("message"))
+                    worksheet.write(index+1,3,"N/A", format)
+                    worksheet.write(index+1,4,res.get("N/A"), format)
+                    worksheet.write(index+1,5,"N/A", format)
+                    worksheet.write(index+1,6,res.get("N/A"), format)
+                worksheet.write(index+1,7,res.get("message"), format)
                 if vis.thumb:
                     worksheet.insert_image(index+1,8,vis.thumb.path)
             
@@ -455,6 +470,15 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
                 logic50error = res.get("logIC50error","N/A")
                 if logic50error != "N/A":
                     logic50error = logic50error -6
+                ic50 = res.get("IC50", "", )
+                u95 = res.get("IC50_upper_95", "", )
+                l95 = res.get("IC50_lower_95",  )
+                hill = res.get("hill", "", )
+                if res.get("message") == vis.INCOMPLETE or res.get("message") == vis.INACTIVE :
+                    ic50 =""
+                    u95=""
+                    l95=""
+                    hill=""
 
                 row_data = [(u"  Experiment Type (Alphascreen) ", self.object.meta_by_name("Assay Type") ,),
                     (u"  Purification ID (Purification) ", self.object.meta_by_name("Protein") ,),
@@ -463,24 +487,25 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
                     (u"  SGC Global Compound ID (Batch) (Compound) ", vis.compound_id ,),
                     (u"  Peptide Concentration (uM) (Alphascreen) ", self.object.meta_by_name("Peptide Concentration (nM)") ,),
                     (u"  Solvent (Alphascreen) ", self.object.meta_by_name("Solvent"),),
-                    (u"  Solvent Concentration (%) (Alphascreen) ", self.object.meta_by_name("Solvent Concentration") ,),
+                    (u"  Solvent Concentration (%) (Alphascreen) ", self.object.meta_by_name("Solvent Concentration (%)") ,),
                     (u"  Buffer (Alphascreen) ", self.object.meta_by_name("Assay Buffer") ,),
                     (u"  Compound Incubation Time (mins) (Alphascreen) ", self.object.meta_by_name("Compound Incubation Time (mins)") ,),
                     (u"  Peptide Incubation Time (mins) (Alphascreen) ", self.object.meta_by_name("Peptide Incubation Time") ,),
-                    (u"  Bead Incubation Time (mins) (Alphascreen) ", self.object.meta_by_name("Bead Incubation Time") ,),
+                    (u"  Bead Incubation Time (mins) (Alphascreen) ", self.object.meta_by_name("Bead Incubation time (mins)") ,),
                     (u"  Incubation Temperatures (C) (Alphascreen) ", self.object.meta_by_name("Incubation Temperature") ,),
+
                     (u"  LogIC50 (relative to 1M) (Data Summary) ", logic50 ,),
                     (u"  LogIC50 error (Data Summary) ",logic50error ,),
-                    (u"  IC50 (Data Summary) ", res.get("IC50", "") ,),
-                    (u"  Curve Fit: Upper 95% ConfLimit (Data Summary) ", res.get("IC50_upper_95", "") ,),
-                    (u"  Curve Fit: Lower 95% ConfLimit (Data Summary) ", res.get("IC50_lower_95", ""),),
-                    (u"  Curve Fit: Hill Slope (Data Summary) ", res.get("IC50_lower_95", "") ,),
+                    (u"  IC50 (Data Summary) ", ic50,),
+                    (u"  Curve Fit: Upper 95% ConfLimit (Data Summary) ", u95 ,),
+                    (u"  Curve Fit: Lower 95% ConfLimit (Data Summary) ", l95,),
+                    (u"  Curve Fit: Hill Slope (Data Summary) ",  hill,),
                     (u"  Curve (Obsolete) (Data Summary) ", "" ,),
                     (u"  Curve Fit: Bottom (Data Summary) ", res.get("bottom", "") ,),
                     (u"  Curve Fit: Top (Data Summary) ", res.get("top", "") ,),
                     (u"  R2 (Data Summary) ", res.get("r-squared", "") ,),
                     (u"  Data Quality (Data Summary) ", "" ,),
-                    (u"  Comments on Curve Fit (Data Summary) ", "" ,),
+                    (u"  Comments on Curve Fit (Data Summary) ", vis.comment ,),
                     (u"  Enzyme Reference (Alphascreen) ", vis.data_mapping_revision.maximum ,),
                     (u"  Enzyme Reference Error (Alphascreen) ", vis.data_mapping_revision.maximum_error ,),]
                 
@@ -531,7 +556,7 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
                 if index == 0:
                     worksheet2.write_row(0,0,[item[0] for item in row_data], bold)#
 
-                worksheet2.write_row(index+1,0,["N/A" if (str(item[1]).lower() == "nan") else "N/A" if (str(item[1]).lower() == "inf") else item[1] for item in row_data])
+                worksheet2.write_row(index+1,0,["N/A" if (str(item[1]).lower() == "nan") else "N/A" if (str(item[1]).lower() == "inf") else item[1] for item in row_data],f2)
 
             workbook.close()
             fsock = open(path,"r")

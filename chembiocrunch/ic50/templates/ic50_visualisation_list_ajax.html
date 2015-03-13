@@ -8,7 +8,7 @@
   	<!-- move the list items here, 4 at a time inside a div class="carousel-item" -->
   {% for visualisation_item in visualisation_list %}
       
-  <div id="vis-{{visualisation_item.id}}" class="col-md-3 col-sm-4 col-xs-6 vis {% if visualisation_item.html %}{{visualisation_item.error_class}}{% endif %}">
+  <div id="vis-{{visualisation_item.id}}" class="col-xs-6 vis {% if visualisation_item.html %}{{visualisation_item.error_class}}{% endif %}">
     <div class="well col-sd-8 col-sd-offset-2 {% ifequal visualisation_item.id visualisation.id %} activeitem {% endifequal %}">
 
       <div class="row-fluid">
@@ -24,7 +24,7 @@
               
       </div>
 
-      <div class="vis-thumb "> {% if visualisation_item.html %}
+      <div class="vis-thumb "> {% if visualisation_item.html and not visualisation_item.always_reload %}
             {{ visualisation_item.html|add_responsive_tags|safe }}
 
             {% else %}

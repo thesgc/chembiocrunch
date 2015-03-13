@@ -211,6 +211,7 @@ class IC50Visualisation(TimeStampedModel):
                         (STEEP_HILL, titlecase( STEEP_HILL)),
                         (TOP_NO_PLATEAUX, titlecase( TOP_NO_PLATEAUX)),)
 
+    starting_platewell = models.CharField(max_length=10,null=True, blank=True, default="")
     data_mapping_revision = models.ForeignKey('IC50WorkflowRevision', related_name="visualisations")
     x_axis = models.CharField(max_length=200, default="Destination Concentration")
     y_axis = models.CharField(max_length=200, default='Percent inhibition')
@@ -220,33 +221,35 @@ class IC50Visualisation(TimeStampedModel):
     visualisation_title = models.CharField(max_length=200, null=True, blank=True) #Will be used for the sample name
     config_json = models.TextField(default="{}")
     html = models.TextField(default="")
-    png = models.FileField(blank=True,null=True, default=None )
-    thumb = models.FileField(blank=True, null=True, default=None)
+    png = models.FileField(blank=True,null=True, default=None , max_length=1000,)
+    thumb = models.FileField(blank=True, null=True, default=None, max_length=1000,)
     constrained = models.NullBooleanField()
     objects = IC50VisualisationManager()
     raw_data = models.TextField(default="{}")
     marked_as_bad_fit = models.BooleanField(default=False)
     raw_dataframe = DataFrame()
     comment = models.CharField(max_length=30, choices=COMMENT_CHOICES, default=GOOD_CURVE)
-
+    always_reload = models.BooleanField(default=False)
+    class Meta:
+        ordering = ['starting_platewell']
 
     def get_results_for_datapoint(self):
         '''When ordered by concentration, take the nth group and do an average - only used for the 
         export to beehive function'''
         raw_dataframe = read_json(self.raw_data)
-        raw_dataframe.sort(["concentration"], inplace=True)
-        raw_dataframe = raw_dataframe.groupby("concentration")
+        raw_dataframe = raw_dataframe.groupby("concentration", sort=True)
         index = 0
-        for index, group in enumerate(raw_dataframe.groups):
+        sorted_groups = sorted([g for g in raw_dataframe.groups])
+        for index, group in enumerate(sorted_groups):
             concentration = group
             df = raw_dataframe.get_group(group)
             inhibition = df["percent_inhib"].mean()
             inhibition_error = df["percent_inhib"].std()
             realind = index +1
             yield [(u"  Compound Concentration %d (uM) (Compound Concentration Range) " % realind, concentration ,),
-                     (u"  Compound Concentration %d Inhibition (%%) (Compound Concentration Range) " % realind, inhibition ,),
-                     (u"  Compound Concentration %d Error (%%) (Compound Concentration Range) " % realind, inhibition_error ,)]
-        while index < 12:
+                     (u"  Compound Concentration %d Inhibition (%%) (Compound Concentration Range) " % realind, inhibition * 100,),
+                     (u"  Compound Concentration %d Error (%%) (Compound Concentration Range) " % realind, inhibition_error *100,)]
+        while index < 11:
             index += 1
             #Fill in any missing values up to 12 columns in total
             realind = index +1
