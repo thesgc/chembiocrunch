@@ -1,12 +1,12 @@
 import json
 from rest_framework import serializers
  
-class JSONField(serializers.WritableField):
+class JSONField(serializers.Field):
     
-    def to_native(self, obj):
+    def to_representation(self, obj):
         return json.dumps(obj)
     
-    def from_native(self, value):
+    def to_internal_value(self, value):
         try:
             val = json.loads(value)
         except TypeError:
