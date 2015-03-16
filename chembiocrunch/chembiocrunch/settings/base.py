@@ -12,6 +12,11 @@ LOGIN_REDIRECT_URL = '/crunch/my_workflows/'
 LOGOUT_REDIRECT_URL = '/logged_out/'
 # Absolute filesystem path to the top-level project folder:
 SITE_ROOT = dirname(DJANGO_ROOT)
+BOWER_COMPONENTS_ROOT =  SITE_ROOT + '/bower_components/'
+
+BOWER_INSTALLED_APPS = (
+    'chembiocrunch_vis',
+)
 
 # Site name:
 SITE_NAME = basename(DJANGO_ROOT)
@@ -209,6 +214,11 @@ INSTALLED_APPS = [    # Default Django apps:
 
      'ic50',
     'cbc_common',
+    'django_shell_ipynb',
+    'djangobower',
+    'rest_framework',
+    'qpcr',
+    'gunicorn',
 
 ]
 
@@ -223,32 +233,58 @@ INSTALLED_APPS = [    # Default Django apps:
 # the site admins on every HTTP 500 error when DEBUG=False.
 # See http://docs.djangoproject.com/en/dev/topics/logging for
 # more details on how to customize your logging configuration.
+########## END LOGGING CONFIGURATION
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
-    'filters': {
-        'require_debug_false': {
-            '()': 'django.utils.log.RequireDebugFalse'
-        }
+    'disable_existing_loggers': True,
+    'root': {
+        'level': 'WARNING',
+        'handlers': ['sentry'],
+    },
+    'formatters': {
+        'verbose': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
+        },
     },
     'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': '/tmp/cbc.log',
+        'sentry': {
+            'level': 'ERROR',
+            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose'
+        }
+    },
+    'loggers': {
+        'django.db.backends': {
+            'level': 'ERROR',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'raven': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'sentry.errors': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': False,
         },
     },
-
-    'loggers': {
-        'django.request': {
-            'handlers': ['file'],
-            'level': 'ERROR',
-            'propagate': True,
-        },
-    }
 }
-########## END LOGGING CONFIGURATION
+# Set your DSN value
+RAVEN_CONFIG = {
+    'dsn': 'http://90e86592d4cc4f7cbb346010b1292a36:23d1dc408e824b01874f58e595a560a3@163.1.63.22/4',
+}
 
+# Add raven to the list of installed apps
+INSTALLED_APPS = INSTALLED_APPS + (
+    # ...
+    'raven.contrib.django.raven_compat',
+)
 
 ########## WSGI CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#wsgi-application
@@ -263,4 +299,5 @@ WSGI_APPLICATION = '%s.wsgi.application' % SITE_NAME
 
 ########## END SOUTH CONFIGURATION
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
+STATICFILES_FINDERS += ('djangobower.finders.BowerFinder',)
 
