@@ -31,6 +31,8 @@ TEMPLATE_LOADERS = (
     )),
 )
 
+SESSION_COOKIE_NAME = 'crunch_sessionid'
+CSRF_COOKIE_NAME = 'crunchcsrftoken'
 
 
 LOGIN_URL = "/crunch/accounts/login"

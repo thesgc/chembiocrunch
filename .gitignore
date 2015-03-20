@@ -29,7 +29,7 @@ tramp
 .\#*
 *.swp
 *.swo
-
+src/master
 # Mac
 .DS_Store
 ._*
