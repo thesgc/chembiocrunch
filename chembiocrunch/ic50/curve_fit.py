@@ -143,8 +143,8 @@ class IC50CurveFit(object):
 
         ax.set_xlabel(u'Micromolar Concentration')
         ax.set_ylabel(u'Normalised Inhibition')
-
         f.tight_layout()
+
         f.savefig(pngfile , format="png", transparent=True)
 
         self.add_labels(ax)
@@ -163,7 +163,7 @@ class IC50CurveFit(object):
 
         ax.set_xticks([])
         ax.set_yticks([])
-        f.tight_layout()
+        f.set_size_inches((1.5,1))
 
         ax.set_xlabel('')
         ax.set_ylabel('')
