@@ -102,7 +102,9 @@ CACHES = {
 
 ########## MEDIA CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#media-root
-MEDIA_ROOT = '/var/lib/data/chembiocrunch/'
+MEDIA_ROOT = '/var/data/chembiocrunch/'
+HDF5_ROOT = normpath(join(MEDIA_ROOT, 'hdf5', ""))
+
 
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#media-url
 MEDIA_URL = '/media/'

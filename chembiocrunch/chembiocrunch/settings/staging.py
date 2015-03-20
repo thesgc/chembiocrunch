@@ -2,13 +2,13 @@ from .production import *
 from os.path import abspath, basename, dirname, join, normpath
 
 
-INSTALLED_APPS += (
-    'django_shell_ipynb',
-    'djangobower',
-    'rest_framework',
-    'qpcr',
-    'gunicorn',
-)
+#INSTALLED_APPS += (
+#    'django_shell_ipynb',
+#    'djangobower',
+#    'rest_framework',
+#    'qpcr',
+#    'gunicorn',
+#)
 
 STATICFILES_FINDERS += ('djangobower.finders.BowerFinder',)
 BOWER_COMPONENTS_ROOT =  SITE_ROOT + '/bower_components/'
