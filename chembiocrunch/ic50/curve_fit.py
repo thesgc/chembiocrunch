@@ -163,13 +163,13 @@ class IC50CurveFit(object):
 
         ax.set_xticks([])
         ax.set_yticks([])
-        f.set_size_inches((1.5,1))
+        f.set_size_inches((2.5,1.3))
 
         ax.set_xlabel('')
         ax.set_ylabel('')
         
         f.tight_layout()
-        f.savefig(thumbfile , format="png", dpi=20)
+        f.savefig(thumbfile , format="png")
 
         plt.close(f)
 
