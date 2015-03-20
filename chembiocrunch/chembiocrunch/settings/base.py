@@ -13,6 +13,7 @@ LOGOUT_REDIRECT_URL = '/logged_out/'
 # Absolute filesystem path to the top-level project folder:
 SITE_ROOT = dirname(DJANGO_ROOT)
 BOWER_COMPONENTS_ROOT =  SITE_ROOT + '/bower_components/'
+ALLOWED_INCLUDE_ROOTS = ('/home/vagrant', '/var/www')
 
 BOWER_INSTALLED_APPS = (
     'chembiocrunch_vis',
@@ -281,10 +282,10 @@ RAVEN_CONFIG = {
 }
 
 # Add raven to the list of installed apps
-INSTALLED_APPS = INSTALLED_APPS + (
+INSTALLED_APPS = INSTALLED_APPS + [
     # ...
     'raven.contrib.django.raven_compat',
-)
+]
 
 ########## WSGI CONFIGURATION
 # See: https://docs.djangoproject.com/en/dev/ref/settings/#wsgi-application
