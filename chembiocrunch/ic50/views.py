@@ -4,10 +4,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import View,  DetailView, ListView, CreateView
 from django.views.generic.detail import SingleObjectMixin
 from django.conf import settings
-try:
-    import cStringIO as StringIO
-except ImportError:
-    import StringIO
+
+import StringIO
 
 from braces.views import LoginRequiredMixin
 
