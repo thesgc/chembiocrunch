@@ -4,6 +4,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import View,  DetailView, ListView, CreateView
 from django.views.generic.detail import SingleObjectMixin
 from django.conf import settings
+try:
+    import cStringIO as StringIO
+except ImportError:
+    import StringIO
 
 from braces.views import LoginRequiredMixin
 
@@ -399,11 +403,12 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
 
         if self.format == "xlsx":
             title = self.object.title + "_output.xlsx"
-            path = self.object.get_upload_to("")
-            if not os.path.exists(path):
-                os.makedirs(path)
-            path +="/" +title
-            workbook = xlsxwriter.Workbook(path)
+            # path = self.object.get_upload_to("")
+            # if not os.path.exists(path):
+            #     os.makedirs(path)
+            # path +="/" +title
+            output = StringIO.StringIO()
+            workbook = xlsxwriter.Workbook(output)
             format = workbook.add_format()
 
             format.set_align('center')
@@ -559,7 +564,7 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
                 worksheet2.write_row(index+1,0,["N/A" if (str(item[1]).lower() == "nan") else "N/A" if (str(item[1]).lower() == "inf") else item[1] for item in row_data],f2)
 
             workbook.close()
-            fsock = open(path,"r")
-            response = HttpResponse(fsock, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            output.seek(0)
+            response = HttpResponse(output.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = 'attachment; filename=%s' % title
             return response
