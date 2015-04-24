@@ -5,7 +5,10 @@ from django.views.generic import View,  DetailView, ListView, CreateView
 from django.views.generic.detail import SingleObjectMixin
 from django.conf import settings
 
-import StringIO
+try:
+    from cStringIO import StringIO
+except:
+    from StringIO import StringIO
 
 from braces.views import LoginRequiredMixin
 
@@ -405,7 +408,8 @@ class Ic50ExportAllView(IC50WorkflowDetailView):
             # if not os.path.exists(path):
             #     os.makedirs(path)
             # path +="/" +title
-            output = StringIO.StringIO()
+            output = StringIO()
+
             workbook = xlsxwriter.Workbook(output)
             format = workbook.add_format()
 
