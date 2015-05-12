@@ -239,7 +239,7 @@ class IC50Visualisation(TimeStampedModel):
         raw_dataframe = read_json(self.raw_data)
         raw_dataframe = raw_dataframe.groupby("concentration", sort=True)
         index = 0
-        sorted_groups = sorted([g for g in raw_dataframe.groups])
+        sorted_groups = reversed(sorted([g for g in raw_dataframe.groups]))
         for index, group in enumerate(sorted_groups):
             concentration = group
             df = raw_dataframe.get_group(group)
